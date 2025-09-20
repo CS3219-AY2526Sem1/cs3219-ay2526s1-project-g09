@@ -8,7 +8,7 @@ import {
   createOTPForEmail as _createOTPForEmail
 } from "../model/repository.js";
 import { formatUserResponse } from "./user-controller.js";
-import { sendEmail } from "../utils/email-sender.js";
+import { sendEmail as _sendEmail } from "../utils/email-sender.js";
 
 export async function handleLogin(req, res) {
   const { email, password } = req.body;
@@ -58,12 +58,12 @@ export async function generateAndSendOTP(req, res) {
 
   // Save OTP in DB
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-  _createOTPForEmail(email, otp, expiresAt);
+  await _createOTPForEmail(email, otp, expiresAt);
 
   // Send OTP
   const subject = "Verify Your PeerPrep Email Address";
   const body = "Your OTP is: " + otp;
-  sendEmail(email, subject, body);
+  await _sendEmail(email, subject, body);
 
   res.json({ message: "OTP sent to your email" });
 }
@@ -73,7 +73,7 @@ export async function verifyOTP(req, res) {
 
   // Check if OTP matches
   const otpRecord = await _findOTPByEmail(email);
-  if (otpRecord.code != code) {
+  if (!otpRecord || otpRecord.code != code) {
     return res.status(400).json({ message: "Invalid or Expired OTP" });
   }
 

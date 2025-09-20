@@ -13,6 +13,37 @@ import {
 } from "../model/repository.js";
 import { passwordStrength } from 'check-password-strength'
 
+//password strength check variables
+const options = [
+  {
+    id: 0,
+    value: "Too weak",
+    minDiversity: 0,
+    minLength: 0
+  },
+  {
+    id: 1,
+    value: "Weak",
+    minDiversity: 2,
+    minLength: 8
+  },
+  {
+    id: 2,
+    value: "Medium",
+    minDiversity: 4,
+    minLength: 10
+  },
+  {
+    id: 3,
+    value: "Strong",
+    minDiversity: 4,
+    minLength: 12
+  }
+]
+const strongestOption = options[options.length - 1];
+const owaspSymbols = "!\"#$%&'()*+,-./\\:;<=>?@[]^_`{|}~"; //Recommended allowed special characters in password by OWASP
+
+
 export async function createUser(req, res) {
   try {
     const { username, email, password } = req.body;
@@ -95,13 +126,12 @@ export async function updateUser(req, res) {
         }
       }
 
-      const passwordStrength = evalPasswordStrength(password);
-      if (passwordStrength != strongestOption.value) {
-        return res.status(400).json({ message: "password is not strong enough"});
-      }
-
       let hashedPassword;
       if (password) {
+        const passwordStrength = evalPasswordStrength(password);
+        if (passwordStrength != strongestOption.value) {
+          return res.status(400).json({ message: "password is not strong enough"});
+        }
         const salt = bcrypt.genSaltSync(10);
         hashedPassword = bcrypt.hashSync(password, salt);
       }
@@ -175,38 +205,6 @@ export function formatUserResponse(user) {
     createdAt: user.createdAt,
   };
 }
-
-//password strength check
-const options = [
-  {
-    id: 0,
-    value: "Too weak",
-    minDiversity: 0,
-    minLength: 0
-  },
-  {
-    id: 1,
-    value: "Weak",
-    minDiversity: 2,
-    minLength: 8
-  },
-  {
-    id: 2,
-    value: "Medium",
-    minDiversity: 4,
-    minLength: 10
-  },
-  {
-    id: 3,
-    value: "Strong",
-    minDiversity: 4,
-    minLength: 12
-  }
-]
-
-const strongestOption = options[options.length - 1];
-
-const owaspSymbols = "!\"#$%&'()*+,-./\\:;<=>?@[]^_`{|}~"; //Recommended allowed special characters in password by OWASP
 
 function evalPasswordStrength(password) {
   return passwordStrength(password, options, owaspSymbols).value;
