@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -30,7 +30,7 @@ jobs:
         run: docker compose down -v
 
   publish:
-    needs: build-and-test
+    needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
