@@ -18,19 +18,14 @@ jobs:
           # Add one entry per microservice
           - name: matching-ui
             context: ./ui-services/matching-ui-service
-            dockerfile: Dockerfile
           - name: questions-ui
             context: ./ui-services/question-ui-service
-            dockerfile: Dockerfile
           - name: collab-ui
             context: ./ui-services/collab-ui-service
-            dockerfile: Dockerfile
           - name: user-ui
             context: ./ui-services/user-ui-service
-            dockerfile: Dockerfile
           - name: history-ui
             context: ./ui-services/history-ui-service
-            dockerfile: Dockerfile
 
     steps:
       - name: Checkout Repository
