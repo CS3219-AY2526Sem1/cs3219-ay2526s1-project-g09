@@ -21,7 +21,7 @@ app.get("/api/v1/leetcode-test", async () => {
   const firstSlug = slugs[0];
 
   // 2) details for the first slug
-  const detail = await gql<{ question: { title: string; codeSnippets: any[] } }>(
+  const detail = await gql<{ question: { title: string; content: string } }>(
     QUERY_DETAIL, { titleSlug: firstSlug }
   );
 
@@ -30,7 +30,7 @@ app.get("/api/v1/leetcode-test", async () => {
     totalKnown: list.problemsetQuestionList.total,
     firstPageSlugs: slugs,
     firstTitle: detail.question?.title ?? null,
-    firstSnippetCount: detail.question?.codeSnippets?.length ?? 0
+    content: detail.question?.content ?? null,
   };
 });
 
