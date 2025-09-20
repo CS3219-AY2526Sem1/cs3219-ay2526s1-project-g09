@@ -33,6 +33,9 @@ dist-ssr/
 **/*.back.*
 *.sublime*
 
+# Environment variables
+**/.env
+
 # Design files
 *.psd
 *.thumb
