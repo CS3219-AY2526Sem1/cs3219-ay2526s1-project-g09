@@ -54,7 +54,7 @@ export async function generateAndSendOTP(req, res) {
   await _deleteOTPByEmail(email);
 
   // Generate 6-digit OTP
-  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
+  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false });
 
   // Save OTP in DB
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
