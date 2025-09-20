@@ -32,7 +32,6 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/add-ci-pipeline'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
