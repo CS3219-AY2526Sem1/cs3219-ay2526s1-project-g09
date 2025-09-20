@@ -9,32 +9,39 @@ import {
 } from "../model/repository.js";
 import { formatUserResponse } from "./user-controller.js";
 import { sendEmail as _sendEmail } from "../utils/email-sender.js";
+import { checkEmail, checkPassword } from "../utils/repository-security.js"
+import { ValidationError } from "../utils/errors.js";
 
 export async function handleLogin(req, res) {
   const { email, password } = req.body;
-  if (email && password) {
-    try {
-      const user = await _findUserByEmail(email);
-      if (!user) {
-        return res.status(401).json({ message: "Wrong email and/or password" });
-      }
-
-      const match = await bcrypt.compare(password, user.password);
-      if (!match) {
-        return res.status(401).json({ message: "Wrong email and/or password" });
-      }
-
-      const accessToken = jwt.sign({
-        id: user.id,
-      }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
-      return res.status(200).json({ message: "User logged in", data: { accessToken, ...formatUserResponse(user) } });
-    } catch (err) {
-      return res.status(500).json({ message: err.message });
+  try {
+    if (!email || !password) {
+      return res.status(400).json({ message: "Missing email and/or password" });
     }
-  } else {
-    return res.status(400).json({ message: "Missing email and/or password" });
+    email = checkEmail(email);
+    password = checkPassword(password);
+
+    const user = await _findUserByEmail(email);
+    if (!user) {
+      return res.status(401).json({ message: "Wrong email and/or password" });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ message: "Wrong email and/or password" });
+    }
+
+    const accessToken = jwt.sign({
+      id: user.id,
+    }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+    return res.status(200).json({ message: "User logged in", data: { accessToken, ...formatUserResponse(user) } });
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      return res.status(400).json({ message: err.message });
+    }
+    return res.status(500).json({ message: err.message });
   }
 }
 
@@ -49,6 +56,8 @@ export async function handleVerifyToken(req, res) {
 
 export async function generateAndSendOTP(req, res) {
   const { email } = req.body;
+
+  email = checkEmail(email);
 
   // Delete any existing OTP in DB
   await _deleteOTPByEmail(email);
@@ -70,6 +79,9 @@ export async function generateAndSendOTP(req, res) {
 
 export async function verifyOTP(req, res) {
   const { email, code } = req.body;
+
+  email = checkEmail(email);
+  code = checkOTP(code);
 
   // Check if OTP matches
   const otpRecord = await _findOTPByEmail(email);

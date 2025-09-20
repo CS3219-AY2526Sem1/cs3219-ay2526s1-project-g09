@@ -106,44 +106,47 @@ export async function getAllUsers(req, res) {
 export async function updateUser(req, res) {
   try {
     const { username, email, password } = req.body;
-    if (username || email || password) {
-      const userId = req.params.id;
-      if (!isValidObjectId(userId)) {
-        return res.status(404).json({ message: `User ${userId} not found` });
-      }
-      const user = await _findUserById(userId);
-      if (!user) {
-        return res.status(404).json({ message: `User ${userId} not found` });
-      }
-      if (username || email) {
-        let existingUser = await _findUserByUsername(username);
-        if (existingUser && existingUser.id !== userId) {
-          return res.status(409).json({ message: "username already exists" });
-        }
-        existingUser = await _findUserByEmail(email);
-        if (existingUser && existingUser.id !== userId) {
-          return res.status(409).json({ message: "email already exists" });
-        }
-      }
-
-      let hashedPassword;
-      if (password) {
-        const passwordStrength = evalPasswordStrength(password);
-        if (passwordStrength != strongestOption.value) {
-          return res.status(400).json({ message: "password is not strong enough"});
-        }
-        const salt = bcrypt.genSaltSync(10);
-        hashedPassword = bcrypt.hashSync(password, salt);
-      }
-      const updatedUser = await _updateUserById(userId, username, email, hashedPassword);
-      return res.status(200).json({
-        message: `Updated data for user ${userId}`,
-        data: formatUserResponse(updatedUser),
-      });
-    } else {
+    if (!username && !email && !password) {
       return res.status(400).json({ message: "No field to update: username and email and password are all missing!" });
     }
+    username = checkUsername(username);
+    email = checkEmail(email);
+    password = checkPassword(password);
+    const userId = req.params.id;
+    if (!isValidObjectId(userId)) {
+      return res.status(404).json({ message: `User ${userId} not found` });
+    }
+    const user = await _findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: `User ${userId} not found` });
+    }
+    let existingUser = await _findUserByUsername(username);
+    if (existingUser && existingUser.id !== userId) {
+      return res.status(409).json({ message: "username already exists" });
+    }
+    existingUser = await _findUserByEmail(email);
+    if (existingUser && existingUser.id !== userId) {
+      return res.status(409).json({ message: "email already exists" });
+    }
+
+    let hashedPassword;
+    if (password) {
+      const passwordStrength = evalPasswordStrength(password);
+      if (passwordStrength != strongestOption.value) {
+        return res.status(400).json({ message: "password is not strong enough"});
+      }
+      const salt = bcrypt.genSaltSync(10);
+      hashedPassword = bcrypt.hashSync(password, salt);
+    }
+    const updatedUser = await _updateUserById(userId, username, email, hashedPassword);
+    return res.status(200).json({
+      message: `Updated data for user ${userId}`,
+      data: formatUserResponse(updatedUser),
+    });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      return res.status(400).json({ message: err.message });
+    }
     console.error(err);
     return res.status(500).json({ message: "Unknown error when updating user!" });
   }
