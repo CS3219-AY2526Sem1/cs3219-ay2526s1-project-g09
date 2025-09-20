@@ -60,7 +60,7 @@ jobs:
             type=raw,value=${{ github.sha }}
             type=ref,event=branch
             type=ref,event=tag
-            type=raw,value=latest,enable=${{ github.ref_name == 'main' || github.ref_name == 'master' }}
+            type=raw,value=latest,enable=${{ github.ref_name == 'master' }}
 
       - name: Build (no push for PRs)
         if: ${{ github.event_name == 'pull_request' }}
