@@ -5,9 +5,7 @@ const baseHeaders = {
   "content-type": "application/json",
   // these two help avoid anti-bot hiccups
   "origin": "https://leetcode.com",
-  "referer": "https://leetcode.com/problemset/",
-  // optional but sometimes helpful
-  "user-agent": "question-backend-service/1.0 (+https://leetcode.com)"
+  "referer": "https://leetcode.com/problemset/"
 };
 
 export async function gql<T>(query: string, variables: Record<string, any>): Promise<T> {
