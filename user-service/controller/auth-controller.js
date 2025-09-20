@@ -1,7 +1,14 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { findUserByEmail as _findUserByEmail } from "../model/repository.js";
+import otpGenerator from "otp-generator";
+import {
+  findUserByEmail as _findUserByEmail,
+  findOTPByEmail as _findOTPByEmail,
+  deleteOTPByEmail as _deleteOTPByEmail,
+  createOTPForEmail as _createOTPForEmail
+} from "../model/repository.js";
 import { formatUserResponse } from "./user-controller.js";
+import { sendEmail } from "../utils/email-sender.js";
 
 export async function handleLogin(req, res) {
   const { email, password } = req.body;
@@ -38,4 +45,40 @@ export async function handleVerifyToken(req, res) {
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
+}
+
+export async function generateAndSendOTP(req, res) {
+  const { email } = req.body;
+
+  // Delete any existing OTP in DB
+  await _deleteOTPByEmail(email);
+
+  // Generate 6-digit OTP
+  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
+
+  // Save OTP in DB
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  _createOTPForEmail(email, otp, expiresAt);
+
+  // Send OTP
+  const subject = "Verify Your PeerPrep Email Address";
+  const body = "Your OTP is: " + otp;
+  sendEmail(email, subject, body);
+
+  res.json({ message: "OTP sent to your email" });
+}
+
+export async function verifyOTP(req, res) {
+  const { email, code } = req.body;
+
+  // Check if OTP matches
+  const otpRecord = await _findOTPByEmail(email);
+  if (otpRecord.code != code) {
+    return res.status(400).json({ message: "Invalid or Expired OTP" });
+  }
+
+  // Delete used OTP
+  await _deleteOTPByEmail(email);
+
+  res.json({ message: "Email verified successfully" });
 }

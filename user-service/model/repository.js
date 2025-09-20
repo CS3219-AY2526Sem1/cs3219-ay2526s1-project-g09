@@ -1,4 +1,5 @@
 import UserModel from "./user-model.js";
+import OTPModel from "./otp-model.js";
 import "dotenv/config";
 import { connect } from "mongoose";
 
@@ -68,4 +69,17 @@ export async function updateUserPrivilegeById(userId, isAdmin) {
 
 export async function deleteUserById(userId) {
   return UserModel.findByIdAndDelete(userId);
+}
+
+export async function findOTPByEmail(email) {
+  return OTPModel.findOne({ email });
+}
+
+export async function deleteOTPByEmail(email) {
+  return OTPModel.deleteMany({ email });
+}
+
+export async function createOTPForEmail(email, code, expiresAt) {
+  const createdAt = Date.now();
+  return new OTPModel({ email, code, expiresAt, createdAt }).save();
 }
