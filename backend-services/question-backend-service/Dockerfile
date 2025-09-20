@@ -1,19 +1,18 @@
-FROM node:20-alpine AS deps
+# Use Node for build & serve
+FROM node:22-alpine
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
 
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY tsconfig.json ./
-COPY src ./src
+# Install deps
+COPY package*.json .
+RUN npm install --frozen-lockfile
+
+# Copy source
+COPY . .
+
+# Build the app (generates /dist)
 RUN npm run build
 
-FROM node:20-alpine
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-EXPOSE 8080
-CMD ["node","dist/index.js"]
+# Expose port
+EXPOSE 5275
+
+CMD ["node", "dist/index.js"]
