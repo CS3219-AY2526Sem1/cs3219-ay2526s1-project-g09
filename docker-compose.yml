@@ -51,3 +51,13 @@ services:
     ports:
       - "5178:5178"
     container_name: peerprep-history-ui
+  question-backend-service:
+    build:
+      context: ./backend-services/question-backend-service
+      dockerfile: Dockerfile
+    environment:
+      - PORT=5275
+      # - MONGODB_URI=...   # (ignored for now since you asked to skip Mongo)
+    ports:
+      - "5275:5275"
+    container_name: peerprep-question-backend
