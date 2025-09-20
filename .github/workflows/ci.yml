@@ -1,0 +1,59 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build all services with docker-compose
+        run: docker compose build
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for API to be healthy
+        run: |
+          for i in {1..30}; do
+            status=$(docker inspect --format='{{json .State.Health.Status}}' $(docker compose ps -q api) 2>/dev/null || echo '"starting"')
+            if [ "$status" = "\"healthy\"" ]; then
+              echo "API is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed to become healthy"
+          docker compose logs
+          exit 1
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
+
+  publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push with docker-compose
+        run: docker compose build && docker compose push
