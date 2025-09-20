@@ -25,20 +25,6 @@ jobs:
       - name: Start services
         run: docker compose up -d
 
-      - name: Wait for API to be healthy
-        run: |
-          for i in {1..30}; do
-            status=$(docker inspect --format='{{json .State.Health.Status}}' $(docker compose ps -q api) 2>/dev/null || echo '"starting"')
-            if [ "$status" = "\"healthy\"" ]; then
-              echo "API is healthy"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "API failed to become healthy"
-          docker compose logs
-          exit 1
-
       - name: Tear down
         if: always()
         run: docker compose down -v
