@@ -4,7 +4,7 @@ services:
     build:
       context: ./ui-shell
       dockerfile: Dockerfile  
-    image: ghcr.io/${OWNER}/matching-ui:${IMAGE_TAG:-local}
+    image: ghcr.io/${OWNER:-local}/matching-ui:${IMAGE_TAG:-local}
     ports:
       - "5173:5173"   
     depends_on:
@@ -19,7 +19,7 @@ services:
     build:
       context: ./ui-services/matching-ui-service
       dockerfile: Dockerfile
-    image: ghcr.io/${OWNER}/matching-ui:${IMAGE_TAG:-local}
+    image: ghcr.io/${OWNER:-local}/matching-ui:${IMAGE_TAG:-local}
     ports:
       - "5174:5174"
     container_name: peerprep-matching-ui
@@ -28,7 +28,7 @@ services:
     build:
       context: ./ui-services/question-ui-service
       dockerfile: Dockerfile
-    image: ghcr.io/${OWNER}/matching-ui:${IMAGE_TAG:-local}
+    image: ghcr.io/${OWNER:-local}/matching-ui:${IMAGE_TAG:-local}
     ports:
       - "5175:5175"
     container_name: peerprep-question-ui
@@ -37,7 +37,7 @@ services:
     build:
       context: ./ui-services/collab-ui-service
       dockerfile: Dockerfile
-    image: ghcr.io/${OWNER}/matching-ui:${IMAGE_TAG:-local}
+    image: ghcr.io/${OWNER:-local}/matching-ui:${IMAGE_TAG:-local}
     ports:
       - "5176:5176"
     container_name: peerprep-collab-ui
@@ -46,7 +46,7 @@ services:
     build:
       context: ./ui-services/user-ui-service
       dockerfile: Dockerfile
-    image: ghcr.io/${OWNER}/matching-ui:${IMAGE_TAG:-local}
+    image: ghcr.io/${OWNER:-local}/matching-ui:${IMAGE_TAG:-local}
     ports:
       - "5177:5177"
     container_name: peerprep-user-ui
@@ -54,7 +54,7 @@ services:
     build:
       context: ./ui-services/history-ui-service
       dockerfile: Dockerfile
-    image: ghcr.io/${OWNER}/matching-ui:${IMAGE_TAG:-local}
+    image: ghcr.io/${OWNER:-local}/matching-ui:${IMAGE_TAG:-local}
     ports:
       - "5178:5178"
     container_name: peerprep-history-ui

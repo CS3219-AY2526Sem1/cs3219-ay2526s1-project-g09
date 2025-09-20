@@ -43,5 +43,10 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set image variables
+        run: |
+            echo "OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Build & Push with docker-compose
         run: docker compose build && docker compose push
