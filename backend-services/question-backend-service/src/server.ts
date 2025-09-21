@@ -2,14 +2,14 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import healthRoutes from "./routes/health.js";
 import leetcodeRoutes from "./routes/leetcode.js";
-// import db from "./plugins/db.js";
+import db from "./plugins/db.js";
 
 export async function buildServer() {
   const app = Fastify({ logger: true });
 
   // plugins
   await app.register(cors, { origin: "*" });
-  // await app.register(db); // Enable after adding MongoDB Connection
+  await app.register(db); // Enable after adding MongoDB Connection
 
   // routes
   await app.register(healthRoutes, { prefix: "/api/v1" });
