@@ -22,16 +22,16 @@ const leetcodeRoutes: FastifyPluginAsync = async (app) => {
 
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
   app.post("/leetcode/seed-first", 
-    {
-      // per-route rate limits
-      config: {
-        rateLimit: {
-          max: 3,              
-          timeWindow: "1 minute"
-        },
+  {
+    // per-route rate limits
+    config: {
+      rateLimit: {
+        max: 3,              
+        timeWindow: "1 minute"
       },
     },
-      async () => {
+  },
+  async () => {
     const list = await listFirstN(1);
     const first = list.questions[0];
     if (!first) {
