@@ -3,7 +3,7 @@ import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
 
 const leetcodeRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/leetcode", async () => {
+  app.get("/leetcode-test", async () => {
     const list = await listFirstN(5);
     const slugs = list.questions.map((q) => q.titleSlug);
     const firstSlug = slugs[0];
