@@ -12,21 +12,21 @@ Fastify (TypeScript, ESM) service that:
 
 ## Getting Started
 
-### 1) Requirements
+### 1. Requirements
 - Node.js ≥ 20
 - MongoDB Atlas (or local MongoDB)
 - npm
 
-### 2) Clone & Install
+### 2. Clone & Install
 ```bash
 npm install
 ```
 
-### 3) Environment
+### 3. Environment
 1. Clone `.env.example` file and rename it as `.env`. 
 2. Replace `<db_password>` in the `MONGODB_URI` variable with the cluster account password. 
 
-### 4) Run
+### 4. Run
 
 ```bash
 npm run dev
