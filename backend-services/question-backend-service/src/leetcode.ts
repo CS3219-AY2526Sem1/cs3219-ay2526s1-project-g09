@@ -2,10 +2,7 @@ import { fetch } from "undici";
 
 const ENDPOINT = "https://leetcode.com/graphql";
 const baseHeaders = {
-  "content-type": "application/json",
-  // these two help avoid anti-bot hiccups
-  "origin": "https://leetcode.com",
-  "referer": "https://leetcode.com/problemset/"
+  "content-type": "application/json"
 };
 
 export async function gql<T>(query: string, variables: Record<string, any>): Promise<T> {
