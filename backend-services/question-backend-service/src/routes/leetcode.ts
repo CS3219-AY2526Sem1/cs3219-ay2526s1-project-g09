@@ -1,8 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
+import rateLimit from "@fastify/rate-limit"
 
 const leetcodeRoutes: FastifyPluginAsync = async (app) => {
+  await app.register(rateLimit, { global: false });
   app.get("/leetcode-test", async () => {
     const list = await listFirstN(5);
     const slugs = list.questions.map((q) => q.titleSlug);
