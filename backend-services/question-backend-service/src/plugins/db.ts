@@ -13,7 +13,10 @@ export default fp(async (app: FastifyInstance) => {
   if (!uri) throw new Error("MONGODB_URI is missing");
 
   if (mongoose.connection.readyState === 0) {
-    await mongoose.connect(uri);
+    await mongoose.connect(uri!, {
+      dbName: process.env.MONGODB_DB ?? "question-service",
+      serverSelectionTimeoutMS: 10000,
+    });
   }
 
   app.log.info("Mongo connected");
