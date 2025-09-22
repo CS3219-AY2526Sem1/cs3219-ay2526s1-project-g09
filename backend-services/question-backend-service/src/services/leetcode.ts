@@ -19,9 +19,8 @@ export async function listFirstN(n = 5) {
 }
 
 export async function getQuestionDetail(slug: string) {
-  const res = await gql<{ question: { title: string; content: string } | null }>(
-    QUERY_DETAIL,
-    { titleSlug: slug }
-  );
+  const res = await gql<{
+    question: { title: string; content: string } | null;
+  }>(QUERY_DETAIL, { titleSlug: slug });
   return res.question;
 }

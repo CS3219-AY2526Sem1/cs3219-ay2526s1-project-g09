@@ -1,16 +1,19 @@
 // Model for MongoDB
-import mongoose, { Schema, model, type Model, type InferSchemaType } from "mongoose";
+import mongoose, {
+  Schema,
+  model,
+  type Model,
+  type InferSchemaType,
+} from "mongoose";
 
 const QuestionSchema = new Schema(
   {
     slug: { type: String, required: true, unique: true, index: true },
     title: { type: String, required: true, index: true },
     // difficulty: { type: String, enum: ["Easy", "Medium", "Hard"], required: true },
-    content: { type: String, required: true }
+    content: { type: String, required: true },
   },
-  { collection: "leetcode-questions",
-    timestamps: true
-   }
+  { collection: "leetcode-questions", timestamps: true },
 );
 
 export type QuestionDoc = InferSchemaType<typeof QuestionSchema>;

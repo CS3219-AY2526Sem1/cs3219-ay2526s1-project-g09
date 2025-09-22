@@ -19,52 +19,60 @@ const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
   });
 
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
-  app.post("/leetcode/seed-first", {
-  // apply rate limit only to this route
-    config: {
-      rateLimit: {
-        max: 5,
-        timeWindow: "60s",
-        keyGenerator: (req) =>
-          (req.headers["x-real-ip"] as string) || req.ip,
-        errorResponseBuilder: (_req, context) => ({
-          ok: false,
-          code: "RATE_LIMITED",
-          message: "Too many requests, please slow down.",
-          retryAfterMs: context.after,
-          limit: context.max,
-        }),
-      },
-    },
-  }, async () => {
-    const list = await listFirstN(1);
-    const first = list.questions[0];
-    if (!first) {
-      return { ok: false, message: "No questions returned from LeetCode." };
-    }
-
-    const detail = await getQuestionDetail(first.titleSlug);
-    if (!detail) {
-      return { ok: false, message: "Could not fetch question detail." };
-    }
-
-    // Upsert by slug
-    const res = await Question.updateOne(
-      { slug: first.titleSlug },
-      {
-        $set: {
-          slug: first.titleSlug,
-          title: detail.title,
-          content: detail.content, // HTML string
+  app.post(
+    "/leetcode/seed-first",
+    {
+      // apply rate limit only to this route
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: "60s",
+          keyGenerator: (req) => (req.headers["x-real-ip"] as string) || req.ip,
+          errorResponseBuilder: (_req, context) => ({
+            ok: false,
+            code: "RATE_LIMITED",
+            message: "Too many requests, please slow down.",
+            retryAfterMs: context.after,
+            limit: context.max,
+          }),
         },
       },
-      { upsert: true }
-    );
+    },
+    async () => {
+      const list = await listFirstN(1);
+      const first = list.questions[0];
+      if (!first) {
+        return { ok: false, message: "No questions returned from LeetCode." };
+      }
 
-    // Fetch the saved doc to return it
-    const doc = await Question.findOne({ slug: first.titleSlug }).lean();
-    return { ok: true, upserted: res.upsertedCount > 0, modified: res.modifiedCount > 0, doc };
-  });
+      const detail = await getQuestionDetail(first.titleSlug);
+      if (!detail) {
+        return { ok: false, message: "Could not fetch question detail." };
+      }
+
+      // Upsert by slug
+      const res = await Question.updateOne(
+        { slug: first.titleSlug },
+        {
+          $set: {
+            slug: first.titleSlug,
+            title: detail.title,
+            content: detail.content, // HTML string
+          },
+        },
+        { upsert: true },
+      );
+
+      // Fetch the saved doc to return it
+      const doc = await Question.findOne({ slug: first.titleSlug }).lean();
+      return {
+        ok: true,
+        upserted: res.upsertedCount > 0,
+        modified: res.modifiedCount > 0,
+        doc,
+      };
+    },
+  );
 };
 
 export default leetcodeRoutes;

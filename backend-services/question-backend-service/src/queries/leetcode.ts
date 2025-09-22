@@ -2,16 +2,19 @@ import { fetch } from "undici";
 
 const ENDPOINT = "https://leetcode.com/graphql";
 const baseHeaders = {
-  "content-type": "application/json"
+  "content-type": "application/json",
 };
 
-export async function gql<T>(query: string, variables: Record<string, any>): Promise<T> {
+export async function gql<T>(
+  query: string,
+  variables: Record<string, any>,
+): Promise<T> {
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: baseHeaders,
-    body: JSON.stringify({ query, variables })
+    body: JSON.stringify({ query, variables }),
   });
-  const json = await res.json() as any;
+  const json = (await res.json()) as any;
   if (json.errors) {
     throw new Error(`LeetCode GraphQL errors: ${JSON.stringify(json.errors)}`);
   }
