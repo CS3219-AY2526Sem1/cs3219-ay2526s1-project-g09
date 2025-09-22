@@ -12,10 +12,6 @@
   },
   "scripts": {
     "format": "npx prettier --write .",
-    "format:check": "npx prettier --check .",
-    "lint:ui": "eslint --recursive 'ui-services/**/*.{ts,tsx}'",
-    "lint:backend": "eslint --recursive 'backend-services/**/*.{ts,tsx}'",
-    "lint:ui-shell": "eslint 'ui-shell/**/*.{ts,tsx}'",
-    "lint": "npm run lint:ui && npm run lint:backend && npm run lint:ui-shell"
+    "format:check": "npx prettier --check ."
   }
 }
