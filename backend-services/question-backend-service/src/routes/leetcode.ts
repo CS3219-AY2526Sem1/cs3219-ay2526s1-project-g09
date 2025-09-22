@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyPluginAsync } from "fastify";
+import type { FastifyInstance, FastifyPluginCallback } from "fastify";
 import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
 
@@ -6,7 +6,7 @@ import { Question } from "../models/question.js";
 const dbRateLimitStore: Map<string, { count: number; lastAccess: number }> =
   new Map();
 
-const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
+const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.get("/leetcode-test", async () => {
     const list = await listFirstN(5);
     const slugs = list.questions.map((q) => q.titleSlug);
