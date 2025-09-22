@@ -70,46 +70,54 @@ export async function handleVerifyToken(req, res) {
 }
 
 export async function generateAndSendOTP(req, res) {
-  const { email: dirtyEmail } = req.body;
+  try {
+    const { email: dirtyEmail } = req.body;
 
-  const email = checkEmail(dirtyEmail);
+    const email = checkEmail(dirtyEmail);
 
-  // Delete any existing OTP in DB
-  await _deleteOTPByEmail(email);
+    // Delete any existing OTP in DB
+    await _deleteOTPByEmail(email);
 
-  // Generate 6-digit OTP
-  const otp = otpGenerator.generate(6, {
-    upperCaseAlphabets: false,
-    specialChars: false,
-    lowerCaseAlphabets: false,
-  });
+    // Generate 6-digit OTP
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+      lowerCaseAlphabets: false,
+    });
 
-  // Save OTP in DB
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-  await _createOTPForEmail(email, otp, expiresAt);
+    // Save OTP in DB
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await _createOTPForEmail(email, otp, expiresAt);
 
-  // Send OTP
-  const subject = "Verify Your PeerPrep Email Address";
-  const body = "Your OTP is: " + otp;
-  await _sendEmail(email, subject, body);
+    // Send OTP
+    const subject = "Verify Your PeerPrep Email Address";
+    const body = "Your OTP is: " + otp;
+    await _sendEmail(email, subject, body);
 
-  res.json({ message: "OTP sent to your email" });
+    res.json({ message: "OTP sent to your email" });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 }
 
 export async function verifyOTP(req, res) {
-  const { email: dirtyEmail, otp: dirtyOtp } = req.body;
+  try {
+    const { email: dirtyEmail, otp: dirtyOtp } = req.body;
 
-  const email = checkEmail(dirtyEmail);
-  const otp = checkOTP(dirtyOtp);
+    const email = checkEmail(dirtyEmail);
+    const otp = checkOTP(dirtyOtp);
 
-  // Check if OTP matches
-  const otpRecord = await _findOTPByEmail(email);
-  if (!otpRecord || otpRecord.code !== otp) {
-    return res.status(400).json({ message: "Invalid or Expired OTP" });
+    // Check if OTP matches
+    const otpRecord = await _findOTPByEmail(email);
+    if (!otpRecord || otpRecord.code !== otp) {
+      return res.status(400).json({ message: "Invalid or Expired OTP" });
+    }
+
+    // Delete used OTP
+    await _deleteOTPByEmail(email);
+
+    res.json({ message: "Email verified successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
-
-  // Delete used OTP
-  await _deleteOTPByEmail(email);
-
-  res.json({ message: "Email verified successfully" });
 }
