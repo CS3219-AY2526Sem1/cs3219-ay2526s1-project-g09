@@ -44,6 +44,13 @@ Rate Limit: 100 requests/10 min
     }
     ```
 
+  - Note: Password should meet the following requirements:
+    - Password is 12 characters long
+    - Password should have at least 1 uppercase and 1 lowercase character
+    - Password should contain a number
+    - Password should contain a special character
+      - Special characters include: `!"#$%&'()*+,-./\:;<=>?@[]^_`{|}~`
+
 - Expected Response:
   ```json
   {

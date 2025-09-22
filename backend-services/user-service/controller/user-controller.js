@@ -47,7 +47,7 @@ const options = [
   },
 ];
 const strongestOption = options[options.length - 1];
-const owaspSymbols = "!\"#$%&'()*+,-./\\:;<=>?@[]^_`{|}~"; //Recommended allowed special characters in password by OWASP
+const owaspSymbols = "!\"#$%&'()*+,-./\\:;<=>?@[]^_`{|}~"; //Special characters in password (Specified by OWASP)
 
 export async function createUser(req, res) {
   try {
