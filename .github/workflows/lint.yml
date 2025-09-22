@@ -49,21 +49,24 @@ jobs:
           reviewdog_version: latest
 
       - name: Run ESLint and Reviewdog
-        id: lint
         run: |
           cd ${{ matrix.microservice.path }}
           eslint -f json . > eslint-report.json || echo "ESLint failed"
           cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
           if [ $? -ne 0 ]; then
             echo "lint-failed=true" >> $GITHUB_ENV
-            echo "::set-output name=lint-failed::true"  # Set step output for lint-failed
           else
             echo "lint-failed=false" >> $GITHUB_ENV
-            echo "::set-output name=lint-failed::false"  # Set step output for lint-failed
           fi
 
+      - name: Print Environment Variables
+        run: |
+          echo "Printing environment variables..."
+          echo "lint-failed=${{ env.lint-failed }}"
+          printenv  # This prints all environment variables available in the current step
+
       - name: Review Lint Check Status
-        if: ${{ steps.lint.outputs.lint-failed == 'true' }} # Access the output from the previous step
+        if: ${{ env.lint-failed == 'true' }}
         run: |
           echo "One or more microservices have failed linting."
           exit 1
