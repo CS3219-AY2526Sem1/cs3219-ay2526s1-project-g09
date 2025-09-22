@@ -5,26 +5,19 @@ const baseHeaders = {
   "content-type": "application/json",
 };
 
-export async function gql<T, V>(
+export async function gql<T>(
   query: string,
-  variables: Record<string, V>,
+  variables: Record<string, any>,
 ): Promise<T> {
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: baseHeaders,
     body: JSON.stringify({ query, variables }),
   });
-
-  // Type assertion to safely tell TypeScript that the response is of the expected type
-  const json = (await res.json()) as {
-    data?: T;
-    errors?: { message: string }[];
-  };
-
+  const json = (await res.json()) as any;
   if (json.errors) {
     throw new Error(`LeetCode GraphQL errors: ${JSON.stringify(json.errors)}`);
   }
-
   return json.data as T;
 }
 
