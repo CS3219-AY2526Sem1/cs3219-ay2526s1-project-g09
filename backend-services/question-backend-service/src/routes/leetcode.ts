@@ -4,7 +4,6 @@ import { Question } from "../models/question.js";
 import rateLimit from "@fastify/rate-limit"
 
 const leetcodeRoutes: FastifyPluginAsync = async (app) => {
-  await app.register(rateLimit, { global: false });
   app.get("/leetcode-test", async () => {
     const list = await listFirstN(5);
     const slugs = list.questions.map((q) => q.titleSlug);
@@ -21,17 +20,14 @@ const leetcodeRoutes: FastifyPluginAsync = async (app) => {
   });
 
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
-  app.post("/leetcode/seed-first", 
-  {
-    // per-route rate limits
+  app.post("/leetcode/seed-first", {
     config: {
       rateLimit: {
-        max: 3,              
-        timeWindow: "1 minute"
-      },
-    },
-  },
-  async () => {
+        max: 3,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async () => {
     const list = await listFirstN(1);
     const first = list.questions[0];
     if (!first) {
