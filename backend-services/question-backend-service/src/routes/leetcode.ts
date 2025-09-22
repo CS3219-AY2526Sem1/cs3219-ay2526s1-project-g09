@@ -3,6 +3,11 @@ import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
 
 const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
+  await app.register(import("@fastify/rate-limit"), {
+    global: false,
+    max: 1,
+    timeWindow: "1 minute",
+  });
   app.get("/leetcode-test", async () => {
     const list = await listFirstN(5);
     const slugs = list.questions.map((q) => q.titleSlug);
@@ -21,7 +26,7 @@ const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
   // Rate limit: stricter on POST
   const postRateLimit = {
     preHandler: app.rateLimit({
-      max: 20,
+      max: 3,
       timeWindow: 15 * 60 * 1000, // 15 min
     }),
   };
