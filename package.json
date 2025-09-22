@@ -1,9 +1,15 @@
 {
+  "workspaces": [
+    "ui-services/*",
+    "backend-services/*",
+    "ui-shell"
+  ],
   "devDependencies": {
     "prettier": "3.6.2"
   },
   "scripts": {
     "format": "npx prettier --write .",
-    "format:check": "npx prettier --check ."
+    "format:check": "npx prettier --check .",
+    "lint": "eslint 'services/**/*.{ts,tsx, js, jsx}' --ext .ts,.tsx,.js,.jsx"
   }
 }
