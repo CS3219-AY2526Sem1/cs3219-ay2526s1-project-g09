@@ -1,5 +1,5 @@
 # Use official Node.js runtime
-FROM node:18
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Expose the port
-EXPOSE 3001
+EXPOSE 5277
 
 # Command to run the app
 CMD ["npm", "start"]
