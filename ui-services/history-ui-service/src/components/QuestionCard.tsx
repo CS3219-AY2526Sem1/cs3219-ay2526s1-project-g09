@@ -6,7 +6,10 @@ interface QuestionPreviewCardProps {
   item: QuestionPreview;
 }
 
-const QuestionPreviewCard: React.FC<QuestionPreviewCardProps> = ({ index, item }) => {
+const QuestionPreviewCard: React.FC<QuestionPreviewCardProps> = ({
+  index,
+  item,
+}) => {
   return (
     <div key={index} className="flex items-center gap-4 w-full">
       <Card className="p-2 text-right font-bold text-gray-400 text-xl bg-gray-800 border border-gray-700">

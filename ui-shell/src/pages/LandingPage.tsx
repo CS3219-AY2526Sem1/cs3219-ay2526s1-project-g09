@@ -135,7 +135,7 @@ const FAQSection: React.FC = () => {
             {openIndex === index && (
               <p className="mt-2 text-gray-600">{faq.answer}</p>
             )}
-           </div>
+          </div>
         ))}
       </div>
     </section>

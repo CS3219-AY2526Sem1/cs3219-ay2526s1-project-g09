@@ -4,7 +4,7 @@ import LoginForm from "userUiService/LoginForm";
 const LoginPage: React.FC = () => {
   return (
     <AuthLayout>
-      <LoginForm/>
+      <LoginForm />
     </AuthLayout>
   );
 };

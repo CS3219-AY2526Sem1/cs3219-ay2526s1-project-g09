@@ -1,12 +1,11 @@
 import MatchingPage from "@/pages/MatchingUi";
 
 function App() {
-
   return (
     <>
-      <MatchingPage/>
+      <MatchingPage />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

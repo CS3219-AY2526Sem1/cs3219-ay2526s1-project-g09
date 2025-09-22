@@ -6,7 +6,10 @@ interface QuestionHistoryCardProps {
   item: Attempt;
 }
 
-const QuestionHistoryCard: React.FC<QuestionHistoryCardProps> = ({ index, item }) => {
+const QuestionHistoryCard: React.FC<QuestionHistoryCardProps> = ({
+  index,
+  item,
+}) => {
   return (
     <div key={index} className="flex items-center gap-4 w-full">
       <Card className="p-2 flex-1 text-gray-200 bg-gray-800 border border-gray-700">

@@ -27,9 +27,7 @@ const BlueBgLayout: React.FC<BlueBgLayoutProps> = ({ children, navHeader }) => {
       {navHeader}
 
       {/* Main Content with padding for the navbar */}
-      <main className="flex flex-col flex-1 relative z-10">
-        {children}
-      </main>
+      <main className="flex flex-col flex-1 relative z-10">{children}</main>
     </div>
   );
 };
