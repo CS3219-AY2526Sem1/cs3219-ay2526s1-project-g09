@@ -10,12 +10,7 @@ export async function buildServer() {
   
   // plugins
   await app.register(cors, { origin: "*" });
-  await app.register(rateLimit, 
-    { 
-      global: false, 
-      max: 3000 // default global max rate limit
-    }
-  );
+  await app.register(rateLimit, { global: false });
   await app.register(db);
 
   // routes
