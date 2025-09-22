@@ -43,5 +43,8 @@
 
     "moduleResolution": "bundler",
     "esModuleInterop": true
+  }, 
+  "eslint": {
+    "allowDefaultProject": true
   }
 }
