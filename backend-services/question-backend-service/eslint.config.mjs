@@ -4,6 +4,8 @@ import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
+const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended");
+
 export default defineConfig(
   [globalIgnores(["dist"])],
   eslint.configs.recommended,
@@ -16,4 +18,5 @@ export default defineConfig(
       },
     },
   },
+  eslintPluginPrettierRecommended,
 );
