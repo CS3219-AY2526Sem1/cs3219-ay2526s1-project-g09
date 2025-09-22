@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Layout from "@components/layout/BlueBgLayout";
 import QuestionAttemptTable from "historyUiService/QuestionAttemptTable";
 import QuestionDisplay from "questionUiService/QuestionDisplay";
