@@ -21,22 +21,22 @@ const leetcodeRoutes: FastifyPluginAsync = async (app) => {
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
   app.post("/leetcode/seed-first", {
   // apply rate limit only to this route
-  onRequest: [
-    app.rateLimit({
-      max: 5,      
-      timeWindow: "60s",
-      keyGenerator: (req) => (req.headers["x-real-ip"] as string) || req.ip,
+    onRequest: [
+      app.rateLimit({
+        max: 5,      
+        timeWindow: "60s",
+        keyGenerator: (req) => (req.headers["x-real-ip"] as string) || req.ip,
 
-      errorResponseBuilder: (request, context) => ({
-        ok: false,
-        code: "RATE_LIMITED",
-        message: "Too many requests, please slow down.",
-        retryAfterMs: context.after,  
-        limit: context.max,
+        errorResponseBuilder: (request, context) => ({
+          ok: false,
+          code: "RATE_LIMITED",
+          message: "Too many requests, please slow down.",
+          retryAfterMs: context.after,  
+          limit: context.max,
+        }),
+        // ban: 2,
       }),
-      // ban: 2,
-    }),
-  ],
+    ],
   }, async () => {
     const list = await listFirstN(1);
     const first = list.questions[0];
