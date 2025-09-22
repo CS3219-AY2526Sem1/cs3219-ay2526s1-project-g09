@@ -5,16 +5,37 @@ const baseHeaders = {
   "content-type": "application/json",
 };
 
-export async function gql<T>(
+interface GraphQLResponse<T> {
+  data: T;
+  errors?: { message: string }[];
+}
+
+// Type guard to check if the response is a valid GraphQLResponse
+function isGraphQLResponse<T>(
+  response: unknown,
+): response is GraphQLResponse<T> {
+  return (
+    typeof response === "object" && response !== null && "data" in response
+  );
+}
+
+export async function gql<T, Tvariables>(
   query: string,
-  variables: Record<string, any>,
+  variables: Tvariables,
 ): Promise<T> {
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: baseHeaders,
     body: JSON.stringify({ query, variables }),
   });
-  const json = (await res.json()) as any;
+
+  const json: unknown = await res.json();
+
+  // Type guard check
+  if (!isGraphQLResponse<T>(json)) {
+    throw new Error(`Invalid GraphQL response structure`);
+  }
+
   if (json.errors) {
     throw new Error(`LeetCode GraphQL errors: ${JSON.stringify(json.errors)}`);
   }
