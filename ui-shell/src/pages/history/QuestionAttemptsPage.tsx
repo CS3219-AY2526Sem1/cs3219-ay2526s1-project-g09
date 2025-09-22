@@ -12,7 +12,7 @@ const QuestionAttemptsPage: React.FC = () => {
         <div className="flex-1">
           <QuestionDisplay question={mockQuestions[0]} />
         </div>
-        
+
         {/* Right Column (QuestionAttemptTable) */}
         <div className="flex-2">
           <QuestionAttemptTable />

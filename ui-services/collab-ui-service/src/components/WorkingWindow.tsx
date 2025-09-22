@@ -7,7 +7,7 @@ import "tldraw/tldraw.css";
 const WorkingWindow: React.FC = () => {
   // State to hold the code content
   const [code, setCode] = useState<string>(
-    "// Start coding here!\nfunction twoSum(nums, target) {\n    \n}"
+    "// Start coding here!\nfunction twoSum(nums, target) {\n    \n}",
   );
 
   const handleEditorChange = (value: string | undefined) => {

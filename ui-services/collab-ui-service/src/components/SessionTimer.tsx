@@ -9,7 +9,7 @@ const SessionTimer: React.FC<SessionTimerProps> = ({
   initialTimeInSeconds = 310,
 }) => {
   const [time, setTime] = useState(initialTimeInSeconds);
-  
+
   // Calculate if time is less than 5 minutes (300 seconds)
   const isLowTime = time < 300;
 
@@ -33,7 +33,7 @@ const SessionTimer: React.FC<SessionTimerProps> = ({
     <Button
       className={`
         text-white
-        ${isLowTime ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-orange-700'}
+        ${isLowTime ? "bg-red-600 hover:bg-red-700" : "bg-gray-700 hover:bg-orange-700"}
       `}
     >
       {formatTime(time)}

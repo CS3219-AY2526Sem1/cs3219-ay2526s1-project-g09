@@ -7,7 +7,9 @@ interface QuestionPreferencesProps {
   onConfirm: () => void;
 }
 
-const QuestionPreferences: React.FC<QuestionPreferencesProps> = ({ onConfirm }) => {
+const QuestionPreferences: React.FC<QuestionPreferencesProps> = ({
+  onConfirm,
+}) => {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<
     "Easy" | "Medium" | "Hard"
@@ -27,7 +29,7 @@ const QuestionPreferences: React.FC<QuestionPreferencesProps> = ({ onConfirm }) 
 
   const handleTopicToggle = (topic: string) => {
     setSelectedTopics((prev) =>
-      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
+      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic],
     );
   };
 
@@ -97,7 +99,7 @@ const QuestionPreferences: React.FC<QuestionPreferencesProps> = ({ onConfirm }) 
                   }
                   onClick={() =>
                     setSelectedDifficulty(
-                      difficulty as "Easy" | "Medium" | "Hard"
+                      difficulty as "Easy" | "Medium" | "Hard",
                     )
                   }
                   className={`${

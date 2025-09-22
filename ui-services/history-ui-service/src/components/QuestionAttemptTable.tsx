@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import AttemptCard from "./AttemptCard";
-import { mockAttempts } from "@/data/mock-history-data"; 
+import { mockAttempts } from "@/data/mock-history-data";
 
 const itemsPerPage = 8;
 
@@ -30,8 +30,8 @@ const HistoryTable: React.FC = () => {
       {/* Header */}
       <div className="flex justify-end items-center mb-4 text-gray-400 text-sm">
         <span>
-          Showing {startIndex + 1} to{" "}
-          {Math.min(endIndex, mockAttempts.length)} of {mockAttempts.length}
+          Showing {startIndex + 1} to {Math.min(endIndex, mockAttempts.length)}{" "}
+          of {mockAttempts.length}
         </span>
         <Button
           onClick={handlePreviousPage}

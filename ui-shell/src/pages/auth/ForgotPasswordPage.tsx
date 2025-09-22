@@ -3,7 +3,7 @@ import ForgotPasswordForm from "userUiService/ForgotPasswordForm";
 const ForgotPasswordPage: React.FC = () => {
   return (
     <AuthLayout>
-      <ForgotPasswordForm/>
+      <ForgotPasswordForm />
     </AuthLayout>
   );
 };

@@ -1,11 +1,10 @@
-
 services:
   ui-shell:
     build:
       context: ./ui-shell
-      dockerfile: Dockerfile  
+      dockerfile: Dockerfile
     ports:
-      - "5173:5173"   
+      - "5173:5173"
     depends_on:
       - matching-ui
       - questions-ui
@@ -13,7 +12,7 @@ services:
       - user-ui
       - history-ui
     container_name: peerprep-ui-shell
-    
+
   matching-ui:
     build:
       context: ./ui-services/matching-ui-service

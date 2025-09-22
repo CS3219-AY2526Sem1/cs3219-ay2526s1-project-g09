@@ -4,7 +4,7 @@ import NavHeader from "@components/common/NavHeader";
 
 // Lazy load the remote MFE
 const RemoteMatchingUi = React.lazy(
-  () => import("matchingUiService/MatchingUi")
+  () => import("matchingUiService/MatchingUi"),
 );
 
 const FallbackUi: React.FC = () => (

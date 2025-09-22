@@ -6,7 +6,10 @@ interface MatchingSearchProps {
   onCancel: () => void;
 }
 
-const MatchingSearch: React.FC<MatchingSearchProps> = ({ onMatchFound, onCancel }) => {
+const MatchingSearch: React.FC<MatchingSearchProps> = ({
+  onMatchFound,
+  onCancel,
+}) => {
   const [timeLeft, setTimeLeft] = useState<number>(2); // 2-second timer
 
   useEffect(() => {

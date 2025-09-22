@@ -1,21 +1,21 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom"
-import LandingPage from "@pages/LandingPage"
+import { Routes, Route } from "react-router-dom";
+import LandingPage from "@pages/LandingPage";
 
-import LoginPage from "@pages/auth/LoginPage"
-import ForgotPasswordPage from "@pages/auth/ForgotPasswordPage"
-import SignUpPage from "@pages/auth/SignUpPage"
-import OtpPage from "@pages/auth/OtpPage"
-import SetDisplayNamePage from "@pages/auth/SetDisplayNamePage"
+import LoginPage from "@pages/auth/LoginPage";
+import ForgotPasswordPage from "@pages/auth/ForgotPasswordPage";
+import SignUpPage from "@pages/auth/SignUpPage";
+import OtpPage from "@pages/auth/OtpPage";
+import SetDisplayNamePage from "@pages/auth/SetDisplayNamePage";
 
-import UserProfilePage from "@pages/auth/UserProfilePage"
+import UserProfilePage from "@pages/auth/UserProfilePage";
 import MatchingPage from "@/pages/matching/MatchingPage";
 
-import SessionPage from "@pages/collab/SessionPage"
+import SessionPage from "@pages/collab/SessionPage";
 
-import HistoryPage from "@pages/history/HistoryPage" 
-import QuestionAttemptsPage from "@pages/history/QuestionAttemptsPage" 
-import AttemptPage from "@pages/history/AttemptPage" 
+import HistoryPage from "@pages/history/HistoryPage";
+import QuestionAttemptsPage from "@pages/history/QuestionAttemptsPage";
+import AttemptPage from "@pages/history/AttemptPage";
 
 export default function App() {
   return (
@@ -33,5 +33,5 @@ export default function App() {
       <Route path="/attempt" element={<AttemptPage />} />
       <Route path="/settings" element={<UserProfilePage />} />
     </Routes>
-  )
+  );
 }

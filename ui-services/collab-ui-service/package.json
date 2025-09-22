@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --port 5176 --strictPort",
     "build": "tsc -b && vite build",
+    "format": "npx prettier --write .",
+    "format:check": "npx prettier --check .",
     "lint": "eslint .",
     "preview": "vite preview --port 5176 --strictPort",
     "serve": "vite preview --port 5176 --strictPort"
