@@ -4,7 +4,7 @@ Fastify (TypeScript, ESM) service that:
 
 - Pings LeetCode’s GraphQL API to fetch problems and details
 - Seeds the all problem into MongoDB Atlas (Currently WIP)
-- Exposes simple health and query endpoints
+- Exposes simple query endpoints
 
 ## Tech
 
@@ -78,18 +78,12 @@ src/
     leetcode.ts       # QUERY_LIST, QUERY_DETAIL
 
   routes/
-    health.ts         # GET /api/v1/healthz
     leetcode.ts       # GET /leetcode-test, POST /leetcode/seed-first
 ```
 
 ## API
 
 Base URL: `http://localhost:5275/api/v1`
-
-### Health
-
-**GET** `/healthz`  
-Returns `{ ok: true, service: "question-backend-service" }`
 
 ### LeetCode Test for manual testing of Graph QL endpoint
 

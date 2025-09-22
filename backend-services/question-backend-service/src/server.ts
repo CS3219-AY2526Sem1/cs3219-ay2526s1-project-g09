@@ -1,6 +1,5 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import healthRoutes from "./routes/health.js";
 import leetcodeRoutes from "./routes/leetcode.js";
 import db from "./plugins/db.js";
 
@@ -17,7 +16,6 @@ export async function buildServer() {
   });
 
   // routes
-  await app.register(healthRoutes, { prefix: "/api/v1" });
   await app.register(leetcodeRoutes, { prefix: "/api/v1" });
 
   return app;
