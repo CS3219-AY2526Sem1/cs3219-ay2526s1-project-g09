@@ -18,9 +18,16 @@ const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
     };
   });
 
-  const preHandler = app.rateLimit();
+  // Rate limit: stricter on POST
+  const postRateLimit = {
+    preHandler: app.rateLimit({
+      max: 20,
+      timeWindow: 15 * 60 * 1000, // 15 min
+    }),
+  };
+
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
-  app.post("/leetcode/seed-first", { preHandler }, async () => {
+  app.post("/leetcode/seed-first", postRateLimit, async () => {
     const list = await listFirstN(1);
     const first = list.questions[0];
     if (!first) {
