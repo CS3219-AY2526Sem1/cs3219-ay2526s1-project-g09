@@ -51,7 +51,7 @@ jobs:
       - name: Run ESLint and Reviewdog
         run: |
           cd ${{ matrix.microservice.path }}
-          eslint -f json . > eslint-report.json || echo "ESLint failed"
+          npx eslint -f json . --format json . > eslint-report.json || echo "ESLint failed"
           cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
           if [ $? -ne 0 ]; then
             echo "lint-failed=true" >> $GITHUB_ENV
