@@ -4,6 +4,8 @@ import { Question } from "../models/question.js";
 import rateLimit from "@fastify/rate-limit"
 
 const leetcodeRoutes: FastifyPluginAsync = async (app) => {
+  // Register rate-limiting plugin so per-route rateLimits are enabled
+  await app.register(rateLimit);
   app.get("/leetcode-test", async () => {
     const list = await listFirstN(5);
     const slugs = list.questions.map((q) => q.titleSlug);
