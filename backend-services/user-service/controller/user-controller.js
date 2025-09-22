@@ -11,7 +11,13 @@ import {
   updateUserById as _updateUserById,
   updateUserPrivilegeById as _updateUserPrivilegeById,
 } from "../model/repository.js";
-import { passwordStrength } from 'check-password-strength'
+import { passwordStrength } from "check-password-strength";
+import {
+  checkUsername,
+  checkEmail,
+  checkPassword,
+} from "../utils/repository-security.js";
+import { ValidationError } from "../utils/errors.js";
 
 //password strength check variables
 const options = [
@@ -19,57 +25,68 @@ const options = [
     id: 0,
     value: "Too weak",
     minDiversity: 0,
-    minLength: 0
+    minLength: 0,
   },
   {
     id: 1,
     value: "Weak",
     minDiversity: 2,
-    minLength: 8
+    minLength: 8,
   },
   {
     id: 2,
     value: "Medium",
     minDiversity: 4,
-    minLength: 10
+    minLength: 10,
   },
   {
     id: 3,
     value: "Strong",
     minDiversity: 4,
-    minLength: 12
-  }
-]
+    minLength: 12,
+  },
+];
 const strongestOption = options[options.length - 1];
 const owaspSymbols = "!\"#$%&'()*+,-./\\:;<=>?@[]^_`{|}~"; //Recommended allowed special characters in password by OWASP
 
-
 export async function createUser(req, res) {
   try {
-    const { username, email, password } = req.body;
-    if (username && email && password) {
-      const existingUser = await _findUserByUsernameOrEmail(username, email);
-      if (existingUser) {
-        return res.status(409).json({ message: "username or email already exists" });
-      }
-      const passwordStrength = evalPasswordStrength(password);
-      if (passwordStrength != strongestOption.value) {
-        return res.status(400).json({ message: "password is not strong enough"});
-      }
-
-      const salt = bcrypt.genSaltSync(10);
-      const hashedPassword = bcrypt.hashSync(password, salt);
-      const createdUser = await _createUser(username, email, hashedPassword);
-      return res.status(201).json({
-        message: `Created new user ${username} successfully`,
-        data: formatUserResponse(createdUser),
-      });
-    } else {
-      return res.status(400).json({ message: "username and/or email and/or password are missing" });
+    const {
+      username: dirtyUsername,
+      email: dirtyEmail,
+      password: dirtyPassword,
+    } = req.body;
+    if (!dirtyUsername && !dirtyEmail && !dirtyPassword) {
+      return res
+        .status(400)
+        .json({ message: "username and/or email and/or password are missing" });
     }
+    const username = checkUsername(dirtyUsername);
+    const email = checkEmail(dirtyEmail);
+    const password = checkPassword(dirtyPassword);
+    const existingUser = await _findUserByUsernameOrEmail(username, email);
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ message: "username or email already exists" });
+    }
+    const passwordStrength = evalPasswordStrength(password);
+    if (passwordStrength != strongestOption.value) {
+      return res.status(400).json({ message: "password is not strong enough" });
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+    const createdUser = await _createUser(username, email, hashedPassword);
+    return res.status(201).json({
+      message: `Created new user ${username} successfully`,
+      data: formatUserResponse(createdUser),
+    });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Unknown error when creating new user!" });
+    return res
+      .status(500)
+      .json({ message: "Unknown error when creating new user!" });
   }
 }
 
@@ -84,11 +101,15 @@ export async function getUser(req, res) {
     if (!user) {
       return res.status(404).json({ message: `User ${userId} not found` });
     } else {
-      return res.status(200).json({ message: `Found user`, data: formatUserResponse(user) });
+      return res
+        .status(200)
+        .json({ message: `Found user`, data: formatUserResponse(user) });
     }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Unknown error when getting user!" });
+    return res
+      .status(500)
+      .json({ message: "Unknown error when getting user!" });
   }
 }
 
@@ -96,22 +117,33 @@ export async function getAllUsers(req, res) {
   try {
     const users = await _findAllUsers();
 
-    return res.status(200).json({ message: `Found users`, data: users.map(formatUserResponse) });
+    return res
+      .status(200)
+      .json({ message: `Found users`, data: users.map(formatUserResponse) });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Unknown error when getting all users!" });
+    return res
+      .status(500)
+      .json({ message: "Unknown error when getting all users!" });
   }
 }
 
 export async function updateUser(req, res) {
   try {
-    const { username, email, password } = req.body;
-    if (!username && !email && !password) {
-      return res.status(400).json({ message: "No field to update: username and email and password are all missing!" });
+    const {
+      username: dirtyUsername,
+      email: dirtyEmail,
+      password: dirtyPassword,
+    } = req.body;
+    if (!dirtyUsername && !dirtyEmail && !dirtyPassword) {
+      return res.status(400).json({
+        message:
+          "No field to update: username and email and password are all missing!",
+      });
     }
-    username = checkUsername(username);
-    email = checkEmail(email);
-    password = checkPassword(password);
+    const username = checkUsername(dirtyUsername);
+    const email = checkEmail(dirtyEmail);
+    const password = checkPassword(dirtyPassword);
     const userId = req.params.id;
     if (!isValidObjectId(userId)) {
       return res.status(404).json({ message: `User ${userId} not found` });
@@ -133,12 +165,19 @@ export async function updateUser(req, res) {
     if (password) {
       const passwordStrength = evalPasswordStrength(password);
       if (passwordStrength != strongestOption.value) {
-        return res.status(400).json({ message: "password is not strong enough"});
+        return res
+          .status(400)
+          .json({ message: "password is not strong enough" });
       }
       const salt = bcrypt.genSaltSync(10);
       hashedPassword = bcrypt.hashSync(password, salt);
     }
-    const updatedUser = await _updateUserById(userId, username, email, hashedPassword);
+    const updatedUser = await _updateUserById(
+      userId,
+      username,
+      email,
+      hashedPassword
+    );
     return res.status(200).json({
       message: `Updated data for user ${userId}`,
       data: formatUserResponse(updatedUser),
@@ -148,7 +187,9 @@ export async function updateUser(req, res) {
       return res.status(400).json({ message: err.message });
     }
     console.error(err);
-    return res.status(500).json({ message: "Unknown error when updating user!" });
+    return res
+      .status(500)
+      .json({ message: "Unknown error when updating user!" });
   }
 }
 
@@ -156,7 +197,8 @@ export async function updateUserPrivilege(req, res) {
   try {
     const { isAdmin } = req.body;
 
-    if (isAdmin !== undefined) {  // isAdmin can have boolean value true or false
+    if (isAdmin !== undefined) {
+      // isAdmin can have boolean value true or false
       const userId = req.params.id;
       if (!isValidObjectId(userId)) {
         return res.status(404).json({ message: `User ${userId} not found` });
@@ -166,7 +208,10 @@ export async function updateUserPrivilege(req, res) {
         return res.status(404).json({ message: `User ${userId} not found` });
       }
 
-      const updatedUser = await _updateUserPrivilegeById(userId, isAdmin === true);
+      const updatedUser = await _updateUserPrivilegeById(
+        userId,
+        isAdmin === true
+      );
       return res.status(200).json({
         message: `Updated privilege for user ${userId}`,
         data: formatUserResponse(updatedUser),
@@ -176,7 +221,9 @@ export async function updateUserPrivilege(req, res) {
     }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Unknown error when updating user privilege!" });
+    return res
+      .status(500)
+      .json({ message: "Unknown error when updating user privilege!" });
   }
 }
 
@@ -192,10 +239,14 @@ export async function deleteUser(req, res) {
     }
 
     await _deleteUserById(userId);
-    return res.status(200).json({ message: `Deleted user ${userId} successfully` });
+    return res
+      .status(200)
+      .json({ message: `Deleted user ${userId} successfully` });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Unknown error when deleting user!" });
+    return res
+      .status(500)
+      .json({ message: "Unknown error when deleting user!" });
   }
 }
 

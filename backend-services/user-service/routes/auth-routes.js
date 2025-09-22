@@ -1,6 +1,11 @@
 import express from "express";
 
-import { handleLogin, handleVerifyToken, generateAndSendOTP, verifyOTP } from "../controller/auth-controller.js";
+import {
+  handleLogin,
+  handleVerifyToken,
+  generateAndSendOTP,
+  verifyOTP,
+} from "../controller/auth-controller.js";
 import { verifyAccessToken } from "../middleware/basic-access-control.js";
 import { rateLimiter } from "../middleware/rate-limiter.js";
 

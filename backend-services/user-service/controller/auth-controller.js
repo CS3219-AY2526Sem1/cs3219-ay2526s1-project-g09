@@ -5,21 +5,25 @@ import {
   findUserByEmail as _findUserByEmail,
   findOTPByEmail as _findOTPByEmail,
   deleteOTPByEmail as _deleteOTPByEmail,
-  createOTPForEmail as _createOTPForEmail
+  createOTPForEmail as _createOTPForEmail,
 } from "../model/repository.js";
 import { formatUserResponse } from "./user-controller.js";
 import { sendEmail as _sendEmail } from "../utils/email-sender.js";
-import { checkEmail, checkPassword } from "../utils/repository-security.js"
+import {
+  checkEmail,
+  checkPassword,
+  checkOTP,
+} from "../utils/repository-security.js";
 import { ValidationError } from "../utils/errors.js";
 
 export async function handleLogin(req, res) {
-  const { email, password } = req.body;
+  const { email: dirtyEmail, password: dirtyPassword } = req.body;
   try {
-    if (!email || !password) {
+    if (!dirtyEmail || !dirtyPassword) {
       return res.status(400).json({ message: "Missing email and/or password" });
     }
-    email = checkEmail(email);
-    password = checkPassword(password);
+    const email = checkEmail(dirtyEmail);
+    const password = checkPassword(dirtyPassword);
 
     const user = await _findUserByEmail(email);
     if (!user) {
@@ -31,16 +35,25 @@ export async function handleLogin(req, res) {
       return res.status(401).json({ message: "Wrong email and/or password" });
     }
 
-    const accessToken = jwt.sign({
-      id: user.id,
-    }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+    const accessToken = jwt.sign(
+      {
+        id: user.id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
+    return res.status(200).json({
+      message: "User logged in",
+      data: { accessToken, ...formatUserResponse(user) },
     });
-    return res.status(200).json({ message: "User logged in", data: { accessToken, ...formatUserResponse(user) } });
   } catch (err) {
     if (err instanceof ValidationError) {
+      console.log(err);
       return res.status(400).json({ message: err.message });
     }
+    console.log(err);
     return res.status(500).json({ message: err.message });
   }
 }
@@ -48,22 +61,28 @@ export async function handleLogin(req, res) {
 export async function handleVerifyToken(req, res) {
   try {
     const verifiedUser = req.user;
-    return res.status(200).json({ message: "Token verified", data: verifiedUser });
+    return res
+      .status(200)
+      .json({ message: "Token verified", data: verifiedUser });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 }
 
 export async function generateAndSendOTP(req, res) {
-  const { email } = req.body;
+  const { email: dirtyEmail } = req.body;
 
-  email = checkEmail(email);
+  const email = checkEmail(dirtyEmail);
 
   // Delete any existing OTP in DB
   await _deleteOTPByEmail(email);
 
   // Generate 6-digit OTP
-  const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false });
+  const otp = otpGenerator.generate(6, {
+    upperCaseAlphabets: false,
+    specialChars: false,
+    lowerCaseAlphabets: false,
+  });
 
   // Save OTP in DB
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
@@ -78,14 +97,14 @@ export async function generateAndSendOTP(req, res) {
 }
 
 export async function verifyOTP(req, res) {
-  const { email, code } = req.body;
+  const { email: dirtyEmail, otp: dirtyOtp } = req.body;
 
-  email = checkEmail(email);
-  code = checkOTP(code);
+  const email = checkEmail(dirtyEmail);
+  const otp = checkOTP(dirtyOtp);
 
   // Check if OTP matches
   const otpRecord = await _findOTPByEmail(email);
-  if (!otpRecord || otpRecord.code != code) {
+  if (!otpRecord || otpRecord.code != otp) {
     return res.status(400).json({ message: "Invalid or Expired OTP" });
   }
 
