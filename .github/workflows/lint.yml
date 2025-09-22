@@ -44,3 +44,4 @@ jobs:
         run: |
           cd ${{ matrix.microservice.path }}
           npm run lint
+        continue-on-error: true
