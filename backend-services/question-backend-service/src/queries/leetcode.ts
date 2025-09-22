@@ -39,7 +39,7 @@ export async function gql<T, Tvariables>(
   if (json.errors) {
     throw new Error(`LeetCode GraphQL errors: ${JSON.stringify(json.errors)}`);
   }
-  return json.data as T;
+  return json.data;
 }
 
 export const QUERY_LIST = `
