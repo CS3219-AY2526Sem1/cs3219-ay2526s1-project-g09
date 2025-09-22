@@ -1,6 +1,7 @@
 import fp from "fastify-plugin";
 import mongoose from "mongoose";
 import type { FastifyInstance } from "fastify";
+import { ConnectionStates } from "mongoose";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -12,7 +13,7 @@ export default fp(async (app: FastifyInstance) => {
   const uri = process.env.MONGODB_URI;
   if (!uri) throw new Error("MONGODB_URI is missing");
 
-  if (mongoose.connection.readyState === 0) {
+  if (mongoose.connection.readyState === ConnectionStates.disconnected) {
     await mongoose.connect(uri, {
       dbName: "question-service",
       serverSelectionTimeoutMS: 10000,
