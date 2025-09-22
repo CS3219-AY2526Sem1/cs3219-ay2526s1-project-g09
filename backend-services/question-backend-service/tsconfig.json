@@ -42,7 +42,9 @@
     "skipLibCheck": true,
 
     "moduleResolution": "bundler",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+
+    "allowJs": true
   }, 
   "eslint": {
     "allowDefaultProject": true
