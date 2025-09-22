@@ -40,14 +40,27 @@ jobs:
           cd ${{ matrix.microservice.path }}
           npm install --frozen-lockfile
 
+      - name: Set up Reviewdog
+        uses: reviewdog/action-setup@d8edfce3dd5e1ec6978745e801f9c50b5ef80252
+        with:
+          reviewdog_version: latest
+
       - name: Run ESLint
         run: |
           cd ${{ matrix.microservice.path }}
-          npm run lint
+          npm run lint | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
         continue-on-error: true
 
+      - name: Collect Lint Status
+        id: lint-status
+        run: |
+          echo "lint-failed=false" >> $GITHUB_ENV
+          if [ $? -ne 0 ]; then
+            echo "lint-failed=true" >> $GITHUB_ENV
+          fi
+
       - name: Review Lint Check Status
-        if: ${{ failure() }}
+        if: ${{ env.lint-failed == 'true' }}
         run: |
           echo "One or more microservices have failed linting."
           exit 1
