@@ -14,7 +14,7 @@ export default fp(async (app: FastifyInstance) => {
 
   if (mongoose.connection.readyState === 0) {
     await mongoose.connect(uri!, {
-      dbName: process.env.MONGODB_DB ?? "question-service",
+      dbName: "question-service",
       serverSelectionTimeoutMS: 10000,
     });
   }

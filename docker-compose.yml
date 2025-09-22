@@ -56,9 +56,7 @@ services:
       context: ./backend-services/question-backend-service
       dockerfile: Dockerfile
     environment:
-      - PORT=${PORT}
       - MONGODB_URI=${MONGODB_URI}
-      - MONGODB_DB=${MONGODB_DB}
     ports:
       - "5275:5275"
     container_name: peerprep-question-backend
