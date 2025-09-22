@@ -52,10 +52,8 @@ jobs:
         run: |
           cd ${{ matrix.microservice.path }}
 
-          npx eslint . 
-          eslint_exit_code=$?  # Capture the exit code of ESLint
+          npx eslint . || eslint_exit_code=$?
 
-          # If ESLint failed, set lint-failed=true immediately
           if [ $eslint_exit_code -ne 0 ]; then
             echo "lint-failed=true" >> $GITHUB_ENV
             echo "ESLint failed"  # Optional: For debugging purposes
@@ -65,7 +63,6 @@ jobs:
 
           npx eslint --format json . > eslint-report.json
           cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
-        continue-on-error: true
 
       - name: Print Environment Variables
         run: |
