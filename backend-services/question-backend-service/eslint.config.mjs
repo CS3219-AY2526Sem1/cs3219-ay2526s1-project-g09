@@ -3,8 +3,7 @@
 import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
-
-const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended");
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default defineConfig(
   [globalIgnores(["dist"])],
@@ -18,5 +17,5 @@ export default defineConfig(
       },
     },
   },
-  eslintPluginPrettierRecommended,
+  eslintConfigPrettier,
 );
