@@ -60,9 +60,7 @@ jobs:
             echo "lint-failed=true" >> $GITHUB_ENV
             echo "ESLint failed"  # Optional: For debugging purposes
           else
-            # Run Reviewdog to process ESLint output
-            cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
-            reviewdog_exit_code=$?  # Capture the exit code of Reviewdog
+            echo "lint-failed=true" >> $GITHUB_ENV
           fi
 
           npx eslint --format json . > eslint-report.json
