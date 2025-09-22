@@ -1,8 +1,8 @@
-import type { FastifyPluginAsync } from "fastify";
+import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
 
-const leetcodeRoutes: FastifyPluginAsync = async (app) => {
+const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
   app.get("/leetcode-test", async () => {
     const list = await listFirstN(5);
     const slugs = list.questions.map((q) => q.titleSlug);
@@ -27,12 +27,12 @@ const leetcodeRoutes: FastifyPluginAsync = async (app) => {
         timeWindow: "60s",
         keyGenerator: (req) =>
           (req.headers["x-real-ip"] as string) || req.ip,
-        errorResponseBuilder: (_req, ctx) => ({
+        errorResponseBuilder: (_req, context) => ({
           ok: false,
           code: "RATE_LIMITED",
           message: "Too many requests, please slow down.",
-          retryAfterMs: ctx.after,
-          limit: ctx.max,
+          retryAfterMs: context.after,
+          limit: context.max,
         }),
       },
     },
