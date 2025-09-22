@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
+import rateLimit from "@fastify/rate-limit"
 
 const leetcodeRoutes: FastifyPluginAsync = async (app) => {
   app.get("/leetcode-test", async () => {
@@ -18,6 +19,7 @@ const leetcodeRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
+  await app.register(rateLimit);
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
   app.post("/leetcode/seed-first", {
   // apply rate limit only to this route
