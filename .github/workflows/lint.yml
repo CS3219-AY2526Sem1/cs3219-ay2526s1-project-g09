@@ -1,0 +1,46 @@
+name: Lint Microservices
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        microservice:
+          # Add one entry per microservice
+          - name: matching-ui
+            context: ./ui-services/matching-ui-service
+          - name: questions-ui
+            context: ./ui-services/question-ui-service
+          - name: collab-ui
+            context: ./ui-services/collab-ui-service
+          - name: user-ui
+            context: ./ui-services/user-ui-service
+          - name: history-ui
+            context: ./ui-services/history-ui-service
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ${{ matrix.microservice.context }}
+          npm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: |
+          cd ${{ matrix.microservice.context }}
+          npm run lint
