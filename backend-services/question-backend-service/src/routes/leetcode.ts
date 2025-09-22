@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
-import rateLimit from "@fastify/rate-limit"
 
 const leetcodeRoutes: FastifyPluginAsync = async (app) => {
   app.get("/leetcode-test", async () => {
@@ -19,26 +18,24 @@ const leetcodeRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
-  await app.register(rateLimit);
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
   app.post("/leetcode/seed-first", {
   // apply rate limit only to this route
-    onRequest: [
-      app.rateLimit({
-        max: 5,      
+    config: {
+      rateLimit: {
+        max: 5,
         timeWindow: "60s",
-        keyGenerator: (req) => (req.headers["x-real-ip"] as string) || req.ip,
-
-        errorResponseBuilder: (request, context) => ({
+        keyGenerator: (req) =>
+          (req.headers["x-real-ip"] as string) || req.ip,
+        errorResponseBuilder: (_req, ctx) => ({
           ok: false,
           code: "RATE_LIMITED",
           message: "Too many requests, please slow down.",
-          retryAfterMs: context.after,  
-          limit: context.max,
+          retryAfterMs: ctx.after,
+          limit: ctx.max,
         }),
-        // ban: 2,
-      }),
-    ],
+      },
+    },
   }, async () => {
     const list = await listFirstN(1);
     const first = list.questions[0];
