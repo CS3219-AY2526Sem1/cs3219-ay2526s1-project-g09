@@ -1,15 +1,15 @@
-name: Formatting and Linting Checks
+name: Format & Lint Microservices
 
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
       - "**"
 
 jobs:
-  prettier:
+  format-check-all:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,3 +26,173 @@ jobs:
 
       - name: Run Prettier Checks
         run: npm run format:check
+
+  matching-ui-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./ui-services/matching-ui-service
+          npm install --frozen-lockfile
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./ui-services/matching-ui-service
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for matching-ui"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  questions-ui-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./ui-services/question-ui-service
+          npm install --frozen-lockfile
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./ui-services/question-ui-service
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for questions-ui"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  collab-ui-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./ui-services/collab-ui-service
+          npm install --frozen-lockfile
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./ui-services/collab-ui-service
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for collab-ui"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  user-ui-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./ui-services/user-ui-service
+          npm install --frozen-lockfile
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./ui-services/user-ui-service
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for questions-ui"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  history-ui-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./ui-services/history-ui-service
+          npm install --frozen-lockfile
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./ui-services/history-ui-service
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for collab-ui"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
