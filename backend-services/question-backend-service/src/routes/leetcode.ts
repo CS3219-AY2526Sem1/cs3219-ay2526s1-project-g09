@@ -2,12 +2,11 @@ import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
 
+// In-memory store for rate limiting (can be replaced with Redis)
+const dbRateLimitStore: Map<string, { count: number; lastAccess: number }> =
+  new Map();
+
 const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
-  await app.register(import("@fastify/rate-limit"), {
-    global: false,
-    max: 1,
-    timeWindow: "1 minute",
-  });
   app.get("/leetcode-test", async () => {
     const list = await listFirstN(5);
     const slugs = list.questions.map((q) => q.titleSlug);
@@ -23,16 +22,39 @@ const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
     };
   });
 
-  // Rate limit: stricter on POST
-  const postRateLimit = {
-    preHandler: app.rateLimit({
-      max: 3,
-      timeWindow: 15 * 60 * 1000, // 15 min
-    }),
-  };
+  await app.register(import("@fastify/rate-limit"), {
+    global: false,
+    max: 5,
+    timeWindow: "1 minute",
+  });
 
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
-  app.post("/leetcode/seed-first", postRateLimit, async () => {
+  app.post("/leetcode/seed-first", async (request, reply) => {
+    const ip = request.ip; // Rate limit by IP address
+
+    // Implement database-specific rate limiting
+    const currentTime = Date.now();
+    const rateLimitWindow = 60 * 1000; // 1 minute
+    const rateLimitMax = 10;
+
+    if (dbRateLimitStore.has(ip)) {
+      const data = dbRateLimitStore.get(ip)!;
+      if (currentTime - data.lastAccess < rateLimitWindow) {
+        if (data.count >= rateLimitMax) {
+          return reply.status(429).send({
+            ok: false,
+            message:
+              "Database access rate limit exceeded. Please try again later.",
+          });
+        }
+        data.count += 1;
+      } else {
+        dbRateLimitStore.set(ip, { count: 1, lastAccess: currentTime });
+      }
+    } else {
+      dbRateLimitStore.set(ip, { count: 1, lastAccess: currentTime });
+    }
+
     const list = await listFirstN(1);
     const first = list.questions[0];
     if (!first) {
