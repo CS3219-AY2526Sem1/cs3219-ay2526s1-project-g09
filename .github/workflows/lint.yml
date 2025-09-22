@@ -26,6 +26,9 @@ jobs:
           - name: history-ui
             path: ./ui-services/history-ui-service
     steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}" >> $GITHUB_ENV
+
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -45,18 +48,15 @@ jobs:
         with:
           reviewdog_version: latest
 
-      - name: Run ESLint
+      - name: Run ESLint and Reviewdog
         run: |
           cd ${{ matrix.microservice.path }}
-          npm run lint | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
-        continue-on-error: true
-
-      - name: Collect Lint Status
-        id: lint-status
-        run: |
-          echo "lint-failed=false" >> $GITHUB_ENV
+          eslint -f json . > eslint-report.json || echo "ESLint failed"
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
           if [ $? -ne 0 ]; then
             echo "lint-failed=true" >> $GITHUB_ENV
+          else
+            echo "lint-failed=false" >> $GITHUB_ENV
           fi
 
       - name: Review Lint Check Status
@@ -64,3 +64,6 @@ jobs:
         run: |
           echo "One or more microservices have failed linting."
           exit 1
+
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}" >> $GITHUB_ENV
