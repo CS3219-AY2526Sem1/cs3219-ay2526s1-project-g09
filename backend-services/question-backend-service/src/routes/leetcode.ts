@@ -22,19 +22,20 @@ const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
     };
   });
 
-  await app.register(import("@fastify/rate-limit"), {
-    global: false,
-    max: 5,
-    timeWindow: "1 minute",
-  });
+  const postRateLimit = {
+    preHandler: app.rateLimit({
+      max: 3,
+      timeWindow: 60 * 1000, // 15 min
+    }),
+  };
 
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
-  app.post("/leetcode/seed-first", async (request, reply) => {
+  app.post("/leetcode/seed-first", postRateLimit, async (request, reply) => {
     const ip = request.ip; // Rate limit by IP address
 
     // Implement database-specific rate limiting
     const currentTime = Date.now();
-    const rateLimitWindow = 60 * 1000; // 1 minute
+    const rateLimitWindow = 15 * 60 * 1000; // 15 minute
     const rateLimitMax = 10;
 
     if (dbRateLimitStore.has(ip)) {

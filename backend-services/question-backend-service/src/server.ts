@@ -10,6 +10,11 @@ export async function buildServer() {
   // plugins
   await app.register(cors, { origin: "*" });
   await app.register(db);
+  await app.register(import("@fastify/rate-limit"), {
+    global: false,
+    max: 5,
+    timeWindow: "1 minute",
+  });
 
   // routes
   await app.register(healthRoutes, { prefix: "/api/v1" });
