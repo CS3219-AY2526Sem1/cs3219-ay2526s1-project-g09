@@ -25,7 +25,7 @@ const leetcodeRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
   const postRateLimit = {
     preHandler: app.rateLimit({
       max: 3,
-      timeWindow: 60 * 1000, // 15 min
+      timeWindow: 15 * 60 * 1000, // 15 min
     }),
   };
 
