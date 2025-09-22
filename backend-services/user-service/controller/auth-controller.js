@@ -104,7 +104,7 @@ export async function verifyOTP(req, res) {
 
   // Check if OTP matches
   const otpRecord = await _findOTPByEmail(email);
-  if (!otpRecord || otpRecord.code != otp) {
+  if (!otpRecord || otpRecord.code !== otp) {
     return res.status(400).json({ message: "Invalid or Expired OTP" });
   }
 

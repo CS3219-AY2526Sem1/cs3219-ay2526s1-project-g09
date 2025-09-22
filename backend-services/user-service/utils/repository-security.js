@@ -24,7 +24,7 @@ export function checkPassword(password) {
 }
 
 export function checkOTP(otp) {
-  if (!otp || !validator.isNumeric(String(otp)) || otp.length !== 6) {
+  if (!otp || !validator.isNumeric(String(otp)) || String(otp).length !== 6) {
     throw new ValidationError("OTP must be a 6-digit number");
   }
   return otp;

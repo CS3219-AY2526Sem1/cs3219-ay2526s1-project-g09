@@ -71,7 +71,7 @@ export async function createUser(req, res) {
         .json({ message: "username or email already exists" });
     }
     const passwordStrength = evalPasswordStrength(password);
-    if (passwordStrength != strongestOption.value) {
+    if (passwordStrength !== strongestOption.value) {
       return res.status(400).json({ message: "password is not strong enough" });
     }
 
@@ -164,7 +164,7 @@ export async function updateUser(req, res) {
     let hashedPassword;
     if (password) {
       const passwordStrength = evalPasswordStrength(password);
-      if (passwordStrength != strongestOption.value) {
+      if (passwordStrength !== strongestOption.value) {
         return res
           .status(400)
           .json({ message: "password is not strong enough" });
