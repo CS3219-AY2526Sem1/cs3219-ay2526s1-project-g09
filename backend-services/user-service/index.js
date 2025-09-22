@@ -17,23 +17,29 @@ const whitelist = [
   "http://localhost:5175",
   "http://localhost:5176",
   "http://localhost:5177",
-  "http://localhost:5178"
-]
+  "http://localhost:5178",
+];
 
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true); // allow non-browser requests (e.g. Postman)
       if (whitelist.indexOf(origin) !== -1) {
-        callback(null, true)
+        callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'))
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true, // if you need cookies/auth headers
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
-  })
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+    ],
+  }),
 ); // config cors so that front-end can use
 
 app.use("/users", userRoutes);
@@ -44,6 +50,7 @@ app.get("/", (req, res, next) => {
   res.json({
     message: "Hello World from user-service",
   });
+  next();
 });
 
 // Handle When No Route Match Is Found
@@ -60,6 +67,7 @@ app.use((error, req, res, next) => {
       message: error.message,
     },
   });
+  next();
 });
 
 export default app;

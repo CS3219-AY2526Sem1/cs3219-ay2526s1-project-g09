@@ -34,7 +34,6 @@ Rate Limit: 100 requests/10 min
   **POST** `http://localhost:5277/users`
 
 - Body
-
   - Required: `username` (string), `email` (string), `password` (string)
 
     ```json
@@ -65,7 +64,6 @@ Rate Limit: 100 requests/10 min
   **POST** `http://localhost:5277/auth/login`
 
 - Body
-
   - Required: `email` (string), `password` (string)
 
     ```json
@@ -97,13 +95,11 @@ Rate Limit: 100 requests/10 min
 **GET** `http://localhost:5277/users/{userId}`
 
 - Parameters
-
   - Required: `userId` path parameter
 
   - Example: `http://localhost:5277/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 
   - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
@@ -130,13 +126,11 @@ Rate Limit: 100 requests/10 min
 **PATCH** `http://localhost:5277/users/{userId}`
 
 - Parameters
-
   - Required: `userId` path parameter
 
   - Example: `http://localhost:5277/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Body
-
   - At least one of the following fields is required: `username` (string), `email` (string), `password` (string)
 
     ```json
@@ -148,7 +142,6 @@ Rate Limit: 100 requests/10 min
     ```
 
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 
   - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
@@ -175,13 +168,11 @@ Rate Limit: 100 requests/10 min
 **DELETE** `http://localhost:5277/users/{userId}`
 
 - Parameters
-
   - Required: `userId` path parameter
 
   - Example: `http://localhost:5277/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 
   - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
@@ -201,7 +192,6 @@ Rate Limit: 100 requests/10 min
 **GET** `http://localhost:5277/auth/verify-token`
 
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 
   - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
@@ -227,7 +217,6 @@ Rate Limit: 100 requests/10 min
 **POST** `http://localhost:5277/auth/send-otp`
 
 - Body
-
   - Required: `email` (string)
 
     ```json
@@ -250,7 +239,6 @@ Rate Limit: 100 requests/10 min
 **POST** `http://localhost:5277/auth/verify-otp`
 
 - Body
-
   - Required: `email` (string), `otp` (string)
 
     ```json

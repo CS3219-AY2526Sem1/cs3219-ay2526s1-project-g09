@@ -14,7 +14,7 @@ const OTPSchema = new Schema({
   expiresAt: {
     type: Date,
     required: true,
-    expires: 0 // Expires on the given timestamp (TTL index)
+    expires: 0, // Expires on the given timestamp (TTL index)
   },
   createdAt: {
     type: Date,

@@ -176,7 +176,7 @@ export async function updateUser(req, res) {
       userId,
       username,
       email,
-      hashedPassword
+      hashedPassword,
     );
     return res.status(200).json({
       message: `Updated data for user ${userId}`,
@@ -210,7 +210,7 @@ export async function updateUserPrivilege(req, res) {
 
       const updatedUser = await _updateUserPrivilegeById(
         userId,
-        isAdmin === true
+        isAdmin === true,
       );
       return res.status(200).json({
         message: `Updated privilege for user ${userId}`,

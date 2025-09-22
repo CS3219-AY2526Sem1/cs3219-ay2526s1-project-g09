@@ -45,7 +45,6 @@
 - Endpoint: http://localhost:3001/users
 
 - Body
-
   - Required: `username` (string), `email` (string), `password` (string)
 
     ```json
@@ -76,18 +75,15 @@
 - Endpoint: http://localhost:3001/users/{userId}
 
 - Parameters
-
   - Required: `userId` path parameter
   - Example: `http://localhost:3001/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - <a name="auth-header">Headers</a>
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 
   - Explanation: This endpoint requires the client to include a JWT (JSON Web Token) in the HTTP request header for authentication and authorization. This token is generated during the authentication process (i.e., login) and contains information about the user's identity. The server verifies this token to ensure that the client is authorized to access the data.
 
   - Auth Rules:
-
     - Admin users: Can retrieve any user's data. The server verifies the user associated with the JWT token is an admin user and allows access to the requested user's data.
     - Non-admin users: Can only retrieve their own data. The server checks if the user ID in the request URL matches the ID of the user associated with the JWT token. If it matches, the server returns the user's own data.
 
@@ -107,10 +103,8 @@
 - HTTP Method: `GET`
 - Endpoint: http://localhost:3001/users
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
   - Auth Rules:
-
     - Admin users: Can retrieve all users' data. The server verifies the user associated with the JWT token is an admin user and allows access to all users' data.
     - Non-admin users: Not allowed access.
 
@@ -132,11 +126,9 @@
 - Endpoint: http://localhost:3001/users/{userId}
 
 - Parameters
-
   - Required: `userId` path parameter
 
 - Body
-
   - At least one of the following fields is required: `username` (string), `email` (string), `password` (string)
 
     ```json
@@ -148,10 +140,8 @@
     ```
 
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
   - Auth Rules:
-
     - Admin users: Can update any user's data. The server verifies the user associated with the JWT token is an admin user and allows the update of requested user's data.
     - Non-admin users: Can only update their own data. The server checks if the user ID in the request URL matches the ID of the user associated with the JWT token. If it matches, the server updates the user's own data.
 
@@ -176,11 +166,9 @@
 - Endpoint: http://localhost:3001/users/{userId}
 
 - Parameters
-
   - Required: `userId` path parameter
 
 - Body
-
   - Required: `isAdmin` (boolean)
 
     ```json
@@ -190,10 +178,8 @@
     ```
 
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
   - Auth Rules:
-
     - Admin users: Can update any user's privilege. The server verifies the user associated with the JWT token is an admin user and allows the privilege update.
     - Non-admin users: Not allowed access.
 
@@ -216,15 +202,12 @@
 - HTTP Method: `DELETE`
 - Endpoint: http://localhost:3001/users/{userId}
 - Parameters
-
   - Required: `userId` path parameter
 
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 
   - Auth Rules:
-
     - Admin users: Can delete any user's data. The server verifies the user associated with the JWT token is an admin user and allows the deletion of requested user's data.
 
     - Non-admin users: Can only delete their own data. The server checks if the user ID in the request URL matches the ID of the user associated with the JWT token. If it matches, the server deletes the user's own data.
@@ -245,7 +228,6 @@
 - HTTP Method: `POST`
 - Endpoint: http://localhost:3001/auth/login
 - Body
-
   - Required: `email` (string), `password` (string)
 
     ```json
@@ -270,7 +252,6 @@
 - HTTP Method: `GET`
 - Endpoint: http://localhost:3001/auth/verify-token
 - Headers
-
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 
 - Responses:
