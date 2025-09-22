@@ -10,7 +10,19 @@ export async function buildServer() {
 
   // plugins
   await app.register(cors, { origin: "*" });
-  await app.register(rateLimit, { global: false });
+  await app.register(rateLimit, {
+    global: false,
+    max: 5,
+    timeWindow: "60s",
+    keyGenerator: (req) => (req.headers["x-real-ip"] as string) || req.ip,
+    errorResponseBuilder: (_req, context) => ({
+      ok: false,
+      code: "RATE_LIMITED",
+      message: "Too many requests, please slow down.",
+      retryAfterMs: context.after,
+      limit: context.max,
+    }),
+  });
   await app.register(db);
 
   // routes
