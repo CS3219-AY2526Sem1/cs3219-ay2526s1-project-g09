@@ -33,7 +33,7 @@ const UserModelSchema = new Schema({
   },
   expiresAt: {
     type: Date,
-    required: true,
+    required: false,
     expires: 0, // Unverified users should automatically be cleared at given timestamp; Verified users should have a null timestamp
   },
 });
