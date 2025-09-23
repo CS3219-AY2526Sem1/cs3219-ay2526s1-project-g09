@@ -54,7 +54,7 @@ export async function seedLeetCodeBatch() {
 
   const { pageSize, nextSkip } = cursor;
 
-  const { questionList, total } = await fetchNonPaidQuestionList(
+  const { questionList, total, initial_count } = await fetchNonPaidQuestionList(
     pageSize,
     nextSkip,
   );
@@ -125,7 +125,7 @@ export async function seedLeetCodeBatch() {
   cursor.nextSkip = nextSkip + pageSize;
   cursor.lastRunAt = new Date();
   cursor.total = total;
-  if (questionList.length < pageSize) {
+  if (initial_count < pageSize) {
     cursor.done = true;
   }
   await cursor.save();
@@ -179,7 +179,11 @@ export async function fetchNonPaidQuestionInfo(
 export async function fetchNonPaidQuestionList(
   limit: number,
   skip: number,
-): Promise<{ questionList: BasicInformation[]; total: number }> {
+): Promise<{
+  questionList: BasicInformation[];
+  total: number;
+  initial_count: number;
+}> {
   const out: BasicInformation[] = [];
 
   const res = await gql<
@@ -193,8 +197,9 @@ export async function fetchNonPaidQuestionList(
   >(QUERY_LIST, { categorySlug: "", limit: limit, skip: skip, filters: {} });
 
   const { total, questions } = res.problemsetQuestionList;
+  let initial_count = questions.length;
   const questionList = questions.filter((q) => !q.isPaidOnly);
-  return { questionList, total };
+  return { questionList, total, initial_count };
 }
 
 export async function getQuestionDetail(slug: string) {
