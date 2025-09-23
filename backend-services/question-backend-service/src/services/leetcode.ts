@@ -3,7 +3,8 @@ import { QUERY_LIST, QUERY_DETAIL } from "../queries/leetcode.js";
 import pLimit from "p-limit";
 import { Question } from "../models/question.js";
 
-type BasicInformation = {
+export type BasicInformation = {
+  questionId: string | number;
   title: string;
   titleSlug: string;
   isPaidOnly: boolean;
@@ -12,14 +13,14 @@ type BasicInformation = {
   topicTags: { name: string; slug: string; id: string }[];
 };
 
-type QuestionList = {
+export type QuestionList = {
   problemsetQuestionList: {
     total: number;
     questions: BasicInformation[];
   };
 };
 
-type Details = {
+export type Details = {
   question:
     | (BasicInformation & {
         content: string | null;
@@ -110,6 +111,27 @@ export async function fetchAllNonPaidSlugs(): Promise<BasicInformation[]> {
   return out;
 }
 
+export async function fetchQuestionPage(limit: number, skip: number) {
+  const res = await gql<
+    {
+      problemsetQuestionList: { total: number; questions: BasicInformation[] };
+    },
+    {
+      categorySlug: string;
+      limit: number;
+      skip: number;
+      filters: Record<string, unknown>;
+    }
+  >(QUERY_LIST, {
+    categorySlug: "",
+    limit: limit,
+    skip: skip,
+    filters: {},
+  });
+
+  return res.problemsetQuestionList;
+}
+
 export async function listFirstN(n = 5) {
   const res = await gql<
     {
@@ -135,3 +157,18 @@ export async function getQuestionDetail(slug: string) {
   });
   return res.question;
 }
+
+// export async function syncDailyHead(headCount = 500) {
+//   const questionList = (await fetchAllNonPaidSlugs()).slice(0, headCount);
+//   const limit = pLimit(DETAIL_CONCURRENCY);
+
+//   const details = await Promise.all(
+//     questionList.map((b) => limit(() => getQuestionDetail(b.titleSlug))),
+//   );
+
+//   await upsertMany(details as NonNullable<Details["question"]>[]);
+//   return {
+//     scanned: questionList.length,
+//     upserted: details.filter(Boolean).length,
+//   };
+// }
