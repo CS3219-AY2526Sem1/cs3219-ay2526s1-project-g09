@@ -83,7 +83,7 @@ src/
 
 ## API
 
-Base URL: `http://localhost:5275/api/v1`
+Base URL: `http://127.0.0.1:5275/api/v1`
 
 ### LeetCode Test for manual testing of Graph QL endpoint
 
@@ -91,7 +91,7 @@ Base URL: `http://localhost:5275/api/v1`
 Fetches first page (limit=5) and details of the first problem.
 
 ```bash
-curl http://localhost:5275/api/v1/leetcode-test
+curl http://127.0.0.1:5275/api/v1/leetcode-test
 ```
 
 ### Seed first problem into Mongo
