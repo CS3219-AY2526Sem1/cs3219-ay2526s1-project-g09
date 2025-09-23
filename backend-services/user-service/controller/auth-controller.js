@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
 import {
@@ -109,7 +110,7 @@ export async function verifyOTP(req, res) {
 
     // Check if OTP matches
     const otpRecord = await _findOTPByEmail(email);
-    if (!otpRecord || otpRecord.code !== otp) {
+    if (crypto.timingSafeEqual(Buffer.from(otp), Buffer.from(otpRecord))) {
       return res.status(400).json({ message: "Invalid or Expired OTP" });
     }
 
