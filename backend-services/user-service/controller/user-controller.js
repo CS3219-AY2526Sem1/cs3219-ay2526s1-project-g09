@@ -11,43 +11,12 @@ import {
   updateUserById as _updateUserById,
   updateUserPrivilegeById as _updateUserPrivilegeById,
 } from "../model/repository.js";
-import { passwordStrength } from "check-password-strength";
 import {
   checkUsername,
   checkEmail,
   checkPassword,
 } from "../utils/repository-security.js";
 import { ValidationError } from "../utils/errors.js";
-
-//password strength check variables
-const options = [
-  {
-    id: 0,
-    value: "Too weak",
-    minDiversity: 0,
-    minLength: 0,
-  },
-  {
-    id: 1,
-    value: "Weak",
-    minDiversity: 2,
-    minLength: 8,
-  },
-  {
-    id: 2,
-    value: "Medium",
-    minDiversity: 4,
-    minLength: 10,
-  },
-  {
-    id: 3,
-    value: "Strong",
-    minDiversity: 4,
-    minLength: 12,
-  },
-];
-const strongestOption = options[options.length - 1];
-const owaspSymbols = "!\"#$%&'()*+,-./\\:;<=>?@[]^_`{|}~"; //Special characters in password (Specified by OWASP)
 
 export async function createUser(req, res) {
   try {
@@ -70,11 +39,6 @@ export async function createUser(req, res) {
         .status(409)
         .json({ message: "username or email already exists" });
     }
-    const passwordStrength = evalPasswordStrength(password);
-    if (passwordStrength !== strongestOption.value) {
-      return res.status(400).json({ message: "password is not strong enough" });
-    }
-
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
     const createdUser = await _createUser(username, email, hashedPassword);
@@ -163,12 +127,6 @@ export async function updateUser(req, res) {
 
     let hashedPassword;
     if (password) {
-      const passwordStrength = evalPasswordStrength(password);
-      if (passwordStrength !== strongestOption.value) {
-        return res
-          .status(400)
-          .json({ message: "password is not strong enough" });
-      }
       const salt = bcrypt.genSaltSync(10);
       hashedPassword = bcrypt.hashSync(password, salt);
     }
@@ -258,8 +216,4 @@ export function formatUserResponse(user) {
     isAdmin: user.isAdmin,
     createdAt: user.createdAt,
   };
-}
-
-function evalPasswordStrength(password) {
-  return passwordStrength(password, options, owaspSymbols).value;
 }

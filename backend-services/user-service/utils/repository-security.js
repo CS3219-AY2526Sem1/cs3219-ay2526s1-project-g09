@@ -1,5 +1,36 @@
 import validator from "validator";
 import { ValidationError } from "./errors.js";
+import { passwordStrength } from "check-password-strength";
+
+//password strength check variables
+const options = [
+  {
+    id: 0,
+    value: "Too weak",
+    minDiversity: 0,
+    minLength: 0,
+  },
+  {
+    id: 1,
+    value: "Weak",
+    minDiversity: 2,
+    minLength: 8,
+  },
+  {
+    id: 2,
+    value: "Medium",
+    minDiversity: 4,
+    minLength: 10,
+  },
+  {
+    id: 3,
+    value: "Strong",
+    minDiversity: 4,
+    minLength: 12,
+  },
+];
+const strongestOption = options[options.length - 1];
+const owaspSymbols = "!\"#$%&'()*+,-./\\:;<=>?@[]^_`{|}~"; //Special characters in password (Specified by OWASP)
 
 // Throws an error if validation fails
 export function checkUsername(username) {
@@ -32,12 +63,21 @@ export function checkPassword(password) {
   if (password.indexOf(" ") >= 0) {
     throw new ValidationError("Password should not have any Whitespace");
   }
+  if (checkPasswordStrength(password) !== strongestOption.value) {
+    throw new ValidationError(
+      "Password is not strong enough. It must be at least 12 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
+    );
+  }
   return password;
+}
+
+function checkPasswordStrength(password) {
+  return passwordStrength(password, options, owaspSymbols).value;
 }
 
 export function checkOTP(otp) {
   if (!otp || !validator.isNumeric(String(otp)) || String(otp).length !== 6) {
     throw new ValidationError("OTP must be a 6-digit number");
   }
-  return otp;
+  return String(otp);
 }
