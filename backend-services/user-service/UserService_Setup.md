@@ -21,17 +21,17 @@ Port 465 are used in User Service to send an email for the OTP feature
 
 ## API
 
-Base URL: `http://localhost:5277`
+Base URL: `http://localhost:5277/api/user-service`
 Routes:
-`http://localhost:5277/auth`
-`http://localhost:5277/users`
+`http://localhost:5277/api/user-service/auth`
+`http://localhost:5277/api/user-service/users`
 
 Rate Limit: 100 requests/10 min
 
 ### Registering a User
 
 - Usage:
-  **POST** `http://localhost:5277/users`
+  **POST** `http://localhost:5277/api/user-service/users`
 
 - Body
   - Required: `username` (string), `email` (string), `password` (string)
@@ -68,7 +68,7 @@ Rate Limit: 100 requests/10 min
 ### Login with User Details
 
 - Usage:
-  **POST** `http://localhost:5277/auth/login`
+  **POST** `http://localhost:5277/api/user-service/auth/login`
 
 - Body
   - Required: `email` (string), `password` (string)
@@ -99,12 +99,12 @@ Rate Limit: 100 requests/10 min
 
 - Usage:
 
-**GET** `http://localhost:5277/users/{userId}`
+**GET** `http://localhost:5277/api/user-service/users/{userId}`
 
 - Parameters
   - Required: `userId` path parameter
 
-  - Example: `http://localhost:5277/users/60c72b2f9b1d4c3a2e5f8b4c`
+  - Example: `http://localhost:5277/api/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Headers
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
@@ -130,12 +130,12 @@ Rate Limit: 100 requests/10 min
 
 - Usage:
 
-**PATCH** `http://localhost:5277/users/{userId}`
+**PATCH** `http://localhost:5277/api/user-service/users/{userId}`
 
 - Parameters
   - Required: `userId` path parameter
 
-  - Example: `http://localhost:5277/users/60c72b2f9b1d4c3a2e5f8b4c`
+  - Example: `http://localhost:5277/api/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Body
   - At least one of the following fields is required: `username` (string), `email` (string), `password` (string)
@@ -172,12 +172,12 @@ Rate Limit: 100 requests/10 min
 
 - Usage:
 
-**DELETE** `http://localhost:5277/users/{userId}`
+**DELETE** `http://localhost:5277/api/user-service/users/{userId}`
 
 - Parameters
   - Required: `userId` path parameter
 
-  - Example: `http://localhost:5277/users/60c72b2f9b1d4c3a2e5f8b4c`
+  - Example: `http://localhost:5277/api/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Headers
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
@@ -196,7 +196,7 @@ Rate Limit: 100 requests/10 min
 
 - Usage:
 
-**GET** `http://localhost:5277/auth/verify-token`
+**GET** `http://localhost:5277/api/user-service/auth/verify-token`
 
 - Headers
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
@@ -221,7 +221,7 @@ Rate Limit: 100 requests/10 min
 
 - Usage:
 
-**POST** `http://localhost:5277/auth/send-otp`
+**POST** `http://localhost:5277/api/user-service/auth/send-otp`
 
 - Body
   - Required: `email` (string)
@@ -243,7 +243,7 @@ Rate Limit: 100 requests/10 min
 
 - Usage:
 
-**POST** `http://localhost:5277/auth/verify-otp`
+**POST** `http://localhost:5277/api/user-service/auth/verify-otp`
 
 - Body
   - Required: `email` (string), `otp` (string)

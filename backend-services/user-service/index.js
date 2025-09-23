@@ -42,8 +42,8 @@ app.use(
   }),
 ); // config cors so that front-end can use
 
-app.use("/users", userRoutes);
-app.use("/auth", authRoutes);
+app.use("/api/user-service/users", userRoutes);
+app.use("/api/user-service/auth", authRoutes);
 
 app.get("/", (req, res, next) => {
   console.log("Sending Greetings!");
