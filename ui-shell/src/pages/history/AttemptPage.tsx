@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Layout from "@components/layout/BlueBgLayout";
 import QuestionDisplay from "questionUiService/QuestionDisplay";
 import { mockQuestions } from "@/data/mock-history-data";
