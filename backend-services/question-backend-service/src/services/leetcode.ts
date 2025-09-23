@@ -1,6 +1,7 @@
 import { gql } from "../queries/leetcode.js";
 import { QUERY_LIST, QUERY_DETAIL } from "../queries/leetcode.js";
 import pLimit from "p-limit";
+import { Question } from "../models/question.js";
 
 type BasicInformation = {
   title: string;
@@ -33,6 +34,48 @@ type Details = {
 
 const PAGE_SIZE = 50;
 const DETAIL_CONCURRENCY = 6;
+
+export async function upsertMany(questions: Details["question"][]) {
+  const aggregate = questions.filter(Boolean).map((question) => ({
+    updateOne: {
+      filter: { titleSlug: question!.titleSlug },
+      update: {
+        $set: {
+          ...question!,
+          lastSyncedAt: new Date(),
+        },
+      },
+      upsert: true,
+    },
+  }));
+
+  if (aggregate.length) {
+    await Question.bulkWrite(aggregate, { ordered: false });
+  }
+}
+
+export async function syncAllNonPaid() {
+  const questionList = await fetchAllNonPaidSlugs();
+  const limit = pLimit(DETAIL_CONCURRENCY);
+
+  const details = await Promise.all(
+    questionList.map((question: BasicInformation) =>
+      limit(async () => {
+        const detail = await getQuestionDetail(question.titleSlug);
+        if (detail && !detail.isPaidOnly) {
+          return detail;
+        }
+        return null;
+      }),
+    ),
+  );
+
+  await upsertMany(details as NonNullable<Details["question"]>[]);
+  return {
+    scanned: questionList.length,
+    upserted: details.filter(Boolean).length,
+  };
+}
 
 export async function fetchAllNonPaidSlugs(): Promise<BasicInformation[]> {
   let skip = 0;

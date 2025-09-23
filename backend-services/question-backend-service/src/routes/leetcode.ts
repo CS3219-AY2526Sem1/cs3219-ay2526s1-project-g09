@@ -5,27 +5,28 @@ import {
   fetchAllNonPaidSlugs,
 } from "../services/leetcode.js";
 import { Question } from "../models/question.js";
+import { syncAllNonPaid } from "../services/leetcode.js";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
-// function assertAdmin(req: any) {
-//   const token = req.headers["x-admin-token"];
-//   if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
-//     const err = new Error("Unauthorized");
-//     throw err;
-//   }
-// }
+function assertAdmin(req: any) {
+  const token = req.headers["x-admin-token"];
+  if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+    const err = new Error("Unauthorized");
+    throw err;
+  }
+}
 
 // In-memory store for rate limiting (can be replaced with Redis)
 const dbRateLimitStore: Map<string, { count: number; lastAccess: number }> =
   new Map();
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
-  // app.post("/api/v1/leetcode/seed-all", async (req, reply) => {
-  //   assertAdmin(req);
-  //   const res = await syncAllNonPaid();
-  //   return { ok: true, ...res };
-  // });
+  app.post("/leetcode/seed-all", async (req, reply) => {
+    assertAdmin(req);
+    const res = await syncAllNonPaid();
+    return { ok: true, ...res };
+  });
 
   app.get("/leetcode-test", async () => {
     const list = await fetchAllNonPaidSlugs();
