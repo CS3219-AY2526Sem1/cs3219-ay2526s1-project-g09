@@ -84,6 +84,7 @@ jobs:
       - name: Run ESLint and Reviewdog
         run: |
           cd ./ui-services/question-ui-service
+          exit_code=0
           npx eslint . || exit_code=$?
           eslint_exit_code=$exit_code
 
