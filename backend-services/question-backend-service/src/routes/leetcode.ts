@@ -1,21 +1,40 @@
 import type { FastifyInstance, FastifyPluginCallback } from "fastify";
-import { listFirstN, getQuestionDetail } from "../services/leetcode.js";
+import {
+  listFirstN,
+  getQuestionDetail,
+  fetchAllNonPaidSlugs,
+} from "../services/leetcode.js";
 import { Question } from "../models/question.js";
+
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
+
+// function assertAdmin(req: any) {
+//   const token = req.headers["x-admin-token"];
+//   if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+//     const err = new Error("Unauthorized");
+//     throw err;
+//   }
+// }
 
 // In-memory store for rate limiting (can be replaced with Redis)
 const dbRateLimitStore: Map<string, { count: number; lastAccess: number }> =
   new Map();
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
+  // app.post("/api/v1/leetcode/seed-all", async (req, reply) => {
+  //   assertAdmin(req);
+  //   const res = await syncAllNonPaid();
+  //   return { ok: true, ...res };
+  // });
+
   app.get("/leetcode-test", async () => {
-    const list = await listFirstN(5);
-    const slugs = list.questions.map((q) => q.titleSlug);
+    const list = await fetchAllNonPaidSlugs();
+    const slugs = list.map((q) => q.titleSlug);
     const firstSlug = slugs[0];
     const detail = firstSlug ? await getQuestionDetail(firstSlug) : null;
 
     return {
       ok: true,
-      totalKnown: list.total,
       titleSlugs: slugs,
       title: detail?.title ?? null,
       isPaidOnly: detail?.isPaidOnly,
