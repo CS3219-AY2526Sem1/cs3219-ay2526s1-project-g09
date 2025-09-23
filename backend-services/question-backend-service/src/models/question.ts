@@ -39,6 +39,9 @@ const QuestionSchema = new Schema(
   { collection: "leetcode-questions", timestamps: true },
 );
 
+QuestionSchema.index({ slug: 1 }, { unique: true });
+QuestionSchema.index({ category: 1, difficulty: 1, title: 1 });
+
 export type QuestionDoc = InferSchemaType<typeof QuestionSchema>;
 
 // Reuse existing model in dev/hot-reload to avoid OverwriteModelError
