@@ -16,9 +16,15 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     return {
       ok: true,
       totalKnown: list.total,
-      firstPageSlugs: slugs,
-      firstTitle: detail?.title ?? null,
+      titleSlugs: slugs,
+      title: detail?.title ?? null,
+      isPaidOnly: detail?.isPaidOnly,
+      difficulty: detail?.difficulty,
+      categoryTitle: detail?.categoryTitle ?? null,
       content: detail?.content ?? null,
+      exampleTestcases: detail?.exampleTestcases ?? null,
+      codeSnippets: detail?.codeSnippets,
+      hints: detail?.hints ?? null,
     };
   });
 
@@ -72,9 +78,15 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       { slug: first.titleSlug },
       {
         $set: {
-          slug: first.titleSlug,
+          titleSlug: first.titleSlug,
           title: detail.title,
-          content: detail.content, // HTML string
+          isPaidOnly: detail?.isPaidOnly,
+          difficulty: detail?.difficulty,
+          categoryTitle: detail?.categoryTitle ?? null,
+          content: detail?.content ?? null,
+          exampleTestcases: detail?.exampleTestcases ?? null,
+          codeSnippets: detail?.codeSnippets,
+          hints: detail?.hints ?? null,
         },
       },
       { upsert: true },
