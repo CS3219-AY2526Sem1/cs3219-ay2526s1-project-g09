@@ -43,8 +43,6 @@
 
     "moduleResolution": "bundler",
     "esModuleInterop": true,
-
-    "allowJs": true
   },
   "eslint": {
     "allowDefaultProject": true
