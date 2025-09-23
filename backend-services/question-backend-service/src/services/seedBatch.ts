@@ -41,7 +41,7 @@ export async function seedLeetCodeBatch() {
   const id = "leetcode-questions";
   const cursor =
     (await SeedCursor.findById(id)) ??
-    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 10, done: false });
+    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 200, done: false });
 
   if (cursor.done) {
     return {
@@ -80,23 +80,41 @@ export async function seedLeetCodeBatch() {
   );
 
   // Build bulk ops (idempotent upserts keyed by titleSlug)
-  const ops = questionInfos.map((question) => ({
+  const ops = questionInfos.map((q) => ({
     updateOne: {
-      filter: { titleSlug: question.titleSlug },
+      // Use the same field you persist & index
+      filter: { slug: q.titleSlug },
+
+      // All update operators must be inside `update`
       update: {
         $set: {
-          questionId: String(question.questionId),
-          slug: question.titleSlug,
-          title: question.title,
-          difficulty: question.difficulty,
-          isPaidOnly: question.isPaidOnly,
-          categoryTitle: question.categoryTitle,
-          content: question.content,
-          codeSnippets: question.codeSnippets,
-          hints: question.hints,
-          sampleTestCase: question.codeSnippets,
+          // keep slug in the doc
+          slug: q.titleSlug,
+
+          // ids/titles
+          questionId: String(q.questionId),
+          title: q.title,
+
+          // metadata
+          difficulty: q.difficulty,
+          isPaidOnly: q.isPaidOnly,
+          categoryTitle: q.categoryTitle ?? null,
+          topicTags: q.topicTags ?? [],
+
+          // content & extras
+          content: q.content ?? null,
+          codeSnippets: q.codeSnippets ?? [],
+          hints: q.hints ?? [],
+          exampleTestcases: q.exampleTestcases ?? null,
+          updatedAt: new Date(),
+        },
+
+        // only on first insert
+        $setOnInsert: {
+          createdAt: new Date(),
         },
       },
+
       upsert: true,
     },
   }));
