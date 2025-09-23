@@ -47,6 +47,11 @@ jobs:
           cd ./ui-services/matching-ui-service
           npm install --frozen-lockfile
 
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
       - name: Run ESLint and Reviewdog
         run: |
           cd ./ui-services/matching-ui-service
@@ -80,6 +85,11 @@ jobs:
         run: |
           cd ./ui-services/question-ui-service
           npm install --frozen-lockfile
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
 
       - name: Run ESLint and Reviewdog
         run: |
@@ -116,6 +126,11 @@ jobs:
           cd ./ui-services/collab-ui-service
           npm install --frozen-lockfile
 
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
       - name: Run ESLint and Reviewdog
         run: |
           cd ./ui-services/collab-ui-service
@@ -150,6 +165,11 @@ jobs:
           cd ./ui-services/user-ui-service
           npm install --frozen-lockfile
 
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
       - name: Run ESLint and Reviewdog
         run: |
           cd ./ui-services/user-ui-service
@@ -183,6 +203,11 @@ jobs:
         run: |
           cd ./ui-services/history-ui-service
           npm install --frozen-lockfile
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
 
       - name: Run ESLint and Reviewdog
         run: |
