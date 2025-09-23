@@ -1,22 +1,32 @@
 import { useState } from "react";
 import { UserService } from "../api/UserService";
-import { useNavigate } from "react-router-dom";
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onLoginSuccess?: (token: string, user: any) => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   async function handleLogin() {
     try {
       const res = await UserService.login(email, password);
-      console.log("Logged in: ", res.data.accessToken);
+      const { accessToken, ...user } = res.data;
+      console.log("Logged in:", user);
 
       // store the token (somehow)
+      localStorage.setItem("authToken", accessToken);
+      localStorage.setItem("user", JSON.stringify(user));
 
-      navigate("/matching");
+      // navigate to Matching page
+      onLoginSuccess?.(accessToken, user);
     } catch (err) {
-      if (err instanceof Error) console.error(err.message);
+      if (err instanceof Error) {
+        console.error(err.message);
+        setError("Invalid credentials. Please try again.");
+      }
     }
   }
 
@@ -44,6 +54,8 @@ const LoginForm: React.FC = () => {
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
       </div>
+
+      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
       <div className="flex items-center justify-between mt-4">
         <label className="flex items-center space-x-2">

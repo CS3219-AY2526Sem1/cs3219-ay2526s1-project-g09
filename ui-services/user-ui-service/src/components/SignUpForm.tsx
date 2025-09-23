@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { UserService } from "../api/UserService";
 
-const SignUpForm: React.FC = () => {
+interface SignUpFormProps {
+  onSignUpSuccess?: (email: string) => void;
+}
+
+const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -18,13 +21,14 @@ const SignUpForm: React.FC = () => {
     }
 
     try {
-      const username = email.split("@")[0]; // quick example: derive username from email
       const res = await UserService.register(username, email, password);
       console.log("Registered:", res.data);
 
-      // register user as unverified user
+      // Generate and send otp to email
+      await UserService.sendOtp(email);
 
-      navigate("/otp");
+      // Navigate to otp page
+      onSignUpSuccess?.(email);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -33,33 +37,46 @@ const SignUpForm: React.FC = () => {
   }
 
   return (
-    <form className="bg-white">
+    <form className="bg-white" onSubmit={handleSignUp}>
       <div className="space-y-4">
+        <input
+          type="username"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+        />
         <input
           type="email"
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
         <input
           type="password"
           placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
       </div>
 
-      <a href="/otp">
-        <button
-          type="button"
-          className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
-        >
-          Create Account
-        </button>
-      </a>
+      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
+      <button
+        type="submit"
+        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
+      >
+        Create Account
+      </button>
       <div className="flex items-center my-6">
         <hr className="flex-1 border-gray-300" />
         <span className="mx-2 text-gray-400 text-sm">or</span>
