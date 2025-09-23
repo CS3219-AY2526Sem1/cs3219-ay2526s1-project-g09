@@ -1,4 +1,3 @@
-// Model for MongoDB
 import mongoose, {
   Schema,
   model,
@@ -6,12 +5,36 @@ import mongoose, {
   type InferSchemaType,
 } from "mongoose";
 
+const CodeSnippetSchema = new Schema(
+  {
+    lang: { type: String, required: true },
+    langSlug: { type: String, required: true },
+    code: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 const QuestionSchema = new Schema(
   {
-    slug: { type: String, required: true, unique: true, index: true },
+    // identity
+    slug: { type: String, required: true, unique: true, index: true }, // titleSlug
     title: { type: String, required: true, index: true },
-    // difficulty: { type: String, enum: ["Easy", "Medium", "Hard"], required: true },
-    content: { type: String, required: true },
+
+    // meta
+    difficulty: {
+      type: String,
+      enum: ["Easy", "Medium", "Hard"],
+      required: true,
+      index: true,
+    },
+    isPaidOnly: { type: Boolean, required: true, index: true },
+    categoryTitle: { type: String, required: false, index: true },
+
+    // content
+    content: { type: String, required: true }, // HTML body
+    codeSnippets: { type: [CodeSnippetSchema], default: [] },
+    hints: { type: [String], default: [] },
+    sampleTestCase: { type: String, required: false },
   },
   { collection: "leetcode-questions", timestamps: true },
 );

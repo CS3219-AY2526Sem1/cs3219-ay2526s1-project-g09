@@ -53,8 +53,18 @@ query problemsetQuestionList($categorySlug:String,$limit:Int,$skip:Int,$filters:
 export const QUERY_DETAIL = `
 query question($titleSlug:String!){
   question(titleSlug:$titleSlug){
-    title titleSlug questionFrontendId difficulty isPaidOnly
+    title
+    titleSlug
+    isPaidOnly
+    difficulty
     content
-    codeSnippets { lang langSlug code }
+    exampleTestcases
+    categoryTitle
+    codeSnippets {
+      lang
+      langSlug
+      code
+    }
+    hints
   }
 }`;
