@@ -1,4 +1,37 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { UserService } from "../api/UserService";
+
 const SignUpForm: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    try {
+      const username = email.split("@")[0]; // quick example: derive username from email
+      const res = await UserService.register(username, email, password);
+      console.log("Registered:", res.data);
+
+      // register user as unverified user
+
+      navigate("/otp");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      }
+    }
+  }
+
   return (
     <form className="bg-white">
       <div className="space-y-4">
