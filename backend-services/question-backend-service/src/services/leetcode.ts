@@ -7,6 +7,20 @@ export type BasicQuestion = {
   difficulty: string;
 };
 
+export type GqlQuestionDetail = {
+  question: {
+    title: string;
+    titleSlug: string;
+    isPaidOnly: boolean;
+    difficulty: "Easy" | "Medium" | "Hard";
+    content: string | null;
+    exampleTestcases?: string | null;
+    categoryTitle?: string | null;
+    codeSnippets: { lang: string; langSlug: string; code: string }[];
+    hints?: string[] | null;
+  } | null;
+};
+
 export async function listFirstN(n = 5) {
   const res = await gql<
     {
@@ -27,13 +41,9 @@ export async function listFirstN(n = 5) {
 }
 
 export async function getQuestionDetail(slug: string) {
-  const res = await gql<
-    {
-      question: { title: string; content: string } | null;
-    },
-    {
-      titleSlug: string;
-    }
-  >(QUERY_DETAIL, { titleSlug: slug });
+  const res = await gql<GqlQuestionDetail, { titleSlug: string }>(
+    QUERY_DETAIL,
+    { titleSlug: slug },
+  );
   return res.question;
 }
