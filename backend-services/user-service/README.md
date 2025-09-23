@@ -1,28 +1,9 @@
-# User Service Guide
+# PeerPrep - User Service Setup
 
-## Setting-up
+## Port Usage:
 
-> :notebook: If you are familiar to MongoDB and wish to use a local instance, please feel free to do so. This guide utilizes MongoDB Cloud Services.
-
-1. Set up a MongoDB Shared Cluster by following the steps in this [Guide](./MongoDBSetup.md).
-
-2. After setting up, go to the Database Deployment Page. You would see a list of the Databases you have set up. Select `Connect` on the cluster you just created earlier on for User Service.
-
-   ![alt text](./GuideAssets/ConnectCluster.png)
-
-3. Select the `Drivers` option, as we have to link to a Node.js App (User Service).
-
-   ![alt text](./GuideAssets/DriverSelection.png)
-
-4. Select `Node.js` in the `Driver` pull-down menu, and copy the connection string.
-
-   Notice, you may see `<password>` in this connection string. We will be replacing this with the admin account password that we created earlier on when setting up the Shared Cluster.
-
-   ![alt text](./GuideAssets/ConnectionString.png)
-
-5. In the `user-service` directory, create a copy of the `.env.sample` file and name it `.env`.
-
-6. Update the `DB_CLOUD_URI` of the `.env` file, and paste the string we copied earlier in step 4. Also remember to replace the `<password>` placeholder with the actual password.
+Port 5277 should be used for all API calls to User Service
+Port 465 are used in User Service to send an email for the OTP feature
 
 ## Running User Service
 
@@ -32,101 +13,135 @@
 
 3. Run the command `npm start` to start the User Service in production mode, or use `npm run dev` for development mode, which includes features like automatic server restart when you make code changes.
 
-4. Using applications like Postman, you can interact with the User Service on port 3001. If you wish to change this, please update the `.env` file.
+4. Using applications like Postman, you can interact with the User Service on port 5277. If you wish to change this, please update the `.env` file.
 
-## User Service API Guide
+## Running with Docker
 
-### Create User
+-- To be filled --
 
-- This endpoint allows adding a new user to the database (i.e., user registration).
+## API
 
-- HTTP Method: `POST`
+Base URL: `http://localhost:5277/api/user-service`
+Routes:
+`http://localhost:5277/api/user-service/auth`
+`http://localhost:5277/api/user-service/users`
 
-- Endpoint: http://localhost:3001/users
+Rate Limit: 100 requests/10 min
+
+### Registering a User
+
+- Usage:
+  **POST** `http://localhost:5277/api/user-service/users`
 
 - Body
   - Required: `username` (string), `email` (string), `password` (string)
 
     ```json
     {
-      "username": "SampleUserName",
-      "email": "sample@gmail.com",
+      "username": "SampleUser1",
+      "email": "sample1@gmail.com",
+      "password": "SecurePassword123!"
+    }
+    ```
+
+  - Note: Username should meet the following requirements:
+    - Username must be 3–20 characters
+    - Username should only contain letters and numbers
+
+  - Note: Password should meet the following requirements:
+    - Password is 12 characters long
+    - Password should have at least 1 uppercase and 1 lowercase character
+    - Password should contain a number
+    - Password should contain a special character
+      - Special characters include: `!"#$%&'()*+,-./\:;<=>?@[]^_`{|}~`
+    - Password should not contain any whitespace
+    - Password should not exceed 64 characters
+
+- Expected Response:
+  ```json
+  {
+    "message": "Created new user SampleUser1 successfully",
+    "data": {
+      "id": "<user-unique-id>",
+      "username": "SampleUser1",
+      "email": "sample1@gmail.com",
+      "isAdmin": false,
+      "createdAt": "2025-09-22T13:55:40.590Z"
+    }
+  }
+  ```
+
+### Login with User Details
+
+- Usage:
+  **POST** `http://localhost:5277/api/user-service/auth/login`
+
+- Body
+  - Required: `email` (string), `password` (string)
+
+    ```json
+    {
+      "email": "sample1@gmail.com",
       "password": "SecurePassword"
     }
     ```
 
-- Responses:
-
-  | Response Code               | Explanation                                           |
-  | --------------------------- | ----------------------------------------------------- |
-  | 201 (Created)               | User created successfully, created user data returned |
-  | 400 (Bad Request)           | Missing fields                                        |
-  | 409 (Conflict)              | Duplicate username or email encountered               |
-  | 500 (Internal Server Error) | Database or server error                              |
+- Expected Response:
+  ```json
+  {
+    "message": "User logged in",
+    "data": {
+      "accessToken": "<jwt-access-token>",
+      "id": "<userId>",
+      "username": "SampleUser1",
+      "email": "sample1@gmail.com",
+      "isAdmin": false,
+      "createdAt": "2025-09-22T13:55:40.590Z"
+    }
+  }
+  ```
 
 ### Get User
 
-- This endpoint allows retrieval of a single user's data from the database using the user's ID.
+- Usage:
 
-  > :bulb: The user ID refers to the MongoDB Object ID, a unique identifier automatically generated by MongoDB for each document in a collection.
-
-- HTTP Method: `GET`
-
-- Endpoint: http://localhost:3001/users/{userId}
+**GET** `http://localhost:5277/api/user-service/users/{userId}`
 
 - Parameters
   - Required: `userId` path parameter
-  - Example: `http://localhost:3001/users/60c72b2f9b1d4c3a2e5f8b4c`
 
-- <a name="auth-header">Headers</a>
-  - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
+  - Example: `http://localhost:5277/api/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
-  - Explanation: This endpoint requires the client to include a JWT (JSON Web Token) in the HTTP request header for authentication and authorization. This token is generated during the authentication process (i.e., login) and contains information about the user's identity. The server verifies this token to ensure that the client is authorized to access the data.
-
-  - Auth Rules:
-    - Admin users: Can retrieve any user's data. The server verifies the user associated with the JWT token is an admin user and allows access to the requested user's data.
-    - Non-admin users: Can only retrieve their own data. The server checks if the user ID in the request URL matches the ID of the user associated with the JWT token. If it matches, the server returns the user's own data.
-
-- Responses:
-
-  | Response Code               | Explanation                                              |
-  | --------------------------- | -------------------------------------------------------- |
-  | 200 (OK)                    | Success, user data returned                              |
-  | 401 (Unauthorized)          | Access denied due to missing/invalid/expired JWT         |
-  | 403 (Forbidden)             | Access denied for non-admin users accessing others' data |
-  | 404 (Not Found)             | User with the specified ID not found                     |
-  | 500 (Internal Server Error) | Database or server error                                 |
-
-### Get All Users
-
-- This endpoint allows retrieval of all users' data from the database.
-- HTTP Method: `GET`
-- Endpoint: http://localhost:3001/users
 - Headers
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
-  - Auth Rules:
-    - Admin users: Can retrieve all users' data. The server verifies the user associated with the JWT token is an admin user and allows access to all users' data.
-    - Non-admin users: Not allowed access.
 
-- Responses:
+  - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
+    copy and paste the `<jwt-access-token>` from logging in.
 
-  | Response Code               | Explanation                                      |
-  | --------------------------- | ------------------------------------------------ |
-  | 200 (OK)                    | Success, all user data returned                  |
-  | 401 (Unauthorized)          | Access denied due to missing/invalid/expired JWT |
-  | 403 (Forbidden)             | Access denied for non-admin users                |
-  | 500 (Internal Server Error) | Database or server error                         |
+- Expected Response:
+  ```json
+  {
+    "message": "Found user",
+    "data": {
+      "id": "<userId>",
+      "username": "SampleUser1",
+      "email": "sample1@gmail.com",
+      "isAdmin": false,
+      "createdAt": "2025-09-22T13:55:40.590Z"
+    }
+  }
+  ```
 
 ### Update User
 
-- This endpoint allows updating a user and their related data in the database using the user's ID.
+- Usage:
 
-- HTTP Method: `PATCH`
-
-- Endpoint: http://localhost:3001/users/{userId}
+**PATCH** `http://localhost:5277/api/user-service/users/{userId}`
 
 - Parameters
   - Required: `userId` path parameter
+
+  - Example: `http://localhost:5277/api/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Body
   - At least one of the following fields is required: `username` (string), `email` (string), `password` (string)
@@ -141,123 +156,114 @@
 
 - Headers
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
-  - Auth Rules:
-    - Admin users: Can update any user's data. The server verifies the user associated with the JWT token is an admin user and allows the update of requested user's data.
-    - Non-admin users: Can only update their own data. The server checks if the user ID in the request URL matches the ID of the user associated with the JWT token. If it matches, the server updates the user's own data.
 
-- Responses:
+  - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
+    copy and paste the `<jwt-access-token>` from logging in.
 
-  | Response Code               | Explanation                                             |
-  | --------------------------- | ------------------------------------------------------- |
-  | 200 (OK)                    | User updated successfully, updated user data returned   |
-  | 400 (Bad Request)           | Missing fields                                          |
-  | 401 (Unauthorized)          | Access denied due to missing/invalid/expired JWT        |
-  | 403 (Forbidden)             | Access denied for non-admin users updating others' data |
-  | 404 (Not Found)             | User with the specified ID not found                    |
-  | 409 (Conflict)              | Duplicate username or email encountered                 |
-  | 500 (Internal Server Error) | Database or server error                                |
-
-### Update User Privilege
-
-- This endpoint allows updating a user’s privilege, i.e., promoting or demoting them from admin status.
-
-- HTTP Method: `PATCH`
-
-- Endpoint: http://localhost:3001/users/{userId}
-
-- Parameters
-  - Required: `userId` path parameter
-
-- Body
-  - Required: `isAdmin` (boolean)
-
-    ```json
-    {
-      "isAdmin": true
+- Expected Response:
+  ```json
+  {
+    "message": "Updated data for user {userId}",
+    "data": {
+      "id": "{userId}",
+      "username": "SampleUser123",
+      "email": "sample2@gmail.com",
+      "isAdmin": false,
+      "createdAt": "2025-09-22T13:55:40.590Z"
     }
-    ```
-
-- Headers
-  - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
-  - Auth Rules:
-    - Admin users: Can update any user's privilege. The server verifies the user associated with the JWT token is an admin user and allows the privilege update.
-    - Non-admin users: Not allowed access.
-
-> :bulb: You may need to manually assign admin status to the first user by directly editing the database document before using this endpoint.
-
-- Responses:
-
-  | Response Code               | Explanation                                                     |
-  | --------------------------- | --------------------------------------------------------------- |
-  | 200 (OK)                    | User privilege updated successfully, updated user data returned |
-  | 400 (Bad Request)           | Missing fields                                                  |
-  | 401 (Unauthorized)          | Access denied due to missing/invalid/expired JWT                |
-  | 403 (Forbidden)             | Access denied for non-admin users                               |
-  | 404 (Not Found)             | User with the specified ID not found                            |
-  | 500 (Internal Server Error) | Database or server error                                        |
+  }
+  ```
 
 ### Delete User
 
-- This endpoint allows deletion of a user and their related data from the database using the user's ID.
-- HTTP Method: `DELETE`
-- Endpoint: http://localhost:3001/users/{userId}
+- Usage:
+
+**DELETE** `http://localhost:5277/api/user-service/users/{userId}`
+
 - Parameters
   - Required: `userId` path parameter
+
+  - Example: `http://localhost:5277/api/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Headers
   - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
 
-  - Auth Rules:
-    - Admin users: Can delete any user's data. The server verifies the user associated with the JWT token is an admin user and allows the deletion of requested user's data.
+  - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
+    copy and paste the `<jwt-access-token>` from logging in.
 
-    - Non-admin users: Can only delete their own data. The server checks if the user ID in the request URL matches the ID of the user associated with the JWT token. If it matches, the server deletes the user's own data.
+- Expected Response:
+  ```json
+  {
+    "message": "Deleted user {userId} successfully"
+  }
+  ```
 
-- Responses:
+### Verify Token
 
-  | Response Code               | Explanation                                             |
-  | --------------------------- | ------------------------------------------------------- |
-  | 200 (OK)                    | User deleted successfully                               |
-  | 401 (Unauthorized)          | Access denied due to missing/invalid/expired JWT        |
-  | 403 (Forbidden)             | Access denied for non-admin users deleting others' data |
-  | 404 (Not Found)             | User with the specified ID not found                    |
-  | 500 (Internal Server Error) | Database or server error                                |
+- Usage:
 
-### Login
+**GET** `http://localhost:5277/api/user-service/auth/verify-token`
 
-- This endpoint allows a user to authenticate with an email and password and returns a JWT access token. The token is valid for 1 day and can be used subsequently to access protected resources. For example usage, refer to the [Authorization header section in the Get User endpoint](#auth-header).
-- HTTP Method: `POST`
-- Endpoint: http://localhost:3001/auth/login
+- Headers
+  - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
+
+  - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
+    copy and paste the `<jwt-access-token>` from logging in.
+
+- Expected Response:
+  ```json
+  {
+    "message": "Token verified",
+    "data": {
+      "id": "{userId}",
+      "username": "SampleUser123",
+      "email": "sample123@gmail.com",
+      "isAdmin": false
+    }
+  }
+  ```
+
+### Send OTP
+
+- Usage:
+
+**POST** `http://localhost:5277/api/user-service/auth/send-otp`
+
 - Body
-  - Required: `email` (string), `password` (string)
+  - Required: `email` (string)
+
+    ```json
+    {
+      "email": "sample@gmail.com"
+    }
+    ```
+
+- Expected Response:
+  ```json
+  {
+    "message": "OTP sent to your email"
+  }
+  ```
+
+### Verify OTP
+
+- Usage:
+
+**POST** `http://localhost:5277/api/user-service/auth/verify-otp`
+
+- Body
+  - Required: `email` (string), `otp` (string)
 
     ```json
     {
       "email": "sample@gmail.com",
-      "password": "SecurePassword"
+      "otp": "123456"
     }
     ```
 
-- Responses:
-
-  | Response Code               | Explanation                                        |
-  | --------------------------- | -------------------------------------------------- |
-  | 200 (OK)                    | Login successful, JWT token and user data returned |
-  | 400 (Bad Request)           | Missing fields                                     |
-  | 401 (Unauthorized)          | Incorrect email or password                        |
-  | 500 (Internal Server Error) | Database or server error                           |
-
-### Verify Token
-
-- This endpoint allows one to verify a JWT access token to authenticate and retrieve the user's data associated with the token.
-- HTTP Method: `GET`
-- Endpoint: http://localhost:3001/auth/verify-token
-- Headers
-  - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
-
-- Responses:
-
-  | Response Code               | Explanation                                        |
-  | --------------------------- | -------------------------------------------------- |
-  | 200 (OK)                    | Token verified, authenticated user's data returned |
-  | 401 (Unauthorized)          | Missing/invalid/expired JWT                        |
-  | 500 (Internal Server Error) | Database or server error                           |
+- Expected Response:
+  ```json
+  {
+    "message": "Email verified successfully"
+  }
+  ```
