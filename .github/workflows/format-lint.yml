@@ -222,3 +222,42 @@ jobs:
 
           npx eslint --format json . > eslint-report.json
           cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  ui-shell-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./ui-shell
+          npm install --frozen-lockfile
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./ui-shell
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for collab-ui"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
