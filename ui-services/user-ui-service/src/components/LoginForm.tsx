@@ -1,15 +1,46 @@
+import { useState } from "react";
+import { UserService } from "../api/UserService";
+import { useNavigate } from "react-router-dom";
+
 const LoginForm: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  async function handleLogin() {
+    try {
+      const res = await UserService.login(email, password);
+      console.log("Logged in: ", res.data.accessToken);
+
+      // store the token (somehow)
+
+      navigate("/matching");
+    } catch (err) {
+      if (err instanceof Error) console.error(err.message);
+    }
+  }
+
   return (
-    <form className="bg-white">
+    <form
+      className="bg-white"
+      onSubmit={(e) => {
+        e.preventDefault(); // stop page reload
+        handleLogin();
+      }}
+    >
       <div className="space-y-4">
         <input
           type="email"
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
       </div>
@@ -27,14 +58,12 @@ const LoginForm: React.FC = () => {
         </a>
       </div>
 
-      <a href="/matching">
-        <button
-          type="button"
-          className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
-        >
-          Login
-        </button>
-      </a>
+      <button
+        type="submit"
+        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
+      >
+        Login
+      </button>
       <div className="flex items-center my-6">
         <hr className="flex-1 border-gray-300" />
         <span className="mx-2 text-gray-400 text-sm">or</span>
