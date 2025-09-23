@@ -3,10 +3,16 @@ import { ValidationError } from "./errors.js";
 
 // Throws an error if validation fails
 export function checkUsername(username) {
-  if (typeof username !== "string" || !username.trim()) {
+  if (typeof username !== "string" || username.length === 0) {
     throw new ValidationError("Username is required and must be a string");
   }
-  return username.trim();
+  // Username check
+  if (!/^[a-zA-Z0-9]{3,20}$/.test(username)) {
+    throw new ValidationError(
+      "Username must be 3–20 characters and only contain letters, numbers",
+    );
+  }
+  return username;
 }
 
 export function checkEmail(email) {
@@ -17,10 +23,16 @@ export function checkEmail(email) {
 }
 
 export function checkPassword(password) {
-  if (typeof password !== "string" || !password.trim()) {
+  if (typeof password !== "string" || password.length === 0) {
     throw new ValidationError("Password is required");
   }
-  return password.trim();
+  if (password.length > 64) {
+    throw new ValidationError("Password is longer than 64 characters");
+  }
+  if (password.indexOf(" ") >= 0) {
+    throw new ValidationError("Password should not have any Whitespace");
+  }
+  return password;
 }
 
 export function checkOTP(otp) {

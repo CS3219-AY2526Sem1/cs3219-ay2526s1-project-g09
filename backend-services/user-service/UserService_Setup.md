@@ -44,12 +44,18 @@ Rate Limit: 100 requests/10 min
     }
     ```
 
+  - Note: Username should meet the following requirements:
+    - Username must be 3–20 characters
+    - Username should only contain letters and numbers
+
   - Note: Password should meet the following requirements:
     - Password is 12 characters long
     - Password should have at least 1 uppercase and 1 lowercase character
     - Password should contain a number
     - Password should contain a special character
       - Special characters include: `!"#$%&'()*+,-./\:;<=>?@[]^_`{|}~`
+    - Password should not contain any whitespace
+    - Password should not exceed 64 characters
 
 - Expected Response:
   ```json
