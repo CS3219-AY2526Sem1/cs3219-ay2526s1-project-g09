@@ -3,6 +3,12 @@ import { fetch } from "undici";
 const ENDPOINT = "https://leetcode.com/graphql";
 const baseHeaders = {
   "content-type": "application/json",
+  accept: "application/json, text/plain, */*",
+  origin: "https://leetcode.com",
+  referer: "https://leetcode.com/",
+  // Set a UA so you don't look like a bot with no UA
+  "user-agent":
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36",
 };
 
 interface GraphQLResponse<T> {
@@ -29,16 +35,40 @@ export async function gql<T, Tvariables>(
     body: JSON.stringify({ query, variables }),
   });
 
-  const json: unknown = await res.json();
+  const ctype = res.headers.get("content-type") || "";
+  const raw = await res.text(); // <-- read as text first
 
-  // Type guard check
-  if (!isGraphQLResponse<T>(json)) {
-    throw new Error(`Invalid GraphQL response structure`);
+  if (!res.ok) {
+    throw new Error(
+      `LeetCode HTTP ${res.status} ${res.statusText}; ctype=${ctype}; body=${raw.slice(0, 200)}`,
+    );
   }
 
-  if (json.errors) {
+  if (!ctype.includes("application/json")) {
+    throw new Error(
+      `LeetCode non-JSON response; ctype=${ctype}; body=${raw.slice(0, 200)}`,
+    );
+  }
+
+  let json: unknown;
+  try {
+    json = JSON.parse(raw);
+  } catch (e) {
+    throw new Error(
+      `Failed to parse JSON: ${String(e)}; body=${raw.slice(0, 200)}`,
+    );
+  }
+
+  if (!isGraphQLResponse<T>(json)) {
+    throw new Error(
+      `Invalid GraphQL response structure; body=${raw.slice(0, 200)}`,
+    );
+  }
+
+  if (json.errors?.length) {
     throw new Error(`LeetCode GraphQL errors: ${JSON.stringify(json.errors)}`);
   }
+
   return json.data;
 }
 
