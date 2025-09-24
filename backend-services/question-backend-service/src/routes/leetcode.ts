@@ -4,12 +4,9 @@ import type {
   FastifyRequest,
 } from "fastify";
 import {
-  listFirstN,
   getQuestionDetail,
   fetchAllNonPaidSlugs,
 } from "../services/leetcode.js";
-import { Question } from "../models/question.js";
-import { syncAllNonPaid } from "../services/leetcode.js";
 import { seedLeetCodeBatch } from "../services/seedBatch.js";
 import { SeedCursor } from "../models/question.js";
 import { withDbLimit } from "../lib/dbLimiter.js";
@@ -51,18 +48,6 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     },
   );
 
-  app.post(
-    "/leetcode/seed-all",
-    {
-      config: { rateLimit: { max: 1, timeWindow: "5m" } },
-    },
-    async (req) => {
-      assertAdmin(req);
-      const res = await syncAllNonPaid();
-      return { ok: true, ...res };
-    },
-  );
-
   app.get("/leetcode-test", async () => {
     const list = await fetchAllNonPaidSlugs();
     const slugs = list.map((q) => q.titleSlug);
@@ -82,58 +67,6 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       hints: detail?.hints ?? null,
     };
   });
-
-  // codeql[js/missing-rate-limiting]: Route is protected by @fastify/rate-limit
-  app.post(
-    "/leetcode/seed-first",
-    {
-      config: { rateLimit: { max: 5, timeWindow: "1m" } },
-    },
-    async () => {
-      const list = await listFirstN(1);
-      const first = list.questions[0];
-      if (!first) {
-        return { ok: false, message: "No questions returned from LeetCode." };
-      }
-
-      const detail = await getQuestionDetail(first.titleSlug);
-      if (!detail) {
-        return { ok: false, message: "Could not fetch question detail." };
-      }
-
-      // Upsert by slug
-      const res = await withDbLimit(() =>
-        Question.updateOne(
-          { slug: first.titleSlug },
-          {
-            $set: {
-              titleSlug: first.titleSlug,
-              title: detail.title,
-              isPaidOnly: detail?.isPaidOnly,
-              difficulty: detail?.difficulty,
-              categoryTitle: detail?.categoryTitle ?? null,
-              content: detail?.content ?? null,
-              exampleTestcases: detail?.exampleTestcases ?? null,
-              codeSnippets: detail?.codeSnippets,
-              hints: detail?.hints ?? null,
-            },
-          },
-          { upsert: true },
-        ),
-      );
-
-      // Fetch the saved doc to return it
-      const doc = await withDbLimit(() =>
-        Question.findOne({ slug: first.titleSlug }).lean(),
-      );
-      return {
-        ok: true,
-        upserted: res.upsertedCount > 0,
-        modified: res.modifiedCount > 0,
-        doc,
-      };
-    },
-  );
 };
 
 export default leetcodeRoutes;
