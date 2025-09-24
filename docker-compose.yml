@@ -51,7 +51,6 @@ services:
     ports:
       - "5178:5178"
     container_name: peerprep-history-ui
-
   question-backend-service:
     build:
       context: ./backend-services/question-backend-service
@@ -61,7 +60,6 @@ services:
     ports:
       - "5275:5275"
     container_name: peerprep-question-backend
-
   user-service:
     build:
       context: ./backend-services/user-service
