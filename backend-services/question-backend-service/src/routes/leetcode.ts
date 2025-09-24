@@ -35,29 +35,34 @@ const dbRateLimitStore: Map<string, { count: number; lastAccess: number }> =
   new Map();
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
-  const postRateLimit = {
-    preHandler: app.rateLimit({
-      max: 10,
-      timeWindow: 15 * 60 * 1000, // 15 min
-    }),
-  };
+  app.post(
+    "/leetcode/seed-batch",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "15m" } },
+    },
+    async (req) => {
+      assertAdmin(req);
+      const reset = (req.query as { reset?: string })?.reset === "1";
+      if (reset) {
+        await SeedCursor.findByIdAndDelete("leetcode-questions");
+      }
 
-  app.post("/leetcode/seed-batch", postRateLimit, async (req) => {
-    assertAdmin(req);
-    const reset = (req.query as { reset?: string })?.reset === "1";
-    if (reset) {
-      await SeedCursor.findByIdAndDelete("leetcode-questions");
-    }
+      const res = await seedLeetCodeBatch();
+      return res;
+    },
+  );
 
-    const res = await seedLeetCodeBatch();
-    return res;
-  });
-
-  app.post("/leetcode/seed-all", postRateLimit, async (req) => {
-    assertAdmin(req);
-    const res = await syncAllNonPaid();
-    return { ok: true, ...res };
-  });
+  app.post(
+    "/leetcode/seed-all",
+    {
+      config: { rateLimit: { max: 2, timeWindow: "10m" } },
+    },
+    async (req) => {
+      assertAdmin(req);
+      const res = await syncAllNonPaid();
+      return { ok: true, ...res };
+    },
+  );
 
   app.get("/leetcode-test", async () => {
     const list = await fetchAllNonPaidSlugs();
@@ -80,71 +85,77 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
-  app.post("/leetcode/seed-first", postRateLimit, async (request, reply) => {
-    const ip = request.ip; // Rate limit by IP address
+  app.post(
+    "/leetcode/seed-first",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "10m" } },
+    },
+    async (request, reply) => {
+      const ip = request.ip; // Rate limit by IP address
 
-    // Implement database-specific rate limiting
-    const currentTime = Date.now();
-    const rateLimitWindow = 15 * 60 * 1000; // 15 minute
-    const rateLimitMax = 10;
+      // Implement database-specific rate limiting
+      const currentTime = Date.now();
+      const rateLimitWindow = 15 * 60 * 1000; // 15 minute
+      const rateLimitMax = 10;
 
-    if (dbRateLimitStore.has(ip)) {
-      const data = dbRateLimitStore.get(ip)!;
-      if (currentTime - data.lastAccess < rateLimitWindow) {
-        if (data.count >= rateLimitMax) {
-          return reply.status(429).send({
-            ok: false,
-            message:
-              "Database access rate limit exceeded. Please try again later.",
-          });
+      if (dbRateLimitStore.has(ip)) {
+        const data = dbRateLimitStore.get(ip)!;
+        if (currentTime - data.lastAccess < rateLimitWindow) {
+          if (data.count >= rateLimitMax) {
+            return reply.status(429).send({
+              ok: false,
+              message:
+                "Database access rate limit exceeded. Please try again later.",
+            });
+          }
+          data.count += 1;
+        } else {
+          dbRateLimitStore.set(ip, { count: 1, lastAccess: currentTime });
         }
-        data.count += 1;
       } else {
         dbRateLimitStore.set(ip, { count: 1, lastAccess: currentTime });
       }
-    } else {
-      dbRateLimitStore.set(ip, { count: 1, lastAccess: currentTime });
-    }
 
-    const list = await listFirstN(1);
-    const first = list.questions[0];
-    if (!first) {
-      return { ok: false, message: "No questions returned from LeetCode." };
-    }
+      const list = await listFirstN(1);
+      const first = list.questions[0];
+      if (!first) {
+        return { ok: false, message: "No questions returned from LeetCode." };
+      }
 
-    const detail = await getQuestionDetail(first.titleSlug);
-    if (!detail) {
-      return { ok: false, message: "Could not fetch question detail." };
-    }
+      const detail = await getQuestionDetail(first.titleSlug);
+      if (!detail) {
+        return { ok: false, message: "Could not fetch question detail." };
+      }
 
-    // Upsert by slug
-    const res = await Question.updateOne(
-      { slug: first.titleSlug },
-      {
-        $set: {
-          titleSlug: first.titleSlug,
-          title: detail.title,
-          isPaidOnly: detail?.isPaidOnly,
-          difficulty: detail?.difficulty,
-          categoryTitle: detail?.categoryTitle ?? null,
-          content: detail?.content ?? null,
-          exampleTestcases: detail?.exampleTestcases ?? null,
-          codeSnippets: detail?.codeSnippets,
-          hints: detail?.hints ?? null,
+      // Upsert by slug
+      const res = await Question.updateOne(
+        { slug: first.titleSlug },
+        {
+          $set: {
+            titleSlug: first.titleSlug,
+            title: detail.title,
+            isPaidOnly: detail?.isPaidOnly,
+            difficulty: detail?.difficulty,
+            categoryTitle: detail?.categoryTitle ?? null,
+            content: detail?.content ?? null,
+            exampleTestcases: detail?.exampleTestcases ?? null,
+            codeSnippets: detail?.codeSnippets,
+            hints: detail?.hints ?? null,
+          },
         },
-      },
-      { upsert: true },
-    );
+        { upsert: true },
+      );
 
-    // Fetch the saved doc to return it
-    const doc = await Question.findOne({ slug: first.titleSlug }).lean();
-    return {
-      ok: true,
-      upserted: res.upsertedCount > 0,
-      modified: res.modifiedCount > 0,
-      doc,
-    };
-  });
+      // Fetch the saved doc to return it
+      const doc = await Question.findOne({ slug: first.titleSlug }).lean();
+      return {
+        ok: true,
+        upserted: res.upsertedCount > 0,
+        modified: res.modifiedCount > 0,
+        doc,
+      };
+    },
+  );
 };
 
 export default leetcodeRoutes;
