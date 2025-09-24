@@ -1,5 +1,4 @@
 // scripts/seedBatch.ts
-import { fetchQuestionPage } from "../services/leetcode.js";
 import { Question, SeedCursor } from "../models/question.js";
 import { gql } from "../queries/leetcode.js";
 import { QUERY_LIST, QUERY_DETAIL } from "../queries/leetcode.js";
@@ -184,8 +183,6 @@ export async function fetchNonPaidQuestionList(
   total: number;
   initial_count: number;
 }> {
-  const out: BasicInformation[] = [];
-
   const res = await gql<
     QuestionList,
     {
@@ -197,7 +194,7 @@ export async function fetchNonPaidQuestionList(
   >(QUERY_LIST, { categorySlug: "", limit: limit, skip: skip, filters: {} });
 
   const { total, questions } = res.problemsetQuestionList;
-  let initial_count = questions.length;
+  const initial_count = questions.length;
   const questionList = questions.filter((q) => !q.isPaidOnly);
   return { questionList, total, initial_count };
 }
