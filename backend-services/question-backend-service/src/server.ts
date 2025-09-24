@@ -9,10 +9,9 @@ export async function buildServer() {
   // plugins
   await app.register(cors, { origin: "*" });
   await app.register(db);
-  await app.register(import("@fastify/rate-limit"), {
+  await app.register((await import("@fastify/rate-limit")).default, {
     global: false,
-    max: 5,
-    timeWindow: "1 minute",
+    timeWindow: "15m",
   });
 
   // routes
