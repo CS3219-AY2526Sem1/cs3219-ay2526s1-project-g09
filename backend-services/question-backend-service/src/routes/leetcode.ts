@@ -53,7 +53,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     return res;
   });
 
-  app.post("/leetcode/seed-all", async (req) => {
+  app.post("/leetcode/seed-all", postRateLimit, async (req) => {
     assertAdmin(req);
     const res = await syncAllNonPaid();
     return { ok: true, ...res };
