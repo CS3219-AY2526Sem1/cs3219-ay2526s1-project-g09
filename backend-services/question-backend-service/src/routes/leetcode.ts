@@ -12,7 +12,7 @@ import { Question } from "../models/question.js";
 import { syncAllNonPaid } from "../services/leetcode.js";
 import { seedLeetCodeBatch } from "../services/seedBatch.js";
 import { SeedCursor } from "../models/question.js";
-import { withDbLimit } from "../../lib/dblimiter.js";
+import { withDbLimit } from "../lib/dbLimiter.js";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
