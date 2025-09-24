@@ -12,6 +12,7 @@ import { Question } from "../models/question.js";
 import { syncAllNonPaid } from "../services/leetcode.js";
 import { seedLeetCodeBatch } from "../services/seedBatch.js";
 import { SeedCursor } from "../models/question.js";
+import { withDbLimit } from "../../lib/dblimiter.js";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
@@ -99,26 +100,30 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       }
 
       // Upsert by slug
-      const res = await Question.updateOne(
-        { slug: first.titleSlug },
-        {
-          $set: {
-            titleSlug: first.titleSlug,
-            title: detail.title,
-            isPaidOnly: detail?.isPaidOnly,
-            difficulty: detail?.difficulty,
-            categoryTitle: detail?.categoryTitle ?? null,
-            content: detail?.content ?? null,
-            exampleTestcases: detail?.exampleTestcases ?? null,
-            codeSnippets: detail?.codeSnippets,
-            hints: detail?.hints ?? null,
+      const res = await withDbLimit(() =>
+        Question.updateOne(
+          { slug: first.titleSlug },
+          {
+            $set: {
+              titleSlug: first.titleSlug,
+              title: detail.title,
+              isPaidOnly: detail?.isPaidOnly,
+              difficulty: detail?.difficulty,
+              categoryTitle: detail?.categoryTitle ?? null,
+              content: detail?.content ?? null,
+              exampleTestcases: detail?.exampleTestcases ?? null,
+              codeSnippets: detail?.codeSnippets,
+              hints: detail?.hints ?? null,
+            },
           },
-        },
-        { upsert: true },
+          { upsert: true },
+        ),
       );
 
       // Fetch the saved doc to return it
-      const doc = await Question.findOne({ slug: first.titleSlug }).lean();
+      const doc = await withDbLimit(() =>
+        Question.findOne({ slug: first.titleSlug }).lean(),
+      );
       return {
         ok: true,
         upserted: res.upsertedCount > 0,
