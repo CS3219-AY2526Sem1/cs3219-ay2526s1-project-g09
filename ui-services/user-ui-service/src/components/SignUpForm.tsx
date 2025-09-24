@@ -2,7 +2,7 @@ import { useState } from "react";
 import { UserService } from "../api/UserService";
 
 interface SignUpFormProps {
-  onSignUpSuccess?: (email: string) => void;
+  onSignUpSuccess?: (user: any) => void;
 }
 
 const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
@@ -27,8 +27,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
       // Generate and send otp to email
       await UserService.sendOtp(email);
 
+      const newUser = res.data;
+
       // Navigate to otp page
-      onSignUpSuccess?.(email);
+      onSignUpSuccess?.(newUser);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

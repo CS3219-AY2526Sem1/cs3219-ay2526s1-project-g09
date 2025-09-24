@@ -1,7 +1,15 @@
 import { useState } from "react";
+import { UserService } from "../api/UserService";
+import type { User } from "../api/UserService";
 
-const OtpForm: React.FC = () => {
+interface OtpFormProps {
+  user: User;
+  onOTPSuccess?: () => void;
+}
+
+const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (value: string, index: number) => {
     if (value.length > 1) return;
@@ -16,11 +24,23 @@ const OtpForm: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = otp.join("");
     console.log("Verifying OTP:", code);
     // TODO: Call API for OTP verification
+    try {
+      const email = user.email;
+      await UserService.verifyOtp(email, code);
+    } catch (err) {
+      console.error("OTP verification failed:", err);
+      setError(
+        "Invalid or Expired OTP. Try resending the code and verify again.",
+      );
+    }
+
+    // go to matching page
+    onOTPSuccess?.();
   };
 
   return (
@@ -47,6 +67,8 @@ const OtpForm: React.FC = () => {
             />
           ))}
         </div>
+
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
         {/* Resend link */}
         <p className="text-sm text-gray-500 mb-6">
