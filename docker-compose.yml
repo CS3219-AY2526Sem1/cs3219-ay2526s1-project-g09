@@ -52,12 +52,12 @@ services:
       - "5178:5178"
     container_name: peerprep-history-ui
 
-  # user-service:
-  #   build:
-  #     context: ./backend-services/user-service
-  #     dockerfile: Dockerfile
-  #   env_file:
-  #     - ./backend-services/user-service/.env
-  #   ports:
-  #     - "5277:5277"
-  #   container_name: peerprep-user-service-backend
+  user-service:
+    build:
+      context: ./backend-services/user-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend-services/user-service/.env
+    ports:
+      - "5277:5277"
+    container_name: peerprep-user-service-backend
