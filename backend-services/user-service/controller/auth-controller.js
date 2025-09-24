@@ -127,8 +127,8 @@ export async function verifyOTP(req, res) {
     const user = await _findUserByEmail(email);
 
     // Update verification status
-    await _updateVerificationById(user, true);
-    await _updateUserExpirationById(user, null);
+    await _updateVerificationById(user._id, true);
+    await _updateUserExpirationById(user._id, null);
 
     res.json({ message: "Email verified successfully" });
   } catch (err) {
