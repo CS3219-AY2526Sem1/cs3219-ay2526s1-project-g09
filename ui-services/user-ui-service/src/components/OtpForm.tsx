@@ -1,7 +1,15 @@
 import { useState } from "react";
+import { UserService } from "../api/UserService";
+import type { User } from "../api/UserService";
 
-const OtpForm: React.FC = () => {
+interface OtpFormProps {
+  user: User;
+  onOTPSuccess?: (accessToken: string, user: User) => void;
+}
+
+const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (value: string, index: number) => {
     if (value.length > 1) return;
@@ -16,11 +24,24 @@ const OtpForm: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = otp.join("");
     console.log("Verifying OTP:", code);
-    // TODO: Call API for OTP verification
+    try {
+      const email = user.email;
+      // verify otp then issue jwt token to log user in
+      const res = await UserService.verifyOtp(email, code);
+
+      const accessToken = res.accessToken;
+      // go to matching page
+      onOTPSuccess?.(accessToken, user);
+    } catch (err) {
+      console.error("OTP verification failed:", err);
+      setError(
+        "Invalid or Expired OTP. Try resending the code and verify again.",
+      );
+    }
   };
 
   return (
@@ -32,7 +53,12 @@ const OtpForm: React.FC = () => {
       </p>
 
       {/* OTP Inputs */}
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(e);
+        }}
+      >
         <div className="flex justify-center space-x-3 mb-4">
           {otp.map((digit, i) => (
             <input
@@ -48,6 +74,8 @@ const OtpForm: React.FC = () => {
           ))}
         </div>
 
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
         {/* Resend link */}
         <p className="text-sm text-gray-500 mb-6">
           Didn’t receive the code?{" "}
@@ -60,14 +88,12 @@ const OtpForm: React.FC = () => {
           </button>
         </p>
 
-        <a href="/setDisplayName">
-          <button
-            type="button"
-            className="w-full py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition"
-          >
-            Verify OTP
-          </button>
-        </a>
+        <button
+          type="submit"
+          className="w-full py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition"
+        >
+          Verify OTP
+        </button>
       </form>
     </div>
   );

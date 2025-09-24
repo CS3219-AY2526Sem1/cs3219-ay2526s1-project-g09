@@ -10,6 +10,7 @@ import {
   findUserByUsernameOrEmail as _findUserByUsernameOrEmail,
   updateUserById as _updateUserById,
   updateUserPrivilegeById as _updateUserPrivilegeById,
+  updateUserExpirationById as _updateUserExpirationById,
 } from "../model/repository.js";
 import {
   checkUsername,
@@ -42,6 +43,10 @@ export async function createUser(req, res) {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
     const createdUser = await _createUser(username, email, hashedPassword);
+    await _updateUserExpirationById(
+      createdUser._id,
+      new Date(Date.now() + 24 * 60 * 60 * 1000),
+    ); // Unverified users should expire after 24h
     return res.status(201).json({
       message: `Created new user ${username} successfully`,
       data: formatUserResponse(createdUser),
@@ -214,6 +219,7 @@ export function formatUserResponse(user) {
     username: user.username,
     email: user.email,
     isAdmin: user.isAdmin,
+    isVerified: user.isVerified,
     createdAt: user.createdAt,
   };
 }

@@ -1,18 +1,84 @@
-const LoginForm: React.FC = () => {
+import { useState } from "react";
+import { UserService } from "../api/UserService";
+import type { User } from "../api/UserService";
+import { ApiError } from "../api/UserServiceErrors";
+
+interface LoginFormProps {
+  onLoginSuccess?: (token: string, user: User) => void;
+  onLoginRequireOtp?: (user: User) => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({
+  onLoginSuccess,
+  onLoginRequireOtp,
+}) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleLogin() {
+    try {
+      const res = await UserService.login(email, password);
+      // check if user if verified or not
+      // if not verified, send otp and navigate to otp page
+      if (!res.data.isVerified) {
+        onLoginRequireOtp?.(res.data); // pass email, userId, etc.
+        return;
+      }
+
+      const user = res.data;
+      // if verified, follow below
+      console.log("Logged in:", user);
+
+      if (res.accessToken) {
+        // store the token (somehow)
+        // TODO: figure out how localStorage works
+        localStorage.setItem("authToken", res.accessToken);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // navigate to Matching page
+        onLoginSuccess?.(res.accessToken, user);
+      } else {
+        throw new ApiError("Missing JWT Token.");
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        console.error(err.message);
+        setError("API Error. Please refresh the page and try again.");
+      }
+      if (err instanceof Error) {
+        console.error(err.message);
+        setError("Invalid credentials. Please try again.");
+      }
+    }
+  }
+
   return (
-    <form className="bg-white">
+    <form
+      className="bg-white"
+      onSubmit={(e) => {
+        e.preventDefault(); // stop page reload
+        handleLogin();
+      }}
+    >
       <div className="space-y-4">
         <input
           type="email"
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
         />
       </div>
+
+      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
       <div className="flex items-center justify-between mt-4">
         <label className="flex items-center space-x-2">
@@ -27,14 +93,12 @@ const LoginForm: React.FC = () => {
         </a>
       </div>
 
-      <a href="/matching">
-        <button
-          type="button"
-          className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
-        >
-          Login
-        </button>
-      </a>
+      <button
+        type="submit"
+        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
+      >
+        Login
+      </button>
       <div className="flex items-center my-6">
         <hr className="flex-1 border-gray-300" />
         <span className="mx-2 text-gray-400 text-sm">or</span>
