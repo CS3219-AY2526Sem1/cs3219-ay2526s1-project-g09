@@ -6,9 +6,12 @@ import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default defineConfig(
-  [globalIgnores(["dist"])],
+  {
+    ignores: ["eslint.config.mjs", "dist"],
+  },
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
+
   {
     languageOptions: {
       parserOptions: {
