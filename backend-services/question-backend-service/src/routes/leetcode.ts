@@ -1,4 +1,8 @@
-import type { FastifyInstance, FastifyPluginCallback } from "fastify";
+import type {
+  FastifyInstance,
+  FastifyPluginCallback,
+  FastifyRequest,
+} from "fastify";
 import {
   listFirstN,
   getQuestionDetail,
@@ -11,11 +15,18 @@ import { SeedCursor } from "../models/question.js";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
-function assertAdmin(req: any) {
-  const token = req.headers["x-admin-token"];
+function getHeader(req: FastifyRequest, name: string): string | undefined {
+  const headers = req.headers as Record<string, unknown> | undefined;
+  const value = headers?.[name];
+  if (typeof value === "string") return value;
+  if (Array.isArray(value) && typeof value[0] === "string") return value[0];
+  return undefined;
+}
+
+function assertAdmin(req: FastifyRequest) {
+  const token = getHeader(req, "x-admin-token");
   if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
-    const err = new Error("Unauthorized");
-    throw err;
+    throw new Error("Unauthorized");
   }
 }
 
@@ -32,6 +43,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   };
 
   app.post("/leetcode/seed-batch", postRateLimit, async (req) => {
+    assertAdmin(req);
     const reset = (req.query as { reset?: string })?.reset === "1";
     if (reset) {
       await SeedCursor.findByIdAndDelete("leetcode-questions");
