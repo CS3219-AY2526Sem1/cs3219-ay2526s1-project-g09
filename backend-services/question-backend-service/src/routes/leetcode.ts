@@ -34,7 +34,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.post(
     "/leetcode/seed-batch",
     {
-      config: { rateLimit: { max: 10, timeWindow: "15m" } },
+      config: { rateLimit: { max: 1, timeWindow: "1m" } },
     },
     async (req) => {
       assertAdmin(req);
@@ -51,7 +51,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.post(
     "/leetcode/seed-all",
     {
-      config: { rateLimit: { max: 2, timeWindow: "10m" } },
+      config: { rateLimit: { max: 1, timeWindow: "5m" } },
     },
     async (req) => {
       assertAdmin(req);
@@ -80,11 +80,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     };
   });
 
-  // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
+  // codeql[js/missing-rate-limiting]: Route is protected by @fastify/rate-limit
   app.post(
     "/leetcode/seed-first",
     {
-      config: { rateLimit: { max: 10, timeWindow: "10m" } },
+      config: { rateLimit: { max: 5, timeWindow: "1m" } },
     },
     async () => {
       const list = await listFirstN(1);
