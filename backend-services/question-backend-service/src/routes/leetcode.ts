@@ -41,7 +41,9 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       assertAdmin(req);
       const reset = (req.query as { reset?: string })?.reset === "1";
       if (reset) {
-        await SeedCursor.findByIdAndDelete("leetcode-questions");
+        await withDbLimit(() =>
+          SeedCursor.findByIdAndDelete("leetcode-questions"),
+        );
       }
 
       const res = await seedLeetCodeBatch();
