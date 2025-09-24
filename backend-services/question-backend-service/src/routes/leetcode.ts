@@ -30,10 +30,6 @@ function assertAdmin(req: FastifyRequest) {
   }
 }
 
-// In-memory store for rate limiting (can be replaced with Redis)
-const dbRateLimitStore: Map<string, { count: number; lastAccess: number }> =
-  new Map();
-
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.post(
     "/leetcode/seed-batch",
@@ -90,32 +86,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     {
       config: { rateLimit: { max: 10, timeWindow: "10m" } },
     },
-    async (request, reply) => {
-      const ip = request.ip; // Rate limit by IP address
-
-      // Implement database-specific rate limiting
-      const currentTime = Date.now();
-      const rateLimitWindow = 15 * 60 * 1000; // 15 minute
-      const rateLimitMax = 10;
-
-      if (dbRateLimitStore.has(ip)) {
-        const data = dbRateLimitStore.get(ip)!;
-        if (currentTime - data.lastAccess < rateLimitWindow) {
-          if (data.count >= rateLimitMax) {
-            return reply.status(429).send({
-              ok: false,
-              message:
-                "Database access rate limit exceeded. Please try again later.",
-            });
-          }
-          data.count += 1;
-        } else {
-          dbRateLimitStore.set(ip, { count: 1, lastAccess: currentTime });
-        }
-      } else {
-        dbRateLimitStore.set(ip, { count: 1, lastAccess: currentTime });
-      }
-
+    async () => {
       const list = await listFirstN(1);
       const first = list.questions[0];
       if (!first) {
