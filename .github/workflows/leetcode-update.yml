@@ -1,0 +1,25 @@
+name: Sync Question Bank
+on:
+  schedule:
+    - cron: "*/15 * * * *" # Every 15 minutes
+jobs:
+  sync_leetcode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Run published docker image
+        run: |
+          docker pull ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/peerprep-question-backend:latest
+          docker run --rm ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/peerprep-question-backend:latest
+
+      - name: Sync LeetCode Questions
+        run: |
+          response=$(curl --request POST -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" --url "http://127.0.0.1:5275/api/v1/leetcode/seed-batch" | jq .)
+          if [ $response -ne 200 ]; then
+            echo "Upload is NOT successful!"
+            1
+          else 
+            echo "Upload is successful!"
+          fi
