@@ -5,15 +5,7 @@ export interface User {
   username: string;
   email: string;
   isAdmin: boolean;
-  createdAt: string;
-}
-
-export interface AuthResponse {
-  accessToken: string;
-  id: string;
-  username: string;
-  email: string;
-  isAdmin: boolean;
+  isVerified: boolean;
   createdAt: string;
 }
 
@@ -45,10 +37,13 @@ export const UserService = {
     }),
 
   login: (email: string, password: string) =>
-    request<{ message: string; data: AuthResponse }>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    }),
+    request<{ message: string; accessToken?: string; data: User }>(
+      "/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      },
+    ),
 
   verifyToken: (token: string) =>
     request<{ message: string; data: User }>("/auth/verify-token", {

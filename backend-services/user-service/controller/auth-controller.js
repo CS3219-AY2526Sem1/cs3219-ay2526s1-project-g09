@@ -38,6 +38,15 @@ export async function handleLogin(req, res) {
       return res.status(401).json({ message: "Wrong email and/or password" });
     }
 
+    // If user is not verified, send user data only
+    if (!user.isVerified) {
+      await generateOTPforEmail(email);
+      return res.status(200).json({
+        message: "User not verified. OTP sent to email.",
+        data: formatUserResponse(user),
+      });
+    }
+
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -49,7 +58,8 @@ export async function handleLogin(req, res) {
     );
     return res.status(200).json({
       message: "User logged in",
-      data: { accessToken, ...formatUserResponse(user) },
+      accessToken,
+      data: formatUserResponse(user),
     });
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -78,29 +88,33 @@ export async function generateAndSendOTP(req, res) {
 
     const email = checkEmail(dirtyEmail);
 
-    // Delete any existing OTP in DB
-    await _deleteOTPByEmail(email);
+    await generateOTPforEmail(email);
 
-    // Generate 6-digit OTP
-    const otp = otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      specialChars: false,
-      lowerCaseAlphabets: false,
-    });
-
-    // Save OTP in DB
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    await _createOTPForEmail(email, otp, expiresAt);
-
-    // Send OTP
-    const subject = "Verify Your PeerPrep Email Address";
-    const body = "Your OTP is: " + otp;
-    await _sendEmail(email, subject, body);
-
-    res.json({ message: "OTP sent to your email" });
+    res.status(200).json({ message: "OTP sent to your email" });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
+}
+
+async function generateOTPforEmail(email) {
+  // Delete any existing OTP in DB
+  await _deleteOTPByEmail(email);
+
+  // Generate 6-digit OTP
+  const otp = otpGenerator.generate(6, {
+    upperCaseAlphabets: false,
+    specialChars: false,
+    lowerCaseAlphabets: false,
+  });
+
+  // Save OTP in DB
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  await _createOTPForEmail(email, otp, expiresAt);
+
+  // Send OTP
+  const subject = "Verify Your PeerPrep Email Address";
+  const body = "Your OTP is: " + otp;
+  await _sendEmail(email, subject, body);
 }
 
 export async function verifyOTP(req, res) {

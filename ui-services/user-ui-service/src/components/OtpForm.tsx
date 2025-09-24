@@ -31,16 +31,17 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
     // TODO: Call API for OTP verification
     try {
       const email = user.email;
+      // verify otp then issue jwt token to log user in
       await UserService.verifyOtp(email, code);
+
+      // go to matching page
+      onOTPSuccess?.();
     } catch (err) {
       console.error("OTP verification failed:", err);
       setError(
         "Invalid or Expired OTP. Try resending the code and verify again.",
       );
     }
-
-    // go to matching page
-    onOTPSuccess?.();
   };
 
   return (

@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { UserService } from "../api/UserService";
+import type { User } from "../api/UserService";
+import { ApiError } from "../api/UserServiceErrors";
 
 interface LoginFormProps {
-  onLoginSuccess?: (token: string, user: any) => void;
+  onLoginSuccess?: (token: string, user: User) => void;
+  onLoginRequireOtp?: (user: User) => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+const LoginForm: React.FC<LoginFormProps> = ({
+  onLoginSuccess,
+  onLoginRequireOtp,
+}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -13,16 +19,32 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   async function handleLogin() {
     try {
       const res = await UserService.login(email, password);
-      const { accessToken, ...user } = res.data;
+      // check if user if verified or not
+      // if not verified, send otp and navigate to otp page
+      if (!res.data.isVerified) {
+        onLoginRequireOtp?.(res.data); // pass email, userId, etc.
+        return;
+      }
+
+      const user = res.data;
+      // if verified, follow below
       console.log("Logged in:", user);
 
-      // store the token (somehow)
-      localStorage.setItem("authToken", accessToken);
-      localStorage.setItem("user", JSON.stringify(user));
+      if (res.accessToken) {
+        // store the token (somehow)
+        localStorage.setItem("authToken", res.accessToken);
+        localStorage.setItem("user", JSON.stringify(user));
 
-      // navigate to Matching page
-      onLoginSuccess?.(accessToken, user);
+        // navigate to Matching page
+        onLoginSuccess?.(res.accessToken, user);
+      } else {
+        throw new ApiError("Missing JWT Token.");
+      }
     } catch (err) {
+      if (err instanceof ApiError) {
+        console.error(err.message);
+        setError("API Error. Please refresh the page and try again.");
+      }
       if (err instanceof Error) {
         console.error(err.message);
         setError("Invalid credentials. Please try again.");
