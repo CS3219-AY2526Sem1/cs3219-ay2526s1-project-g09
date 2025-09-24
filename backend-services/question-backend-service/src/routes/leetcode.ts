@@ -31,7 +31,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     }),
   };
 
-  app.post("/leetcode/seed-batch", { postRateLimit }, async (req) => {
+  app.post("/leetcode/seed-batch", postRateLimit, async (req) => {
     const reset = (req.query as { reset?: string })?.reset === "1";
     if (reset) {
       await SeedCursor.findByIdAndDelete("leetcode-questions");
