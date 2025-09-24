@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { UserService } from "../api/UserService";
+import type { User } from "../api/UserService";
 
 interface SignUpFormProps {
-  onSignUpSuccess?: (user: any) => void;
+  onSignUpSuccess?: (user: User) => void;
 }
 
 const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
@@ -39,7 +40,13 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
   }
 
   return (
-    <form className="bg-white" onSubmit={handleSignUp}>
+    <form
+      className="bg-white"
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSignUp(e);
+      }}
+    >
       <div className="space-y-4">
         <input
           type="username"

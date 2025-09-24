@@ -8,10 +8,9 @@ const OtpPage: React.FC = () => {
   const location = useLocation();
 
   const user = (location.state as { user: User }).user;
-
+  // TODO: pass token and user info to matching page
   return (
     <AuthLayout>
-      // TODO: pass token and user info to matching page
       <OtpForm user={user} onOTPSuccess={() => navigate("/matching")} />
     </AuthLayout>
   );

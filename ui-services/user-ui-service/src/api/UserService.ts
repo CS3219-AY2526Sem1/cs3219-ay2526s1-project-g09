@@ -18,6 +18,7 @@ async function request<T>(
       "Content-Type": "application/json",
       ...(options.headers || {}),
     },
+    credentials: "include",
     ...options,
   });
 
@@ -58,10 +59,13 @@ export const UserService = {
     }),
 
   verifyOtp: (email: string, otp: string) =>
-    request<{ message: string }>("/auth/verify-otp", {
-      method: "POST",
-      body: JSON.stringify({ email, otp }),
-    }),
+    request<{ message: string; accessToken: string; data: User }>(
+      "/auth/verify-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, otp }),
+      },
+    ),
 
   getUser: (userId: string, token: string) =>
     request<{ message: string; data: User }>(`/users/${userId}`, {

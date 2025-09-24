@@ -4,7 +4,7 @@ import type { User } from "../api/UserService";
 
 interface OtpFormProps {
   user: User;
-  onOTPSuccess?: () => void;
+  onOTPSuccess?: (accessToken: string, user: User) => void;
 }
 
 const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
@@ -31,10 +31,11 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
     try {
       const email = user.email;
       // verify otp then issue jwt token to log user in
-      await UserService.verifyOtp(email, code);
+      const res = await UserService.verifyOtp(email, code);
 
+      const accessToken = res.accessToken;
       // go to matching page
-      onOTPSuccess?.();
+      onOTPSuccess?.(accessToken, user);
     } catch (err) {
       console.error("OTP verification failed:", err);
       setError(
@@ -52,7 +53,12 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
       </p>
 
       {/* OTP Inputs */}
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(e);
+        }}
+      >
         <div className="flex justify-center space-x-3 mb-4">
           {otp.map((digit, i) => (
             <input
@@ -82,14 +88,12 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
           </button>
         </p>
 
-        <a href="/setDisplayName">
-          <button
-            type="button"
-            className="w-full py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition"
-          >
-            Verify OTP
-          </button>
-        </a>
+        <button
+          type="submit"
+          className="w-full py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition"
+        >
+          Verify OTP
+        </button>
       </form>
     </div>
   );
