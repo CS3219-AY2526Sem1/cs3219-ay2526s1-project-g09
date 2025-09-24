@@ -69,7 +69,6 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build & Push
-        if: ${{ github.event_name != 'pull_request' }}
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.service.context }}
