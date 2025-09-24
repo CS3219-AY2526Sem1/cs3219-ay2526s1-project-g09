@@ -24,7 +24,14 @@ const dbRateLimitStore: Map<string, { count: number; lastAccess: number }> =
   new Map();
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
-  app.post("/leetcode/seed-batch", async (req, reply) => {
+  const postRateLimit = {
+    preHandler: app.rateLimit({
+      max: 10,
+      timeWindow: 15 * 60 * 1000, // 15 min
+    }),
+  };
+
+  app.post("/leetcode/seed-batch", { postRateLimit }, async (req) => {
     const reset = (req.query as { reset?: string })?.reset === "1";
     if (reset) {
       await SeedCursor.findByIdAndDelete("leetcode-questions");
@@ -34,7 +41,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     return res;
   });
 
-  app.post("/leetcode/seed-all", async (req, reply) => {
+  app.post("/leetcode/seed-all", async (req) => {
     assertAdmin(req);
     const res = await syncAllNonPaid();
     return { ok: true, ...res };
@@ -59,13 +66,6 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       hints: detail?.hints ?? null,
     };
   });
-
-  const postRateLimit = {
-    preHandler: app.rateLimit({
-      max: 3,
-      timeWindow: 15 * 60 * 1000, // 15 min
-    }),
-  };
 
   // POST /leetcode/seed-first — fetch first question and upsert into MongoDB
   app.post("/leetcode/seed-first", postRateLimit, async (request, reply) => {
