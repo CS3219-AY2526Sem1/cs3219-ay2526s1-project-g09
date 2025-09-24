@@ -7,8 +7,6 @@ import {
   findOTPByEmail as _findOTPByEmail,
   deleteOTPByEmail as _deleteOTPByEmail,
   createOTPForEmail as _createOTPForEmail,
-  updateVerificationById as _updateVerificationById,
-  updateUserExpirationById as _updateUserExpirationById,
 } from "../model/repository.js";
 import { formatUserResponse } from "./user-controller.js";
 import { sendEmail as _sendEmail } from "../utils/email-sender.js";
@@ -122,13 +120,6 @@ export async function verifyOTP(req, res) {
 
     // Delete used OTP
     await _deleteOTPByEmail(email);
-
-    // Get userId for email
-    const user = await _findUserByEmail(email);
-
-    // Update verification status
-    await _updateVerificationById(user, true);
-    await _updateUserExpirationById(user, null);
 
     res.json({ message: "Email verified successfully" });
   } catch (err) {

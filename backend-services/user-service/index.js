@@ -11,7 +11,14 @@ app.use(express.json());
 // allow cross-origin requests to reach the Express.js server
 // from frontend domain
 
-const whitelist = ["http://localhost:5173"];
+const whitelist = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:5177",
+  "http://localhost:5178",
+];
 
 app.use(
   cors({
