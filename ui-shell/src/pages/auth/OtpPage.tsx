@@ -11,7 +11,8 @@ const OtpPage: React.FC = () => {
 
   return (
     <AuthLayout>
-      <OtpForm user={user} onOTPSuccess={() => navigate("/login")} />
+      // TODO: pass token and user info to matching page
+      <OtpForm user={user} onOTPSuccess={() => navigate("/matching")} />
     </AuthLayout>
   );
 };

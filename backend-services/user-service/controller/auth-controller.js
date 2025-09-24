@@ -47,15 +47,8 @@ export async function handleLogin(req, res) {
       });
     }
 
-    const accessToken = jwt.sign(
-      {
-        id: user.id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1d",
-      },
-    );
+    const accessToken = generateToken(user);
+
     return res.status(200).json({
       message: "User logged in",
       accessToken,
@@ -69,6 +62,19 @@ export async function handleLogin(req, res) {
     console.log(err);
     return res.status(500).json({ message: err.message });
   }
+}
+
+async function generateToken(user) {
+  const accessToken = jwt.sign(
+    {
+      id: user.id,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1d",
+    },
+  );
+  return accessToken;
 }
 
 export async function handleVerifyToken(req, res) {
@@ -90,7 +96,7 @@ export async function generateAndSendOTP(req, res) {
 
     await generateOTPforEmail(email);
 
-    res.status(200).json({ message: "OTP sent to your email" });
+    return res.status(200).json({ message: "OTP sent to your email" });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -144,7 +150,13 @@ export async function verifyOTP(req, res) {
     await _updateVerificationById(user._id, true);
     await _updateUserExpirationById(user._id, null);
 
-    res.json({ message: "Email verified successfully" });
+    // assign jwt token to user
+    const accessToken = generateToken(user);
+    return res.status(200).json({
+      message: "Email verified successfully",
+      accessToken,
+      data: formatUserResponse(user),
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

@@ -32,6 +32,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       if (res.accessToken) {
         // store the token (somehow)
+        // TODO: figure out how localStorage works
         localStorage.setItem("authToken", res.accessToken);
         localStorage.setItem("user", JSON.stringify(user));
 

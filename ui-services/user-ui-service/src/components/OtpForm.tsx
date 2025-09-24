@@ -28,7 +28,6 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
     e.preventDefault();
     const code = otp.join("");
     console.log("Verifying OTP:", code);
-    // TODO: Call API for OTP verification
     try {
       const email = user.email;
       // verify otp then issue jwt token to log user in
