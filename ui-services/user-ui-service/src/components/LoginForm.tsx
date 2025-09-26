@@ -33,9 +33,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
       if (res.accessToken) {
         // store the token (somehow)
         // Soln: sessionStorage
-
+        console.log("Access token: ", res.accessToken);
         sessionStorage.setItem("authToken", res.accessToken);
         sessionStorage.setItem("user", JSON.stringify(user));
+        console.log(sessionStorage.getItem("authToken"));
+        console.log(sessionStorage.getItem("user"));
 
         // navigate to Matching page
         onLoginSuccess?.(res.accessToken, user);
