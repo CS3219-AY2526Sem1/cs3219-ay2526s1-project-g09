@@ -62,10 +62,10 @@ services:
     container_name: peerprep-question-backend
   user-service:
     build:
-      context: ./backend-services/user-service
+      context: ./backend-services/user-backend-service
       dockerfile: Dockerfile
     env_file:
-      - ./backend-services/user-service/.env
+      - ./backend-services/user-backend-service/.env
     ports:
       - "5277:5277"
     container_name: peerprep-user-service-backend
