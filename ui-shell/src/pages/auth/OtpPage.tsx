@@ -1,6 +1,6 @@
 import AuthLayout from "@components/auth/AuthLayout";
 import OtpForm from "userUiService/OtpForm";
-import type { User } from "userUiService/api/UserService";
+import type { User } from "../../api/AuthService";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const OtpPage: React.FC = () => {

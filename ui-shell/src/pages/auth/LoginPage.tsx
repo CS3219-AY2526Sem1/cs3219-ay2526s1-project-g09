@@ -1,7 +1,7 @@
 import AuthLayout from "@components/auth/AuthLayout";
 import LoginForm from "userUiService/LoginForm";
 import { useNavigate } from "react-router-dom";
-import type { User } from "userUiService/api/UserService";
+import type { User } from "../../api/AuthService";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,7 +12,6 @@ const LoginPage: React.FC = () => {
         onLoginRequireOtp={(user: User) =>
           navigate("/otp", { state: { user } })
         }
-        // TODO: pass token and user info to matching page
         onLoginSuccess={() => navigate("/matching")}
       />
     </AuthLayout>
