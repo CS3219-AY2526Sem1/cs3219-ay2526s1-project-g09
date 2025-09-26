@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import peerPrepIconWhite from "@assets/icon_white.svg";
 import { cn } from "@/lib/utils";
+import LogoutButton from "userUiService/LogoutButton";
 
 const NavHeader: React.FC = () => {
   const location = useLocation();
@@ -41,11 +42,7 @@ const NavHeader: React.FC = () => {
           </Link>
         </div>
 
-        <Link to="/">
-          <button className="px-4 py-2 bg-black text-white rounded-lg shadow hover:bg-gray-800 transition">
-            Logout
-          </button>
-        </Link>
+        <LogoutButton />
       </div>
     </nav>
   );

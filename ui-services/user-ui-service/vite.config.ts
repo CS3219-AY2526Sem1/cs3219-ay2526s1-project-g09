@@ -19,6 +19,7 @@ export default defineConfig({
         "./OtpForm": "./src/components/OtpForm",
         "./SetDisplayNameForm": "./src/components/SetDisplayNameForm",
         "./SignUpForm": "./src/components/SignUpForm",
+        "./LogoutButton": "./src/components/LogoutButton",
       },
       shared: ["react", "react-dom"],
     }),
