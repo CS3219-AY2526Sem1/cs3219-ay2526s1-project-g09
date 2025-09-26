@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { UserService } from "../api/UserService";
 import type { User } from "../api/UserService";
+import { ApiError } from "../api/UserServiceErrors";
 
 interface OtpFormProps {
   user: User;
@@ -34,9 +35,24 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
       const res = await UserService.verifyOtp(email, code);
 
       const accessToken = res.accessToken;
-      // go to matching page
-      onOTPSuccess?.(accessToken, user);
+
+      if (res.accessToken) {
+        // store the token (somehow)
+        // Soln: sessionStorage
+
+        sessionStorage.setItem("authToken", res.accessToken);
+        sessionStorage.setItem("user", JSON.stringify(user));
+
+        // go to matching page
+        onOTPSuccess?.(accessToken, user);
+      } else {
+        throw new ApiError("Missing JWT Token.");
+      }
     } catch (err) {
+      if (err instanceof ApiError) {
+        console.error("API Error: ", err);
+        setError("API Error. Please refresh the page and try again.");
+      }
       console.error("OTP verification failed:", err);
       setError(
         "Invalid or Expired OTP. Try resending the code and verify again.",
