@@ -47,11 +47,11 @@ export async function handleLogin(req, res) {
       });
     }
 
-    const accessToken = generateToken(user);
+    const accessToken = await generateToken(user);
 
     return res.status(200).json({
       message: "User logged in",
-      accessToken,
+      accessToken: accessToken,
       data: formatUserResponse(user),
     });
   } catch (err) {
@@ -151,10 +151,10 @@ export async function verifyOTP(req, res) {
     await _updateUserExpirationById(user._id, null);
 
     // assign jwt token to user
-    const accessToken = generateToken(user);
+    const accessToken = await generateToken(user);
     return res.status(200).json({
       message: "Email verified successfully",
-      accessToken,
+      accessToken: accessToken,
       data: formatUserResponse(user),
     });
   } catch (err) {
