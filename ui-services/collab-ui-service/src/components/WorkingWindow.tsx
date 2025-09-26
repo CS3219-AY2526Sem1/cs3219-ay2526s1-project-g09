@@ -1,21 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import Editor from "@monaco-editor/react";
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import CollabEditor from "./collab/CollabEditor";
 
 const WorkingWindow: React.FC = () => {
-  // State to hold the code content
-  const [code, setCode] = useState<string>(
-    "// Start coding here!\nfunction twoSum(nums, target) {\n    \n}",
-  );
-
-  const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      setCode(value);
-    }
-  };
-
   return (
     <div className="flex flex-1 bg-gray-800 rounded-lg shadow-md overflow-hidden relative">
       <Tabs defaultValue="code" className="flex flex-col flex-1">
@@ -34,17 +23,7 @@ const WorkingWindow: React.FC = () => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="code" className="flex-1 p-4 overflow-hidden">
-          {/* The Monaco Editor component */}
-          <Editor
-            height="100%"
-            defaultLanguage="javascript"
-            defaultValue={code}
-            theme="vs-dark"
-            onChange={handleEditorChange}
-            options={{
-              minimap: { enabled: false },
-            }}
-          />
+          <CollabEditor questionId="q1" users={["u1", "u2"]} />
         </TabsContent>
         <TabsContent value="whiteboard" className="flex-1 p-4 overflow-hidden">
           <Tldraw />
