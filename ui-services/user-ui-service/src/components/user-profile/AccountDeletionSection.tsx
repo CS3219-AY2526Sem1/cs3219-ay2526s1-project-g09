@@ -8,13 +8,17 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/useAuth";
 import { UserService } from "../../api/UserService";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
-const AccountDeletionSection = () => {
+interface AccountDeletionSectionProps {
+  onAccountDeleted?: () => void;
+}
+
+const AccountDeletionSection: React.FC<AccountDeletionSectionProps> = ({
+  onAccountDeleted,
+}) => {
   const { user, token, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
 
   const handleDeleteAccount = async () => {
     if (!user || !token) {
@@ -37,7 +41,7 @@ const AccountDeletionSection = () => {
       logout();
 
       // Redirect to landing page
-      navigate("/");
+      onAccountDeleted?.();
 
       setMessage("Account deleted successfully.");
     } catch (err) {

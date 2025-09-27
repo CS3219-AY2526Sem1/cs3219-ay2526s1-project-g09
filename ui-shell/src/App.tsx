@@ -30,7 +30,6 @@ export default function App() {
       <Route path="/signup" element={<SignUpPage />} />
       {/* Requires tempAuthToken */}
       <Route path="/otp" element={<OtpPage />} />
-      <Route path="/setDisplayName" element={<SetDisplayNamePage />} />
       {/* Requires authToken */}
       <Route element={<ProtectedRoute />}>
         <Route path="/matching" element={<MatchingPage />} />
