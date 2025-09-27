@@ -38,9 +38,11 @@ export async function handleLogin(req, res) {
       return res.status(401).json({ message: "Wrong email and/or password" });
     }
 
-    // If user is not verified, send user data only
+    // If user is not verified
     if (!user.isVerified) {
       await generateOTPforEmail(email);
+      // give temp access to otp page
+
       return res.status(200).json({
         message: "User not verified. OTP sent to email.",
         data: formatUserResponse(user),

@@ -28,10 +28,11 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgotPassword" element={<ForgotPasswordPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+      {/* Requires tempAuthToken */}
+      <Route path="/otp" element={<OtpPage />} />
+      <Route path="/setDisplayName" element={<SetDisplayNamePage />} />
       {/* Requires authToken */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/otp" element={<OtpPage />} />
-        <Route path="/setDisplayName" element={<SetDisplayNamePage />} />
         <Route path="/matching" element={<MatchingPage />} />
         <Route path="/collab" element={<SessionPage />} />
         <Route path="/history" element={<HistoryPage />} />

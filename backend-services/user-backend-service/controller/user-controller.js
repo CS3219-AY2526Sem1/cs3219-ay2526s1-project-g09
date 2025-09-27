@@ -7,10 +7,10 @@ import {
   findUserByEmail as _findUserByEmail,
   findUserById as _findUserById,
   findUserByUsername as _findUserByUsername,
+  updateUserExpirationById as _updateUserExpirationById,
   findUserByUsernameOrEmail as _findUserByUsernameOrEmail,
   updateUserById as _updateUserById,
   updateUserPrivilegeById as _updateUserPrivilegeById,
-  updateUserExpirationById as _updateUserExpirationById,
 } from "../model/repository.js";
 import {
   checkUsername,
@@ -47,6 +47,10 @@ export async function createUser(req, res) {
       createdUser._id,
       new Date(Date.now() + 24 * 60 * 60 * 1000),
     ); // Unverified users should expire after 24h
+
+    // Generate tempAuthToken for new user to access OTP page
+    // Note: Must be a diff jwt than the one in auth-controller
+
     return res.status(201).json({
       message: `Created new user ${username} successfully`,
       data: formatUserResponse(createdUser),
