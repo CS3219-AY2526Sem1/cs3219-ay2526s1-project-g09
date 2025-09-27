@@ -1,36 +1,5 @@
 import validator from "validator";
 import { ValidationError } from "./errors.js";
-import { passwordStrength } from "check-password-strength";
-
-//password strength check variables
-const options = [
-  {
-    id: 0,
-    value: "Too weak",
-    minDiversity: 0,
-    minLength: 0,
-  },
-  {
-    id: 1,
-    value: "Weak",
-    minDiversity: 2,
-    minLength: 8,
-  },
-  {
-    id: 2,
-    value: "Medium",
-    minDiversity: 4,
-    minLength: 10,
-  },
-  {
-    id: 3,
-    value: "Strong",
-    minDiversity: 4,
-    minLength: 12,
-  },
-];
-const strongestOption = options[options.length - 1];
-const owaspSymbols = "!\"#$%&'()*+,-./\\:;<=>?@[]^_`{|}~"; //Special characters in password (Specified by OWASP)
 
 // Throws an error if validation fails
 export function checkUsername(username) {
@@ -58,21 +27,23 @@ export function checkPassword(password) {
     throw new ValidationError("Password is required");
   }
   if (password.length > 64) {
-    throw new ValidationError("Password is longer than 64 characters");
+    throw new ValidationError("Password cannot exceed 64 characters");
   }
-  if (password.indexOf(" ") >= 0) {
-    throw new ValidationError("Password should not have any Whitespace");
+  if (/\s/.test(password)) {
+    throw new ValidationError("Password must not contain spaces");
   }
-  if (checkPasswordStrength(password) !== strongestOption.value) {
+  if (
+    password.length < 12 ||
+    !/[a-z]/.test(password) ||
+    !/[A-Z]/.test(password) ||
+    !/[0-9]/.test(password) ||
+    !/[!"#$%&'()*+,\-./\\:;<=>?@[\]^_`{|}~]/.test(password)
+  ) {
     throw new ValidationError(
-      "Password is not strong enough. It must be at least 12 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      "Password must be at least 12 characters long and include uppercase, lowercase, number, and special character.",
     );
   }
   return password;
-}
-
-function checkPasswordStrength(password) {
-  return passwordStrength(password, options, owaspSymbols).value;
 }
 
 export function checkOTP(otp) {
