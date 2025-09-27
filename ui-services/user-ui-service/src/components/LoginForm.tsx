@@ -2,6 +2,7 @@ import { useState } from "react";
 import { UserService } from "../api/UserService";
 import type { User } from "../api/UserService";
 import { ApiError } from "../api/UserServiceErrors";
+import { useAuth } from "../context/useAuth";
 
 interface LoginFormProps {
   onLoginSuccess?: (token: string, user: User) => void;
@@ -12,6 +13,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
   onLoginSuccess,
   onLoginRequireOtp,
 }) => {
+  const { login } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,21 +29,17 @@ const LoginForm: React.FC<LoginFormProps> = ({
         return;
       }
 
-      const user = res.data;
-      // if verified, follow below
-      console.log("Logged in:", user);
-
-      if (res.accessToken) {
-        // store the token (somehow)
-        // TODO: figure out how localStorage works
-        localStorage.setItem("authToken", res.accessToken);
-        localStorage.setItem("user", JSON.stringify(user));
-
-        // navigate to Matching page
-        onLoginSuccess?.(res.accessToken, user);
-      } else {
+      if (!res.accessToken) {
         throw new ApiError("Missing JWT Token.");
       }
+
+      const user = res.data;
+      const token = res.accessToken;
+
+      login(user, token);
+
+      // Navigate or notify parent
+      onLoginSuccess?.(token, user);
     } catch (err) {
       if (err instanceof ApiError) {
         console.error(err.message);

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { UserService } from "../api/UserService";
 import type { User } from "../api/UserService";
+import { ApiError } from "../api/UserServiceErrors";
+import { useAuth } from "../context/useAuth";
 
 interface OtpFormProps {
   user: User;
@@ -10,6 +12,7 @@ interface OtpFormProps {
 const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
 
   const handleChange = (value: string, index: number) => {
     if (value.length > 1) return;
@@ -29,14 +32,20 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
     const code = otp.join("");
     console.log("Verifying OTP:", code);
     try {
-      const email = user.email;
-      // verify otp then issue jwt token to log user in
-      const res = await UserService.verifyOtp(email, code);
+      const res = await UserService.verifyOtp(user.email, code);
 
-      const accessToken = res.accessToken;
-      // go to matching page
-      onOTPSuccess?.(accessToken, user);
+      if (!res.accessToken) {
+        throw new ApiError("Missing JWT Token.");
+      }
+
+      login(res.data, res.accessToken);
+
+      onOTPSuccess?.(res.accessToken, res.data);
     } catch (err) {
+      if (err instanceof ApiError) {
+        console.error("API Error: ", err);
+        setError("API Error. Please refresh the page and try again.");
+      }
       console.error("OTP verification failed:", err);
       setError(
         "Invalid or Expired OTP. Try resending the code and verify again.",

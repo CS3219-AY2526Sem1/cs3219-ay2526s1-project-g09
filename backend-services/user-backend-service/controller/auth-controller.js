@@ -38,20 +38,22 @@ export async function handleLogin(req, res) {
       return res.status(401).json({ message: "Wrong email and/or password" });
     }
 
-    // If user is not verified, send user data only
+    // If user is not verified
     if (!user.isVerified) {
       await generateOTPforEmail(email);
+      // give temp access to otp page
+
       return res.status(200).json({
         message: "User not verified. OTP sent to email.",
         data: formatUserResponse(user),
       });
     }
 
-    const accessToken = generateToken(user);
+    const accessToken = await generateToken(user);
 
     return res.status(200).json({
       message: "User logged in",
-      accessToken,
+      accessToken: accessToken,
       data: formatUserResponse(user),
     });
   } catch (err) {
@@ -151,10 +153,10 @@ export async function verifyOTP(req, res) {
     await _updateUserExpirationById(user._id, null);
 
     // assign jwt token to user
-    const accessToken = generateToken(user);
+    const accessToken = await generateToken(user);
     return res.status(200).json({
       message: "Email verified successfully",
-      accessToken,
+      accessToken: accessToken,
       data: formatUserResponse(user),
     });
   } catch (err) {
