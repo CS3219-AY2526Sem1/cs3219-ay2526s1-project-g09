@@ -7,7 +7,7 @@ interface AuthContextType {
   login: (user: User, token: string) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
-  updateUser: (updates: Partial<User>) => Promise<void>;
+  updateUser: (updates: Partial<User> & { password?: string }) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

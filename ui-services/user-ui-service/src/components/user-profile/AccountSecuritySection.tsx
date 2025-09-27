@@ -1,8 +1,62 @@
+import { useState, useEffect } from "react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../../context/useAuth";
 
 const AccountSecuritySection = () => {
+  const { user, updateUser } = useAuth();
+
+  const [email, setEmail] = useState(user?.email || "");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  // Keep email in sync with context updates
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+    }
+  }, [user]);
+
+  const handleChangeEmail = async () => {
+    if (!email.trim()) {
+      setMessage("Email cannot be empty.");
+      return;
+    }
+    setLoading(true);
+    setMessage("");
+    try {
+      await updateUser({ email });
+      setMessage("Email updated successfully!");
+    } catch (err) {
+      if (err instanceof Error) {
+        setMessage(err.message || "Failed to update email");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!password.trim()) {
+      setMessage("Password cannot be empty.");
+      return;
+    }
+    setLoading(true);
+    setMessage("");
+    try {
+      await updateUser({ password });
+      setPassword("");
+      setMessage("Password updated successfully!");
+    } catch (err) {
+      if (err instanceof Error) {
+        setMessage(err.message || "Failed to update password");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <>
       <CardHeader>
@@ -17,7 +71,8 @@ const AccountSecuritySection = () => {
             <Input
               id="email"
               type="email"
-              defaultValue="CurrentEmail@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="bg-gray-900 border-gray-700 text-gray-200"
             />
           </div>
@@ -25,8 +80,10 @@ const AccountSecuritySection = () => {
             <Button
               variant="outline"
               className="w-full bg-gray-900 text-gray-200 hover:bg-gray-700 border-gray-700"
+              onClick={handleChangeEmail}
+              disabled={loading}
             >
-              Change email
+              {loading ? "Saving..." : "Change email"}
             </Button>
           </div>
         </div>
@@ -38,7 +95,8 @@ const AccountSecuritySection = () => {
             <Input
               id="password"
               type="password"
-              defaultValue="• • • • • • • •"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="bg-gray-900 border-gray-700 text-gray-200"
             />
           </div>
@@ -46,11 +104,14 @@ const AccountSecuritySection = () => {
             <Button
               variant="outline"
               className="w-full bg-gray-900 text-gray-200 hover:bg-gray-700 border-gray-700"
+              onClick={handleChangePassword}
+              disabled={loading}
             >
-              Change password
+              {loading ? "Saving..." : "Change password"}
             </Button>
           </div>
         </div>
+        {message && <p className="text-sm text-gray-400">{message}</p>}
       </CardContent>
     </>
   );

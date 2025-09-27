@@ -73,7 +73,11 @@ export const UserService = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
-  updateUser: (userId: string, data: Partial<User>, token: string) =>
+  updateUser: (
+    userId: string,
+    data: Partial<User> & { password?: string },
+    token: string,
+  ) =>
     request<{ message: string; data: User }>(`/users/${userId}`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },

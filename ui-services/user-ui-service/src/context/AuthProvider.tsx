@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(res.data);
   };
 
-  const updateUser = async (updates: Partial<User>) => {
+  const updateUser = async (updates: Partial<User> & { password?: string }) => {
     if (!token || !user) return;
     const res = await UserService.updateUser(user.id, updates, token);
     setUser(res.data);
