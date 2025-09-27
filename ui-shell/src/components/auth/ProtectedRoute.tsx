@@ -1,26 +1,13 @@
-import React, { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-
-import { AuthService } from "../../api/AuthService";
+import { useAuth } from "userUiService/useAuth";
 
 const ProtectedRoute: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { user, token } = useAuth();
 
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      setIsAuthenticated(false);
-      return;
-    }
-
-    AuthService.verifyToken(token)
-      .then(() => setIsAuthenticated(true))
-      .catch(() => setIsAuthenticated(false));
-  }, []);
-
-  if (isAuthenticated === null) return <div>Loading...</div>;
-  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (!user || !token) {
+    // Not authenticated → bounce back to landing/login
+    return <Navigate to="/login" replace />;
+  }
 
   return <Outlet />;
 };

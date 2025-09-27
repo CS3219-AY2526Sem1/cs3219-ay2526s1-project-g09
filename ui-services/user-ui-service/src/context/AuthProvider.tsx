@@ -7,6 +7,7 @@ import type { User } from "../api/UserService";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("authToken");
@@ -18,7 +19,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .catch(() => {
           setUser(null);
           setToken(null);
-        });
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -52,7 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{ user, token, login, logout, refreshUser, updateUser }}
     >
-      {children}
+      {loading ? <div>Loading auth...</div> : children}
     </AuthContext.Provider>
   );
 };
