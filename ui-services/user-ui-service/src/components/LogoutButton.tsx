@@ -1,15 +1,15 @@
+import { useAuth } from "../context/useAuth";
+
 interface LogOutButtonProps {
-  onLogOutSuccess: () => void;
+  onLogOutSuccess?: () => void;
 }
 
 const LogoutButton: React.FC<LogOutButtonProps> = ({ onLogOutSuccess }) => {
+  const { logout } = useAuth();
   function handleLogOut() {
     try {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-      sessionStorage.removeItem("authToken");
-      sessionStorage.removeItem("user");
-      onLogOutSuccess();
+      logout();
+      onLogOutSuccess?.();
     } catch (err) {
       if (err instanceof Error) {
         console.error(err.message);
