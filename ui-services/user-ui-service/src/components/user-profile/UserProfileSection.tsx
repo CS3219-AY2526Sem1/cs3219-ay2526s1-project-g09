@@ -1,8 +1,41 @@
+import { useState, useEffect } from "react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../../context/useAuth";
 
 const UserProfileSection = () => {
+  const { user, updateUser } = useAuth();
+  const [displayName, setDisplayName] = useState(user?.username || "");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (user?.username) {
+      setDisplayName(user.username);
+    }
+  }, [user]);
+
+  const handleChangeDisplayName = async () => {
+    if (!displayName.trim()) {
+      setMessage("Display name cannot be empty.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+    try {
+      await updateUser({ username: displayName });
+      setMessage("Display name updated successfully!");
+    } catch (err) {
+      if (err instanceof Error) {
+        setMessage(err.message || "Failed to update display name");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <CardHeader>
@@ -16,7 +49,8 @@ const UserProfileSection = () => {
             </label>
             <Input
               id="displayName"
-              defaultValue="Current Username"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
               className="bg-gray-900 border-gray-700 text-gray-200"
             />
           </div>
@@ -24,11 +58,14 @@ const UserProfileSection = () => {
             <Button
               variant="outline"
               className="w-full bg-gray-900 text-gray-200 hover:bg-gray-700 border-gray-700"
+              onClick={handleChangeDisplayName}
+              disabled={loading}
             >
-              Change display name
+              {loading ? "Saving..." : "Change display name"}
             </Button>
           </div>
         </div>
+        {message && <p className="text-sm text-gray-400">{message}</p>}
       </CardContent>
     </>
   );

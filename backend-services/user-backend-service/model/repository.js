@@ -12,6 +12,7 @@ export async function connectToDB() {
   await connect(mongoDBUri);
 }
 
+// User Model
 export async function createUser(username, email, password) {
   return new UserModel({ username, email, password }).save();
 }
@@ -64,10 +65,34 @@ export async function updateUserPrivilegeById(userId, isAdmin) {
   );
 }
 
+export async function updateVerificationById(userId, isVerified) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        isVerified,
+      },
+    },
+    { new: true }, // return the updated user
+  );
+}
+
+export async function updateUserExpirationById(userId, timestamp) {
+  const update = {};
+  if (timestamp) {
+    update.expiresAt = timestamp;
+  } else {
+    update.expiresAt = null;
+  }
+
+  return UserModel.findByIdAndUpdate(userId, update, { new: true });
+}
+
 export async function deleteUserById(userId) {
   return UserModel.findByIdAndDelete(userId);
 }
 
+// OTP Model
 export async function findOTPByEmail(email) {
   return OTPModel.findOne({ email });
 }

@@ -1,23 +1,73 @@
-# PeerPrep - User Service Setup
+# PeerPrep - User Backend Service
 
-## Port Usage:
+Express.js service that:
 
-Port 5277 should be used for all API calls to User Service
-Port 465 are used in User Service to send an email for the OTP feature
+- Provides structured RESTful API endpoints
+- Uses JWT authentication
+- Maintains user database with MongoDB Atlas
+
+## Tech
+
+- Express.js
+- Node.js
+- Mongoose (MongoDB)
+- JavaScript
 
 ## Running User Service
+
+**Before running** check for the following requirements:
+
+- Node.js 18 or higher
+- MongoDB Atlas
+- npm
 
 1. Open Command Line/Terminal and navigate into the `user-service` directory.
 
 2. Run the command: `npm install`. This will install all the necessary dependencies.
 
-3. Run the command `npm start` to start the User Service in production mode, or use `npm run dev` for development mode, which includes features like automatic server restart when you make code changes.
+3. Clone `.env.example` and rename as `.env`. Then replace <db_password> with your MongoDB Atlas account password. Then replace <gmail_app_password> with your Gmail account app password.
 
-4. Using applications like Postman, you can interact with the User Service on port 5277. If you wish to change this, please update the `.env` file.
+4. Run the command `npm start` to start the User Service in production mode, or use `npm run dev` for development mode, which includes features like automatic server restart when you make code changes.
+
+5. Using applications like Postman, you can interact with the User Service on port 5277. If you wish to change this, please update the `.env` file.
 
 ## Running with Docker
 
--- To be filled --
+1. Follow steps 1 to 3 from Running User Service.
+
+2. Run `docker compose up --build`.
+
+3. Using applications like Postman, you can interact with the User Service on port 5277. If you wish to change this, please update the `.env` file.
+
+## Project Structure
+
+```
+src/
+  index.js                    # Starts the server and establish routes
+  server.js                   # Establish connection to MongoDB
+
+  controller/
+    auth-controller.js        # Functions that involves jwt and otp
+    user-controller.js        # All other user management functions
+
+  middleware/
+    basic-access-control.js   # Functions to verify jwt and account owner
+    rate-limiter.js           # Rate limiter for each endpoint
+
+  model/
+    otp-model.js              # schema to store otp for verifying emails
+    repository.js             # CRUD operations with db
+    user-model.js             # schema for user data
+
+  routes/
+    auth-routes.js            # contain routes for /auth
+    user-routes.js            # contain routes for /users
+
+  utils/
+    email-sender.js           # Uses nodemailer to send otp to users
+    errors.js                 # Custom error for user service
+    repository-security.js    # Enforces user input security and password strength
+```
 
 ## API
 
@@ -66,6 +116,7 @@ Rate Limit: 100 requests/10 min
       "username": "SampleUser1",
       "email": "sample1@gmail.com",
       "isAdmin": false,
+      "isVerified": false,
       "createdAt": "2025-09-22T13:55:40.590Z"
     }
   }
@@ -90,12 +141,13 @@ Rate Limit: 100 requests/10 min
   ```json
   {
     "message": "User logged in",
+    "accessToken": "<jwt-access-token>",
     "data": {
-      "accessToken": "<jwt-access-token>",
       "id": "<userId>",
       "username": "SampleUser1",
       "email": "sample1@gmail.com",
       "isAdmin": false,
+      "isVerified": true,
       "createdAt": "2025-09-22T13:55:40.590Z"
     }
   }
@@ -127,6 +179,7 @@ Rate Limit: 100 requests/10 min
       "username": "SampleUser1",
       "email": "sample1@gmail.com",
       "isAdmin": false,
+      "isVerified": true,
       "createdAt": "2025-09-22T13:55:40.590Z"
     }
   }
@@ -169,6 +222,7 @@ Rate Limit: 100 requests/10 min
       "username": "SampleUser123",
       "email": "sample2@gmail.com",
       "isAdmin": false,
+      "isVerified": true,
       "createdAt": "2025-09-22T13:55:40.590Z"
     }
   }
@@ -264,6 +318,15 @@ Rate Limit: 100 requests/10 min
 - Expected Response:
   ```json
   {
-    "message": "Email verified successfully"
+    "message": "Email verified successfully",
+    "accessToken": "<jwt-access-token>",
+    "data": {
+      "id": "<userId>",
+      "username": "SampleUser1",
+      "email": "sample1@gmail.com",
+      "isAdmin": false,
+      "isVerified": true,
+      "createdAt": "2025-09-22T13:55:40.590Z"
+    }
   }
   ```
