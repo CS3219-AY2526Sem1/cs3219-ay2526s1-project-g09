@@ -51,10 +51,12 @@ export async function handleLogin(req, res) {
 
     const accessToken = await generateToken(user);
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("authToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "PROD", // HTTPS in prod
-      sameSite: process.env.NODE_ENV === "PROD" ? "Lax" : "None", // None to allow cross-site
+      secure: isProd, // HTTPS in prod
+      sameSite: isProd ? "None" : "Lax", // None in prod, Lax in dev
       path: "/",
       ...(rememberMe ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}), // 7 days
     });
@@ -160,12 +162,13 @@ export async function verifyOTP(req, res) {
     await _updateUserExpirationById(user._id, null);
 
     const accessToken = await generateToken(user);
+    const isProd = process.env.NODE_ENV === "production";
 
     // give user a cookie
     res.cookie("authToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Lax",
+      secure: isProd, // HTTPS in prod
+      sameSite: isProd ? "None" : "Lax", // None in prod, Lax in dev
       path: "/",
     });
 
