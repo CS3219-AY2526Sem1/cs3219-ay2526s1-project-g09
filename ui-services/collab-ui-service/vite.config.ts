@@ -17,6 +17,9 @@ export default defineConfig({
         "./SessionHeader": "./src/components/SessionHeader",
         "./ChatWindow": "./src/components/chat/ChatWindow",
       },
+      remotes: {
+        userUiService: "http://localhost:5177/assets/remoteEntry.js",
+      },
       shared: ["react", "react-dom"],
     }),
   ],

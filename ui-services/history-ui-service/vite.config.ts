@@ -17,6 +17,9 @@ export default defineConfig({
         "./QuestionAttemptTable": "./src/components/QuestionAttemptTable",
         "./NotesWindow": "./src/components/NotesWindow",
       },
+      remotes: {
+        userUiService: "http://localhost:5177/assets/remoteEntry.js",
+      },
       shared: ["react", "react-dom"],
     }),
   ],

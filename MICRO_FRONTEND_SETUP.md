@@ -90,3 +90,56 @@ docker-compose up --build -d
 2. Open the shell in your browser: http://localhost:5173
 3. The shell will load the MFEs dynamically.
 4. Interact with the UI — if the MFEs load correctly, the setup is working!
+
+## Accessing User Authentication State
+
+This section will describe how the various UI services can access the user's authentication state by importing useAuth from the user-ui-service remote.
+
+1. Add the remote to the respective `vite.config.ts`:
+
+```ts
+federation({
+  name: "<some>-ui-service",
+  filename: "remoteEntry.js",
+  exposes: {
+    /* components */
+  },
+  remotes: {
+    userUiService: "http://localhost:5177/assets/remoteEntry.js",
+  },
+  shared: ["react", "react-dom"],
+});
+```
+
+2. Import and use `useAuth` in the respective UI services:
+
+```tsx
+import { useAuth } from "userUiService/useAuth";
+
+export default function Example() {
+  const { user, logout } = useAuth();
+
+  if (!user) return <p>Not logged in</p>;
+
+  return (
+    <div>
+      <p>
+        Welcome, {user.username} ({user.email})
+      </p>
+      <button onClick={logout}>Logout</button>
+    </div>
+  );
+}
+```
+
+### useAuth API
+
+When you import `useAuth`, you can read the logged-in user's information and perform authentication actions.
+
+| Property / Function       | Type                                                                | Description                                                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`user`**                | `User \| null`                                                      | The currently authenticated user object (contains `id`, `username`, `email`, etc.). Returns `null` if no user is logged in.                         |
+| **`login(user: User)`**   | `(user: User) => void`                                              | Sets the authenticated user in context after a successful login or OTP verification. Usually called internally by the login/OTP forms.              |
+| **`logout()`**            | `() => void`                                                        | Logs the user out by clearing the session (and cookie on the backend) and resets the context to `null`.                                             |
+| **`refreshUser()`**       | `() => Promise<void>`                                               | Fetches the latest user info from the backend and updates the context. Useful if user data might have changed (e.g. profile update in another tab). |
+| **`updateUser(updates)`** | `(updates: Partial<User> & { password?: string }) => Promise<void>` | Sends updated user data (username, email, password, etc.) to the backend, then refreshes the context with the new user object.                      |
