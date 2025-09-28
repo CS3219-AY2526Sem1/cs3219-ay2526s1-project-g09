@@ -37,19 +37,20 @@ export const UserService = {
       body: JSON.stringify({ username, email, password }),
     }),
 
-  login: (email: string, password: string) =>
-    request<{ message: string; accessToken?: string; data: User }>(
-      "/auth/login",
-      {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      },
-    ),
+  login: (email: string, password: string, rememberMe: boolean) =>
+    request<{ message: string; data: User }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password, rememberMe }),
+    }),
 
-  verifyToken: (token: string) =>
+  logout: () =>
+    request<{ message: string }>("/auth/logout", {
+      method: "POST",
+    }),
+
+  verifyToken: () =>
     request<{ message: string; data: User }>("/auth/verify-token", {
       method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
     }),
 
   sendOtp: (email: string) =>
@@ -59,34 +60,24 @@ export const UserService = {
     }),
 
   verifyOtp: (email: string, otp: string) =>
-    request<{ message: string; accessToken: string; data: User }>(
-      "/auth/verify-otp",
-      {
-        method: "POST",
-        body: JSON.stringify({ email, otp }),
-      },
-    ),
-
-  getUser: (userId: string, token: string) =>
-    request<{ message: string; data: User }>(`/users/${userId}`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
+    request<{ message: string; data: User }>("/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
     }),
 
-  updateUser: (
-    userId: string,
-    data: Partial<User> & { password?: string },
-    token: string,
-  ) =>
+  getUser: (userId: string) =>
+    request<{ message: string; data: User }>(`/users/${userId}`, {
+      method: "GET",
+    }),
+
+  updateUser: (userId: string, data: Partial<User> & { password?: string }) =>
     request<{ message: string; data: User }>(`/users/${userId}`, {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
     }),
 
-  deleteUser: (userId: string, token: string) =>
+  deleteUser: (userId: string) =>
     request<{ message: string }>(`/users/${userId}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     }),
 };

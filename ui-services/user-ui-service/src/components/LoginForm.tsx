@@ -5,7 +5,7 @@ import { ApiError } from "../api/UserServiceErrors";
 import { useAuth } from "../context/useAuth";
 
 interface LoginFormProps {
-  onLoginSuccess?: (token: string, user: User) => void;
+  onLoginSuccess?: (user: User) => void;
   onLoginRequireOtp?: (user: User) => void;
 }
 
@@ -17,29 +17,24 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleLogin() {
     try {
-      const res = await UserService.login(email, password);
+      const res = await UserService.login(email, password, rememberMe);
       // check if user if verified or not
       // if not verified, send otp and navigate to otp page
       if (!res.data.isVerified) {
-        onLoginRequireOtp?.(res.data); // pass email, userId, etc.
+        onLoginRequireOtp?.(res.data);
         return;
       }
 
-      if (!res.accessToken) {
-        throw new ApiError("Missing JWT Token.");
-      }
-
       const user = res.data;
-      const token = res.accessToken;
-
-      login(user, token);
+      login(user);
 
       // Navigate or notify parent
-      onLoginSuccess?.(token, user);
+      onLoginSuccess?.(user);
     } catch (err) {
       if (err instanceof ApiError) {
         console.error(err.message);
@@ -56,7 +51,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
     <form
       className="bg-white"
       onSubmit={(e) => {
-        e.preventDefault(); // stop page reload
+        e.preventDefault();
         handleLogin();
       }}
     >
@@ -81,7 +76,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       <div className="flex items-center justify-between mt-4">
         <label className="flex items-center space-x-2">
-          <input type="checkbox" className="form-checkbox" />
+          <input
+            type="checkbox"
+            className="form-checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+          />
           <span className="text-gray-600 text-sm">Remember me</span>
         </label>
         <a

@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { findUserById as _findUserById } from "../model/repository.js";
 
 export function verifyAccessToken(req, res, next) {
-  // Read token from cookie only
+  // Read token from cookie
   const token = req.cookies?.authToken;
 
   if (!token) {

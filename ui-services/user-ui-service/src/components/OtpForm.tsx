@@ -6,7 +6,7 @@ import { useAuth } from "../context/useAuth";
 
 interface OtpFormProps {
   user: User;
-  onOTPSuccess?: (accessToken: string, user: User) => void;
+  onOTPSuccess?: (user: User) => void;
 }
 
 const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
@@ -34,13 +34,9 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
     try {
       const res = await UserService.verifyOtp(user.email, code);
 
-      if (!res.accessToken) {
-        throw new ApiError("Missing JWT Token.");
-      }
+      login(res.data);
 
-      login(res.data, res.accessToken);
-
-      onOTPSuccess?.(res.accessToken, res.data);
+      onOTPSuccess?.(res.data);
     } catch (err) {
       if (err instanceof ApiError) {
         console.error("API Error: ", err);

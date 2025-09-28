@@ -16,13 +16,13 @@ interface AccountDeletionSectionProps {
 const AccountDeletionSection: React.FC<AccountDeletionSectionProps> = ({
   onAccountDeleted,
 }) => {
-  const { user, token, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleDeleteAccount = async () => {
-    if (!user || !token) {
+    if (!user) {
       setMessage("You must be logged in to delete your account.");
       return;
     }
@@ -31,10 +31,7 @@ const AccountDeletionSection: React.FC<AccountDeletionSectionProps> = ({
       setLoading(true);
       setMessage("");
 
-      // Call backend
-      await UserService.deleteUser(user.id, token);
-
-      // Clear context + storage
+      await UserService.deleteUser(user.id);
       logout();
 
       // Redirect to landing page
