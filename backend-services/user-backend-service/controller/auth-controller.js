@@ -174,7 +174,6 @@ export async function verifyOTP(req, res) {
 
     return res.status(200).json({
       message: "Email verified successfully",
-      accessToken: accessToken,
       data: formatUserResponse(user),
     });
   } catch (err) {
