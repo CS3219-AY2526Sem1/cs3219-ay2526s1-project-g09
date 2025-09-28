@@ -6,9 +6,9 @@ interface LogOutButtonProps {
 
 const LogoutButton: React.FC<LogOutButtonProps> = ({ onLogOutSuccess }) => {
   const { logout } = useAuth();
-  function handleLogOut() {
+  async function handleLogOut() {
     try {
-      logout();
+      await logout();
       onLogOutSuccess?.();
     } catch (err) {
       if (err instanceof Error) {

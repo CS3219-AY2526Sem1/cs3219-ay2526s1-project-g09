@@ -9,17 +9,43 @@ export interface User {
   createdAt: string;
 }
 
+let csrfToken: string | null = null;
+
+async function getCsrfToken(): Promise<string> {
+  if (csrfToken) return csrfToken;
+  const res = await fetch("http://localhost:5277/api/csrf-token", {
+    credentials: "include",
+  });
+  const data = await res.json();
+  csrfToken = data.csrfToken;
+  if (!csrfToken) {
+    throw new Error("Failed to fetch CSRF token");
+  }
+
+  return csrfToken;
+}
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const method = (options.method || "GET").toUpperCase();
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    const token = await getCsrfToken();
+    headers["X-CSRF-Token"] = token;
+  }
+
   const res = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    credentials: "include",
     ...options,
+    method,
+    headers,
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -43,10 +69,13 @@ export const UserService = {
       body: JSON.stringify({ email, password, rememberMe }),
     }),
 
-  logout: () =>
-    request<{ message: string }>("/auth/logout", {
+  logout: async () => {
+    const res = await request<{ message: string }>("/auth/logout", {
       method: "POST",
-    }),
+    });
+    csrfToken = null;
+    return res;
+  },
 
   verifyToken: () =>
     request<{ message: string; data: User }>("/auth/verify-token", {

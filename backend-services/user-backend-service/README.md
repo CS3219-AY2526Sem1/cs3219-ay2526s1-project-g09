@@ -78,10 +78,31 @@ Routes:
 
 Rate Limit: 100 requests/10 min
 
+### CSRF Token
+
+Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
+
+1. Ensure that CSRF Token is requested via **GET** `http://localhost:5277/api/csrf-token` and the secret value is stored in cookie. Keep the derived token that is provided in the response.
+   Example response:
+
+```json
+{
+  "csrfToken": "y1GBjpke-1wfdxUaILWM9ztT8qIwBo6zyYVM"
+}
+```
+
+2. Then for each **POST**, **PUT**, **PATCH** or **DELETE** request, ensure that the headers include `X-CSRF-Token: <derived token>` before sending the request.
+
 ### Registering a User
 
 - Usage:
+
   **POST** `http://localhost:5277/api/user-service/users`
+
+- Headers
+  - Required: `X-CSRF-Token: <CSRF-derived-token>`
+
+  - Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
   - Required: `username` (string), `email` (string), `password` (string)
@@ -125,7 +146,13 @@ Rate Limit: 100 requests/10 min
 ### Login with User Details
 
 - Usage:
+
   **POST** `http://localhost:5277/api/user-service/auth/login`
+
+- Headers
+  - Required: `X-CSRF-Token: <CSRF-derived-token>`
+
+  - Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
   - Required: `email` (string), `password` (string)
@@ -141,7 +168,6 @@ Rate Limit: 100 requests/10 min
   ```json
   {
     "message": "User logged in",
-    "accessToken": "<jwt-access-token>",
     "data": {
       "id": "<userId>",
       "username": "SampleUser1",
@@ -191,6 +217,11 @@ Rate Limit: 100 requests/10 min
 
 **PATCH** `http://localhost:5277/api/user-service/users/{userId}`
 
+- Headers
+  - Required: `X-CSRF-Token: <CSRF-derived-token>`
+
+  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+
 - Parameters
   - Required: `userId` path parameter
 
@@ -234,16 +265,15 @@ Rate Limit: 100 requests/10 min
 
 **DELETE** `http://localhost:5277/api/user-service/users/{userId}`
 
+- Headers
+  - Required: `X-CSRF-Token: <CSRF-derived-token>`
+
+  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+
 - Parameters
   - Required: `userId` path parameter
 
   - Example: `http://localhost:5277/api/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
-
-- Headers
-  - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
-
-  - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
-    copy and paste the `<jwt-access-token>` from logging in.
 
 - Expected Response:
   ```json
@@ -257,12 +287,6 @@ Rate Limit: 100 requests/10 min
 - Usage:
 
 **GET** `http://localhost:5277/api/user-service/auth/verify-token`
-
-- Headers
-  - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
-
-  - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
-    copy and paste the `<jwt-access-token>` from logging in.
 
 - Expected Response:
   ```json
@@ -282,6 +306,11 @@ Rate Limit: 100 requests/10 min
 - Usage:
 
 **POST** `http://localhost:5277/api/user-service/auth/send-otp`
+
+- Headers
+  - Required: `X-CSRF-Token: <CSRF-derived-token>`
+
+  - Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
   - Required: `email` (string)
@@ -304,6 +333,11 @@ Rate Limit: 100 requests/10 min
 - Usage:
 
 **POST** `http://localhost:5277/api/user-service/auth/verify-otp`
+
+- Headers
+  - Required: `X-CSRF-Token: <CSRF-derived-token>`
+
+  - Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
   - Required: `email` (string), `otp` (string)

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import csurf from "csurf";
 
 import userRoutes from "./routes/user-routes.js";
 import authRoutes from "./routes/auth-routes.js";
@@ -10,9 +11,15 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-const whitelist = ["http://localhost:5173"];
+const whitelist = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:5177",
+  "http://localhost:5178",
+];
 
-app.use(cookieParser());
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -31,9 +38,25 @@ app.use(
       "Content-Type",
       "Accept",
       "Authorization",
+      "X-CSRF-Token",
     ],
   }),
 ); // config cors so that front-end can use
+
+app.use(cookieParser());
+// CSRF handling
+app.use(
+  csurf({
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+    },
+  }),
+);
+app.get("/api/csrf-token", (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 app.use("/api/user-service/users", userRoutes);
 app.use("/api/user-service/auth", authRoutes);
