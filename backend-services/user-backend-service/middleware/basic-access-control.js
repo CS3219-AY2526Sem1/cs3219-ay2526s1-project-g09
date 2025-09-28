@@ -2,32 +2,43 @@ import jwt from "jsonwebtoken";
 import { findUserById as _findUserById } from "../model/repository.js";
 
 export function verifyAccessToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  if (!authHeader) {
+  // Read token from cookie only
+  const token = req.cookies?.authToken;
+
+  if (!token) {
     return res.status(401).json({ message: "Authentication failed" });
   }
+  try {
+    jwt.verify(token, process.env.JWT_SECRET, async (err, payload) => {
+      if (err) {
+        return res.status(401).json({ message: "Invalid or expired token" });
+      }
 
-  // request auth header: `Authorization: Bearer + <access_token>`
-  const token = authHeader.split(" ")[1];
-  jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
-    if (err) {
-      return res.status(401).json({ message: "Authentication failed" });
-    }
+      try {
+        // load latest user info from DB
+        const dbUser = await _findUserById(payload.id);
+        if (!dbUser) {
+          return res.status(401).json({ message: "User not found" });
+        }
 
-    // load latest user info from DB
-    const dbUser = await _findUserById(user.id);
-    if (!dbUser) {
-      return res.status(401).json({ message: "Authentication failed" });
-    }
+        req.user = {
+          id: dbUser.id,
+          username: dbUser.username,
+          email: dbUser.email,
+          isAdmin: dbUser.isAdmin,
+          isVerified: dbUser.isVerified,
+        };
 
-    req.user = {
-      id: dbUser.id,
-      username: dbUser.username,
-      email: dbUser.email,
-      isAdmin: dbUser.isAdmin,
-    };
-    next();
-  });
+        next();
+      } catch (dbErr) {
+        console.error(dbErr);
+        return res.status(500).json({ message: "Internal server error" });
+      }
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
 }
 
 export function verifyIsAdmin(req, res, next) {

@@ -20,7 +20,7 @@ import {
 import { ValidationError } from "../utils/errors.js";
 
 export async function handleLogin(req, res) {
-  const { email: dirtyEmail, password: dirtyPassword } = req.body;
+  const { email: dirtyEmail, password: dirtyPassword, rememberMe } = req.body;
   try {
     if (!dirtyEmail || !dirtyPassword) {
       return res.status(400).json({ message: "Missing email and/or password" });
@@ -51,9 +51,16 @@ export async function handleLogin(req, res) {
 
     const accessToken = await generateToken(user);
 
+    res.cookie("authToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "PROD", // HTTPS in prod
+      sameSite: process.env.NODE_ENV === "PROD" ? "Lax" : "None", // None to allow cross-site
+      path: "/",
+      ...(rememberMe ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}), // 7 days
+    });
+
     return res.status(200).json({
       message: "User logged in",
-      accessToken: accessToken,
       data: formatUserResponse(user),
     });
   } catch (err) {
@@ -152,8 +159,16 @@ export async function verifyOTP(req, res) {
     await _updateVerificationById(user._id, true);
     await _updateUserExpirationById(user._id, null);
 
-    // assign jwt token to user
     const accessToken = await generateToken(user);
+
+    // give user a cookie
+    res.cookie("authToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+      path: "/",
+    });
+
     return res.status(200).json({
       message: "Email verified successfully",
       accessToken: accessToken,
@@ -162,4 +177,14 @@ export async function verifyOTP(req, res) {
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
+}
+
+export async function handleLogout(req, res) {
+  res.clearCookie("authToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Lax",
+    path: "/",
+  });
+  return res.status(200).json({ message: "Logged out" });
 }
