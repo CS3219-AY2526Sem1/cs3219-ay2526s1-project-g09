@@ -3,6 +3,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/useAuth";
+import { validateUsername } from "../../utils/InputValidation";
 
 const UserProfileSection = () => {
   const { user, updateUser } = useAuth();
@@ -17,8 +18,9 @@ const UserProfileSection = () => {
   }, [user]);
 
   const handleChangeDisplayName = async () => {
-    if (!displayName.trim()) {
-      setMessage("Display name cannot be empty.");
+    const error = validateUsername(displayName);
+    if (error) {
+      setMessage(error);
       return;
     }
 

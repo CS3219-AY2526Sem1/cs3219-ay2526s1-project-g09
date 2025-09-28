@@ -7,7 +7,6 @@ import LoginPage from "@pages/auth/LoginPage";
 import ForgotPasswordPage from "@pages/auth/ForgotPasswordPage";
 import SignUpPage from "@pages/auth/SignUpPage";
 import OtpPage from "@pages/auth/OtpPage";
-import SetDisplayNamePage from "@pages/auth/SetDisplayNamePage";
 
 import UserProfilePage from "@pages/auth/UserProfilePage";
 import MatchingPage from "@/pages/matching/MatchingPage";

@@ -6,55 +6,42 @@ import type { User } from "../api/UserService";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("authToken");
-    const storedUserId = localStorage.getItem("userId");
-    if (storedToken && storedUserId) {
-      setToken(storedToken);
-      UserService.getUser(storedUserId, storedToken)
-        .then((res) => setUser(res.data))
-        .catch(() => {
-          setUser(null);
-          setToken(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    UserService.verifyToken()
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
 
-  const login = (user: User, token: string) => {
+  const login = (user: User) => {
     setUser(user);
-    setToken(token);
-    localStorage.setItem("authToken", token);
-    localStorage.setItem("userId", user.id);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await UserService.logout();
+    } catch {
+      // ignore API errors
+    }
     setUser(null);
-    setToken(null);
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userId");
   };
 
   const refreshUser = async () => {
-    if (!token || !user) return;
-    const res = await UserService.getUser(user.id, token);
+    const res = await UserService.verifyToken();
     setUser(res.data);
   };
 
   const updateUser = async (updates: Partial<User> & { password?: string }) => {
-    if (!token || !user) return;
-    const res = await UserService.updateUser(user.id, updates, token);
+    if (!user) return;
+    const res = await UserService.updateUser(user.id, updates);
     setUser(res.data);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, refreshUser, updateUser }}
+      value={{ user, login, logout, refreshUser, updateUser }}
     >
       {loading ? <div>Loading auth...</div> : children}
     </AuthContext.Provider>

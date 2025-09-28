@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import userRoutes from "./routes/user-routes.js";
 import authRoutes from "./routes/auth-routes.js";
@@ -8,11 +9,10 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-// allow cross-origin requests to reach the Express.js server
-// from frontend domain
 
 const whitelist = ["http://localhost:5173"];
 
+app.use(cookieParser());
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -23,7 +23,7 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // if you need cookies/auth headers
+    credentials: true, // for cookies/auth headers
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: [
       "Origin",

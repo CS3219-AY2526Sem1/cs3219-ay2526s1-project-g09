@@ -3,6 +3,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/useAuth";
+import { validatePassword, validateEmail } from "../../utils/InputValidation";
 
 const AccountSecuritySection = () => {
   const { user, updateUser } = useAuth();
@@ -20,8 +21,9 @@ const AccountSecuritySection = () => {
   }, [user]);
 
   const handleChangeEmail = async () => {
-    if (!email.trim()) {
-      setMessage("Email cannot be empty.");
+    const error = validateEmail(email);
+    if (error) {
+      setMessage(error);
       return;
     }
     setLoading(true);
@@ -39,8 +41,9 @@ const AccountSecuritySection = () => {
   };
 
   const handleChangePassword = async () => {
-    if (!password.trim()) {
-      setMessage("Password cannot be empty.");
+    const errors = validatePassword(password);
+    if (errors.length > 0) {
+      setMessage(errors);
       return;
     }
     setLoading(true);
@@ -111,7 +114,9 @@ const AccountSecuritySection = () => {
             </Button>
           </div>
         </div>
-        {message && <p className="text-sm text-gray-400">{message}</p>}
+        {message && (
+          <p className="text-sm text-gray-400 whitespace-pre-line">{message}</p>
+        )}
       </CardContent>
     </>
   );

@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { UserService } from "../api/UserService";
 import type { User } from "../api/UserService";
+import {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+} from "../utils/InputValidation";
 
 interface SignUpFormProps {
   onSignUpSuccess?: (user: User) => void;
@@ -15,6 +20,15 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
+
+    const usernameError = validateUsername(username);
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+
+    if (usernameError || emailError || passwordError) {
+      setError(usernameError || emailError || passwordError);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -43,7 +57,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
     <form
       className="bg-white"
       onSubmit={(e) => {
-        e.preventDefault();
         handleSignUp(e);
       }}
     >

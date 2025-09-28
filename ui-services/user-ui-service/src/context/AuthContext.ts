@@ -3,8 +3,7 @@ import type { User } from "../api/UserService";
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (user: User, token: string) => void;
+  login: (user: User) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
   updateUser: (updates: Partial<User> & { password?: string }) => Promise<void>;

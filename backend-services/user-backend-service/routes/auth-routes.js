@@ -5,6 +5,7 @@ import {
   handleVerifyToken,
   generateAndSendOTP,
   verifyOTP,
+  handleLogout,
 } from "../controller/auth-controller.js";
 import { verifyAccessToken } from "../middleware/basic-access-control.js";
 import { rateLimiter } from "../middleware/rate-limiter.js";
@@ -18,5 +19,7 @@ router.get("/verify-token", rateLimiter, verifyAccessToken, handleVerifyToken);
 router.post("/send-otp", rateLimiter, generateAndSendOTP);
 
 router.post("/verify-otp", rateLimiter, verifyOTP);
+
+router.post("/logout", rateLimiter, handleLogout);
 
 export default router;
