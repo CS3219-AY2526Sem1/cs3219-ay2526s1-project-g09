@@ -39,8 +39,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       if (err instanceof ApiError) {
         console.error(err.message);
         setError("API Error. Please refresh the page and try again.");
-      }
-      if (err instanceof Error) {
+      } else if (err instanceof Error) {
         console.error(err.message);
         setError("Invalid credentials. Please try again.");
       }

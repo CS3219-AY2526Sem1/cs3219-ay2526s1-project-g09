@@ -41,11 +41,12 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
       if (err instanceof ApiError) {
         console.error("API Error: ", err);
         setError("API Error. Please refresh the page and try again.");
+      } else {
+        console.error("OTP verification failed:", err);
+        setError(
+          "Invalid or Expired OTP. Try resending the code and verify again.",
+        );
       }
-      console.error("OTP verification failed:", err);
-      setError(
-        "Invalid or Expired OTP. Try resending the code and verify again.",
-      );
     }
   };
 

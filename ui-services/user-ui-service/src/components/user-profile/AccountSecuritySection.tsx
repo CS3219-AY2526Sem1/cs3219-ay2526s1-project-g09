@@ -42,7 +42,7 @@ const AccountSecuritySection = () => {
 
   const handleChangePassword = async () => {
     const errors = validatePassword(password);
-    if (errors.length > 0) {
+    if (errors) {
       setMessage(errors);
       return;
     }
