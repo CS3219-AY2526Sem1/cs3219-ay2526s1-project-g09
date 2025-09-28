@@ -64,7 +64,6 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
       {/* OTP Inputs */}
       <form
         onSubmit={(e) => {
-          e.preventDefault();
           handleSubmit(e);
         }}
       >

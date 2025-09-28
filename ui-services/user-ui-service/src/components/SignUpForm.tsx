@@ -43,7 +43,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
     <form
       className="bg-white"
       onSubmit={(e) => {
-        e.preventDefault();
         handleSignUp(e);
       }}
     >
