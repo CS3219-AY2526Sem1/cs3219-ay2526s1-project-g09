@@ -20,12 +20,12 @@ export function normalizeEmail(email: string): string {
   return `${localPart}@${domain.toLowerCase()}`;
 }
 
-export function validatePassword(password: string): string[] {
+export function validatePassword(password: string): string {
   const errors: string[] = [];
 
   if (!password) {
     errors.push("Password is required.");
-    return errors;
+    return errors.join("\n");
   }
   if (password.length > 64) {
     errors.push("Password cannot exceed 64 characters.");
@@ -49,7 +49,7 @@ export function validatePassword(password: string): string[] {
     errors.push("Password must include at least one special character.");
   }
 
-  return errors;
+  return errors.join("\n");
 }
 
 export function validateOtp(otp: string): string | null {

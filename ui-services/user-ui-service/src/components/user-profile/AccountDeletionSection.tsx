@@ -18,15 +18,12 @@ const AccountDeletionSection: React.FC<AccountDeletionSectionProps> = ({
 }) => {
   const { user, token, logout } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleDeleteAccount = async () => {
     if (!user || !token) {
       setMessage("You must be logged in to delete your account.");
-      return;
-    }
-
-    if (!confirm("Are you sure? This action is irreversible.")) {
       return;
     }
 
@@ -69,14 +66,34 @@ const AccountDeletionSection: React.FC<AccountDeletionSectionProps> = ({
           {message && <p className="text-sm text-red-400 mt-2">{message}</p>}
         </div>
         <div className="w-[150px]">
-          <Button
-            variant="destructive"
-            className="w-full bg-red-600 hover:bg-red-700 text-white"
-            onClick={handleDeleteAccount}
-            disabled={loading}
-          >
-            {loading ? "Deleting..." : "Delete account"}
-          </Button>
+          {!confirming ? (
+            <Button
+              variant="destructive"
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => setConfirming(true)}
+            >
+              Delete account
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="destructive"
+                className="w-full bg-red-700 hover:bg-red-800 text-white"
+                onClick={handleDeleteAccount}
+                disabled={loading}
+              >
+                {loading ? "Deleting..." : "Confirm delete?"}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full border-gray-500 text-gray-200 hover:bg-gray-700"
+                onClick={() => setConfirming(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </>
