@@ -16,6 +16,9 @@ export default defineConfig({
         "./QuestionDisplay": "./src/components/QuestionDisplay",
         "./AnswerButton": "./src/components/AnswerButton",
       },
+      remotes: {
+        userUiService: "http://localhost:5177/assets/remoteEntry.js",
+      },
       shared: ["react", "react-dom"],
     }),
   ],
