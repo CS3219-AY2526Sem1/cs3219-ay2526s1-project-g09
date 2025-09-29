@@ -33,7 +33,7 @@ Express.js service that:
 
 ## Running with Docker
 
-1. Follow steps 1 to 3 from Running User Service.
+1. Follow steps 1 to 3 from [Running User Service](#running-user-service).
 
 2. Run `docker compose up --build`.
 
@@ -72,6 +72,7 @@ src/
 ## API
 
 Base URL: `http://localhost:5277/api/user-service`
+
 Routes:
 `http://localhost:5277/api/user-service/auth`
 `http://localhost:5277/api/user-service/users`
