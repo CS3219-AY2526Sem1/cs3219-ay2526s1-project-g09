@@ -27,9 +27,8 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgotPassword" element={<ForgotPasswordPage />} />
       <Route path="/signup" element={<SignUpPage />} />
-      {/* Requires tempAuthToken */}
+      {/* Requires authentication */}
       <Route path="/otp" element={<OtpPage />} />
-      {/* Requires authToken */}
       <Route element={<ProtectedRoute />}>
         <Route path="/matching" element={<MatchingPage />} />
         <Route path="/collab" element={<SessionPage />} />
