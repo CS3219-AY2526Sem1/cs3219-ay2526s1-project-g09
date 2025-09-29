@@ -155,12 +155,13 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
   - Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
-  - Required: `email` (string), `password` (string)
+  - Required: `email` (string), `password` (string), `rememberMe` (boolean)
 
     ```json
     {
       "email": "sample1@gmail.com",
-      "password": "SecurePassword"
+      "password": "SecurePassword",
+      "rememberMe: "false"
     }
     ```
 
