@@ -21,7 +21,7 @@ Express.js service that:
 - MongoDB Atlas
 - npm
 
-1. Open Command Line/Terminal and navigate into the `user-service` directory.
+1. Open Command Line/Terminal and navigate into the `user-backend-service` directory.
 
 2. Run the command: `npm install`. This will install all the necessary dependencies.
 
@@ -133,7 +133,7 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
   {
     "message": "Created new user SampleUser1 successfully",
     "data": {
-      "id": "<user-unique-id>",
+      "id": "<userId>",
       "username": "SampleUser1",
       "email": "sample1@gmail.com",
       "isAdmin": false,
@@ -237,12 +237,6 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
       "password": "SecurePassword"
     }
     ```
-
-- Headers
-  - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
-
-  - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
-    copy and paste the `<jwt-access-token>` from logging in.
 
 - Expected Response:
   ```json
