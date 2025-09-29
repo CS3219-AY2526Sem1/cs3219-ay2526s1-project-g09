@@ -68,4 +68,4 @@ services:
       - ./backend-services/user-backend-service/.env
     ports:
       - "5277:5277"
-    container_name: peerprep-user-service-backend
+    container_name: peerprep-user-backend
