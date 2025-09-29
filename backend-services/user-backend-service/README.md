@@ -191,12 +191,6 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
 
   - Example: `http://localhost:5277/api/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
-- Headers
-  - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
-
-  - Postman Usage: Select Auth -> Auth Type -> Bearer Token, then
-    copy and paste the `<jwt-access-token>` from logging in.
-
 - Expected Response:
   ```json
   {
