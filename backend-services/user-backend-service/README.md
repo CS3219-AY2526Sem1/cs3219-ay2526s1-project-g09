@@ -161,7 +161,7 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
     {
       "email": "sample1@gmail.com",
       "password": "SecurePassword",
-      "rememberMe: "false"
+      "rememberMe": "false"
     }
     ```
 
