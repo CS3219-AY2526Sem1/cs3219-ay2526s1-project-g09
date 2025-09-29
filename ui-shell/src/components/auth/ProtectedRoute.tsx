@@ -4,7 +4,7 @@ import { useAuth } from "userUiService/useAuth";
 const ProtectedRoute: React.FC = () => {
   const { user } = useAuth();
 
-  if (!user) {
+  if (!user || !user.isVerified) {
     return <Navigate to="/login" replace />;
   }
 
