@@ -8,7 +8,7 @@ export async function buildServer() {
 
   // plugins
   await app.register(cors, {
-    origin: "[http://localhost:5285/api/v1/leetcode/seed-batch]",
+    origin: ["http://localhost:5285/api/v1/leetcode/seed-batch"],
   });
   await app.register(db);
   await app.register((await import("@fastify/rate-limit")).default, {
