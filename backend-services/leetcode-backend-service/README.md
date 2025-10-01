@@ -71,7 +71,7 @@ src/
     db.ts             # Mongoose connect
 
   models/
-    Question.ts       # slug, title, content (collection: leetcode_questions)
+    Question.ts       # titleSlug, title, content (collection: leetcode_questions)
 
   services/
     leetcode.ts       # wrappers around gql + queries
@@ -100,7 +100,7 @@ curl.exe http://localhost:5285/api/v1/leetcode/test
 ### Seed first problem into Mongo
 
 **POST** `/leetcode/seed-batch`  
-Fetches the next 200 problem and **upserts** to Mongo within 2 minutes.
+Fetches the next 20 problem and **upserts** to Mongo within 2 minutes.
 
 Query params:
 
@@ -135,7 +135,7 @@ curl http://localhost:5275/api/v1/questions
 ```ts
 {
   // identity
-  slug: String,           // titleSlug, unique
+  titleSlug: String,           // titleSlug, unique
   title: String,
 
   // meta

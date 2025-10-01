@@ -9,7 +9,7 @@ export type BasicInformation = {
   isPaidOnly: boolean;
   difficulty: "Easy" | "Medium" | "Hard";
   categoryTitle?: string | null;
-  topicTags: { name: string; slug: string; id: string }[];
+  topicTags: { name: string; titleSlug: string; id: string }[];
 };
 
 export type QuestionList = {
@@ -33,13 +33,13 @@ export type Details = {
 };
 
 /**
- * Run one batch (default pageSize=200). Returns a summary.
+ * Run one batch (default pageSize=20). Returns a summary.
  */
 export async function seedLeetCodeBatch() {
   const id = "questions";
   const cursor =
     (await SeedCursor.findById(id)) ??
-    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 200, done: false });
+    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 20, done: false });
 
   if (cursor.done) {
     return {
@@ -81,13 +81,13 @@ export async function seedLeetCodeBatch() {
   const ops = questionInfos.map((q) => ({
     updateOne: {
       // Use the same field you persist & index
-      filter: { slug: q.titleSlug },
+      filter: { titleSlug: q.titleSlug },
 
       // All update operators must be inside `update`
       update: {
         $set: {
-          // keep slug in the doc
-          slug: q.titleSlug,
+          // keep titleSlug in the doc
+          titleSlug: q.titleSlug,
 
           // ids/titles
           title: q.title,
