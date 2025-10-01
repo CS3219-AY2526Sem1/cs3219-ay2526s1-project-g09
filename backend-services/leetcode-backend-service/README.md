@@ -80,7 +80,7 @@ src/
     leetcode.ts       # QUERY_LIST, QUERY_DETAIL
 
   routes/
-    leetcode.ts       # GET /leetcode-test, POST /leetcode/seed-first
+    leetcode.ts       # GET /leetcode/test, POST /leetcode/seed-first
 ```
 
 ## API
@@ -89,12 +89,12 @@ Base URL: `http://localhost:5285/api/v1`
 
 ### LeetCode Test for manual testing of Graph QL endpoint
 
-**GET** `/leetcode-test`  
+**GET** `/leetcode/test`  
 Fetches details of all leetcode questions.
 
 ```bash
 # For window users
-curl.exe http://localhost:5285/api/v1/leetcode-test
+curl.exe http://localhost:5285/api/v1/leetcode/test
 ```
 
 ### Seed first problem into Mongo
@@ -110,7 +110,7 @@ Examples:
 
 ```bash
 # For window users
-curl.exe --request POST -H "X-Admin-Token: <ADMIN_TOKEN>" --url "http://localhost:5275/api/v1/leetcode/seed-batch"
+curl.exe --request POST -H "X-Admin-Token: <ADMIN_TOKEN>" --url "http://localhost:5285/api/v1/leetcode/seed-batch"
 ```
 
 Response (fields):

@@ -9,6 +9,16 @@ export default defineConfig(
   {
     ignores: ["eslint.config.mjs", "dist"],
   },
+  {
+    /**
+     * Disabled for quick prototyping, but should be enabled later
+     * once the codebase is more stable.
+     */
+    rules: {
+      "no-unsafe-assignment": "off",
+      "no-unsafe-call": "off",
+    },
+  },
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
 

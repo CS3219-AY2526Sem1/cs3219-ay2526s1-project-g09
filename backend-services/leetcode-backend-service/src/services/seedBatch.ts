@@ -36,7 +36,7 @@ export type Details = {
  * Run one batch (default pageSize=200). Returns a summary.
  */
 export async function seedLeetCodeBatch() {
-  const id = "leetcode-questions";
+  const id = "questions";
   const cursor =
     (await SeedCursor.findById(id)) ??
     new SeedCursor({ _id: id, nextSkip: 0, pageSize: 200, done: false });
@@ -71,7 +71,7 @@ export async function seedLeetCodeBatch() {
   }
 
   // fetch the question details from skip with size pageSize
-  // this are the information that needs to be inserted
+  // these are the information that needs to be inserted
   const questionInfos: QuestionDetail[] = await fetchNonPaidQuestionInfo(
     pageSize,
     nextSkip,
