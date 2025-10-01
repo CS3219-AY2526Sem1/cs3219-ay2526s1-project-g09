@@ -17,7 +17,7 @@ const CodeSnippetSchema = new Schema(
 const QuestionSchema = new Schema(
   {
     // identity
-    slug: { type: String, required: true, unique: true, index: true }, // titleSlug
+    titleSlug: { type: String, required: true, unique: true, index: true }, // titleSlug
     title: { type: String, required: true, index: true },
 
     // meta
@@ -45,7 +45,7 @@ const CursorSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
     nextSkip: { type: Number, default: 0, index: true },
-    pageSize: { type: Number, default: 200 },
+    pageSize: { type: Number, default: 20 },
     done: { type: Boolean, default: false },
     lastRunAt: { type: Date },
     total: { type: Number, default: 0 },

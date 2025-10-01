@@ -9,7 +9,7 @@ export type BasicInformation = {
   isPaidOnly: boolean;
   difficulty: "Easy" | "Medium" | "Hard";
   categoryTitle?: string | null;
-  topicTags: { name: string; slug: string; id: string }[];
+  topicTags: { name: string; titleSlug: string; id: string }[];
 };
 
 export type QuestionList = {
