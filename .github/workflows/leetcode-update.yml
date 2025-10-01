@@ -16,7 +16,7 @@ jobs:
 
       - name: Sync LeetCode Questions
         run: |
-          response=$(curl --request POST -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" --url "http://127.0.0.1:5275/api/v1/leetcode/seed-batch" | jq .)
+          response=$(curl --request POST -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" --url "http://localhost:5285/api/v1/leetcode/seed-batch" | jq .)
           if [ $response -ne 200 ]; then
             echo "Upload is NOT successful!"
             1
