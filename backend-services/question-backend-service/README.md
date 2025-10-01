@@ -78,7 +78,7 @@ src/
     leetcode.ts       # QUERY_LIST, QUERY_DETAIL
 
   routes/
-    leetcode.ts       # GET /leetcode-test, POST /leetcode/seed-first
+    leetcode.ts       # GET /leetcode/test, POST /leetcode/seed-first
 ```
 
 ## API
@@ -87,11 +87,11 @@ Base URL: `http://127.0.0.1:5275/api/v1`
 
 ### LeetCode Test for manual testing of Graph QL endpoint
 
-**GET** `/leetcode-test`  
+**GET** `/leetcode/test`  
 Fetches first page (limit=5) and details of the first problem.
 
 ```bash
-curl http://127.0.0.1:5275/api/v1/leetcode-test
+curl http://127.0.0.1:5275/api/v1/leetcode/test
 ```
 
 ### Seed first problem into Mongo

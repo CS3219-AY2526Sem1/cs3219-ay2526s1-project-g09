@@ -9,9 +9,14 @@ export default defineConfig(
   {
     ignores: ["eslint.config.mjs", "dist"],
   },
+  {
+    rules: {
+      "no-unsafe-assignment": "off",
+      "no-unsafe-call": "off",
+    },
+  },
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
-
   {
     languageOptions: {
       parserOptions: {

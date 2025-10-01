@@ -91,7 +91,12 @@ export async function fetchAllNonPaidSlugs(): Promise<BasicInformation[]> {
         skip: number;
         filters: Record<string, unknown>;
       }
-    >(QUERY_LIST, { categorySlug: "", limit: total, skip: skip, filters: {} });
+    >(QUERY_LIST, {
+      categorySlug: "",
+      limit: PAGE_SIZE,
+      skip: skip,
+      filters: {},
+    });
 
     const questionList = res.problemsetQuestionList;
     total = questionList.total ?? 0;

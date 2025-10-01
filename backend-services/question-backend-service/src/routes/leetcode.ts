@@ -48,7 +48,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     },
   );
 
-  app.get("/leetcode-test", async () => {
+  app.get("/leetcode/test", async () => {
     const list = await fetchAllNonPaidSlugs();
     const slugs = list.map((q) => q.titleSlug);
     const firstSlug = slugs[0];

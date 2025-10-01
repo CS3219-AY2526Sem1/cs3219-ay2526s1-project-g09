@@ -36,7 +36,7 @@ const QuestionSchema = new Schema(
     hints: { type: [String], default: [] },
     sampleTestCase: { type: String, required: false },
   },
-  { collection: "leetcode-questions", timestamps: true },
+  { collection: "questions", timestamps: true },
 );
 
 QuestionSchema.index({ category: 1, difficulty: 1, title: 1 });
