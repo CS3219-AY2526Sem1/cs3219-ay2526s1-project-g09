@@ -1,3 +1,6 @@
+/**
+ * Service functions to interact with LeetCode's API and manage question data.
+ */
 import { gql } from "../queries/leetcode.js";
 import { QUERY_LIST, QUERY_DETAIL } from "../queries/leetcode.js";
 import pLimit from "p-limit";
@@ -32,7 +35,7 @@ export type Details = {
     | null;
 };
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 const DETAIL_CONCURRENCY = 6;
 
 export async function upsertMany(questions: Details["question"][]) {

@@ -1,3 +1,6 @@
+/**
+ * Set up connection to MongoDB using Mongoose and integrate it with Fastify.
+ */
 import fp from "fastify-plugin";
 import mongoose from "mongoose";
 import type { FastifyInstance } from "fastify";

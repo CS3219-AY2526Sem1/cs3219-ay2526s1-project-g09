@@ -1,3 +1,7 @@
+/**
+ * Model for MongoDB data insertion
+ */
+
 import mongoose, {
   Schema,
   model,

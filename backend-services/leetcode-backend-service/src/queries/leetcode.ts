@@ -1,3 +1,6 @@
+/**
+ * GraphQL client for LeetCode's API.
+ */
 import { fetch } from "undici";
 
 const ENDPOINT = "https://leetcode.com/graphql";
@@ -6,7 +9,7 @@ const baseHeaders = {
   accept: "application/json, text/plain, */*",
   origin: "https://leetcode.com",
   referer: "https://leetcode.com/",
-  // Set a UA so you don't look like a bot with no UA
+  // Set a UserAgent to avoid 403 from Cloudflare
   "user-agent":
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36",
 };

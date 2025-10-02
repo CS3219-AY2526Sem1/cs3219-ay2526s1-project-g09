@@ -1,3 +1,6 @@
+/**
+ * Routes including seeding leetcode questions.
+ */
 import type {
   FastifyInstance,
   FastifyPluginCallback,
@@ -30,7 +33,7 @@ function assertAdmin(req: FastifyRequest) {
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.post(
-    "/leetcode/seed-batch",
+    "/seed-batch",
     {
       config: { rateLimit: { max: 1, timeWindow: "1m" } },
     },
@@ -46,7 +49,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     },
   );
 
-  app.get("/leetcode/test", async () => {
+  app.get("/test", async () => {
     const list = await fetchAllNonPaidSlugs();
     const slugs = list.map((q) => q.titleSlug);
     const firstSlug = slugs[0];
