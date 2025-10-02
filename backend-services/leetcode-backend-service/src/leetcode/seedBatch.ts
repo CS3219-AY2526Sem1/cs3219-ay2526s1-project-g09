@@ -1,9 +1,9 @@
 /**
  * Seed the database with LeetCode questions in batches.
  */
-import { Question, SeedCursor } from "../models/question.js";
-import { gql } from "../queries/leetcode.js";
-import { QUERY_LIST, QUERY_DETAIL } from "../queries/leetcode.js";
+import { Question, SeedCursor } from "../db/model/question.js";
+import { gql } from "./client.js";
+import { QUERY_LIST, QUERY_DETAIL } from "./queries.js";
 
 export type BasicInformation = {
   title: string;

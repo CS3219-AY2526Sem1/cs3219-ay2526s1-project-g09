@@ -9,10 +9,10 @@ import type {
 import {
   getQuestionDetail,
   fetchAllNonPaidSlugs,
-} from "../services/leetcode.js";
+} from "../leetcode/service.js";
 import { seedLeetCodeBatch } from "../services/seedBatch.js";
-import { SeedCursor } from "../models/question.js";
-import { withDbLimit } from "../lib/dbLimiter.js";
+import { SeedCursor } from "../db/model/question.js";
+import { withDbLimit } from "../db/dbLimiter.js";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 

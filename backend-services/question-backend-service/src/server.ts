@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import leetcodeRoutes from "./leetcode/routes.js";
-import db from "./db/connection.js";
+import leetcodeRoutes from "./routes/leetcode.js";
+import db from "./plugins/db.js";
 
 export async function buildServer() {
   const app = Fastify({ logger: true });
