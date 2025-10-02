@@ -1,10 +1,10 @@
 /**
  * Service functions to interact with LeetCode's API and manage question data.
  */
-import { gql } from "../queries/leetcode.js";
-import { QUERY_LIST, QUERY_DETAIL } from "../queries/leetcode.js";
+import { gql } from "./client.js";
+import { QUERY_LIST, QUERY_DETAIL } from "./queries.js";
 import pLimit from "p-limit";
-import { Question } from "../models/question.js";
+import { Question } from "../db/model/question.js";
 
 export type BasicInformation = {
   title: string;
