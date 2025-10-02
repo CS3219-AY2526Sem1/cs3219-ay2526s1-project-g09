@@ -1,4 +1,6 @@
-// scripts/seedBatch.ts
+/**
+ * Seed the database with LeetCode questions in batches.
+ */
 import { Question, SeedCursor } from "../models/question.js";
 import { gql } from "../queries/leetcode.js";
 import { QUERY_LIST, QUERY_DETAIL } from "../queries/leetcode.js";
