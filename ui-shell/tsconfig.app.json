@@ -31,7 +31,7 @@
       "@layouts/*": ["layouts/*"],
       "@types/*": ["types/*"],
       "@peerprep/types": ["../../shared/types"],
-      "@peerprep/api": ["../../../shared/api"]
+      "@peerprep/api": ["../../shared/api"]
     }
   },
   "include": ["src"]
