@@ -2,19 +2,26 @@ import { useState, useEffect } from "react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "../../context/useAuth";
 import { validateUsername } from "../../utils/InputValidation";
+import type { User } from "@peerprep/types";
+import { UserService } from "@/api/UserService";
+import { ApiError } from "@/api/UserServiceErrors";
 
-const UserProfileSection = () => {
-  const { user, updateUser } = useAuth();
-  const [displayName, setDisplayName] = useState(user?.username || "");
+interface UserProfileSectionProps {
+  user: User;
+  onUserUpdated?: (user: User) => void;
+}
+
+const UserProfileSection: React.FC<UserProfileSectionProps> = ({
+  user,
+  onUserUpdated,
+}) => {
+  const [displayName, setDisplayName] = useState(user.username);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (user?.username) {
-      setDisplayName(user.username);
-    }
+    setDisplayName(user.username);
   }, [user]);
 
   const handleChangeDisplayName = async () => {
@@ -23,15 +30,18 @@ const UserProfileSection = () => {
       setMessage(error);
       return;
     }
-
     setLoading(true);
-    setMessage("");
     try {
-      await updateUser({ username: displayName });
+      const res = await UserService.updateUser(user.id, {
+        username: displayName,
+      });
       setMessage("Display name updated successfully!");
+      onUserUpdated?.(res.data);
     } catch (err) {
-      if (err instanceof Error) {
-        setMessage(err.message || "Failed to update display name");
+      if (err instanceof Error || err instanceof ApiError) {
+        setMessage(err.message);
+      } else {
+        setMessage("Failed to update display name");
       }
     } finally {
       setLoading(false);

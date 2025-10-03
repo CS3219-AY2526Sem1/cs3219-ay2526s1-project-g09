@@ -5,42 +5,41 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "../../context/useAuth";
-import { UserService } from "../../api/UserService";
+import { UserService } from "@/api/UserService";
+import { ApiError } from "@/api/UserServiceErrors";
 import { useState } from "react";
+import type { User } from "@peerprep/types";
 
 interface AccountDeletionSectionProps {
+  user: User;
   onAccountDeleted?: () => void;
 }
 
 const AccountDeletionSection: React.FC<AccountDeletionSectionProps> = ({
+  user,
   onAccountDeleted,
 }) => {
-  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleDeleteAccount = async () => {
-    if (!user) {
-      setMessage("You must be logged in to delete your account.");
-      return;
-    }
-
     try {
       setLoading(true);
       setMessage("");
 
       await UserService.deleteUser(user.id);
-      logout();
+      await UserService.logout();
 
       // Redirect to landing page
       onAccountDeleted?.();
 
       setMessage("Account deleted successfully.");
     } catch (err) {
-      if (err instanceof Error) {
-        setMessage(err.message || "Failed to delete account.");
+      if (err instanceof Error || err instanceof ApiError) {
+        setMessage(err.message);
+      } else {
+        setMessage("Failed to delete account.");
       }
     } finally {
       setLoading(false);
