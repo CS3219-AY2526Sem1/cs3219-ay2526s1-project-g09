@@ -1,0 +1,10 @@
+services:
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: user-service
+    ports:
+      - "5277:5277"
+    env_file:
+      - .env

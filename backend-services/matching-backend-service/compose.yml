@@ -1,0 +1,17 @@
+services:
+  redis:
+    image: redis:8.2.1
+    ports:
+      - "6379:6379"
+
+  matching-service:
+    build: .
+    container_name: matching-service
+    ports:
+      - "5274:5274"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MONGODB_URI=${MONGODB_URI}
+    depends_on:
+      - redis
