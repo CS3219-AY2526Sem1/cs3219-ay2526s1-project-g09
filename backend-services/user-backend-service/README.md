@@ -162,7 +162,7 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
     {
       "email": "sample1@gmail.com",
       "password": "SecurePassword",
-      "rememberMe": "false"
+      "rememberMe": false
     }
     ```
 
@@ -343,7 +343,6 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
   ```json
   {
     "message": "Email verified successfully",
-    "accessToken": "<jwt-access-token>",
     "data": {
       "id": "<userId>",
       "username": "SampleUser1",
