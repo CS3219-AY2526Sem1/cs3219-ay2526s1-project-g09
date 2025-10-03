@@ -6,13 +6,10 @@ import type {
   FastifyPluginCallback,
   FastifyRequest,
 } from "fastify";
-import {
-  getQuestionDetail,
-  fetchAllNonPaidSlugs,
-} from "../leetcode/service.js";
-import { seedLeetCodeBatch } from "../services/seedBatch.js";
 import { SeedCursor } from "../db/model/question.js";
 import { withDbLimit } from "../db/dbLimiter.js";
+import { Question } from "../db/model/question.js";
+import { z } from "zod";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
@@ -33,41 +30,37 @@ function assertAdmin(req: FastifyRequest) {
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.post(
-    "/seed-batch",
+    "/post-question",
     {
-      config: { rateLimit: { max: 1, timeWindow: "1m" } },
+      config: { rateLimit: { max: 10, timeWindow: "1m" } },
     },
-    async (req) => {
+    async (req, res) => {
       assertAdmin(req);
       const reset = (req.query as { reset?: string })?.reset === "1";
       if (reset) {
         await withDbLimit(() => SeedCursor.findByIdAndDelete("questions"));
       }
+      const Body = z.object({
+        source: z.string(),
+        titleSlug: z.string(),
+        categoryTitle: z.string().max(100),
+        difficulty: z.enum(["Easy", "Medium", "Hard"]),
+      });
+      const parsed = Body.parse(req.body);
+      const { source, titleSlug, categoryTitle, difficulty } = parsed;
+      const doc = {
+        ...parsed,
+      };
 
-      const res = await seedLeetCodeBatch();
-      return res;
+      const saved = await Question.findOneAndUpdate(
+        { source, titleSlug, categoryTitle, difficulty },
+        { $set: doc },
+        { new: true, upsert: true },
+      );
+
+      return { ok: true, id: saved._id.toString(), updatedAt: saved.updatedAt };
     },
   );
-
-  app.get("/test", async () => {
-    const list = await fetchAllNonPaidSlugs();
-    const slugs = list.map((q) => q.titleSlug);
-    const firstSlug = slugs[0];
-    const detail = firstSlug ? await getQuestionDetail(firstSlug) : null;
-
-    return {
-      ok: true,
-      titleSlugs: slugs,
-      title: detail?.title ?? null,
-      isPaidOnly: detail?.isPaidOnly,
-      difficulty: detail?.difficulty,
-      categoryTitle: detail?.categoryTitle ?? null,
-      content: detail?.content ?? null,
-      exampleTestcases: detail?.exampleTestcases ?? null,
-      codeSnippets: detail?.codeSnippets,
-      hints: detail?.hints ?? null,
-    };
-  });
 };
 
 export default leetcodeRoutes;
