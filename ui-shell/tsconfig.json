@@ -16,7 +16,8 @@
       "@pages/*": ["pages/*"],
       "@layouts/*": ["layouts/*"],
       "@types/*": ["types/*"],
-      "@data/*": ["data/*"]
+      "@data/*": ["data/*"],
+      "@peerprep/types": ["../../shared/types"]
     }
   }
 }
