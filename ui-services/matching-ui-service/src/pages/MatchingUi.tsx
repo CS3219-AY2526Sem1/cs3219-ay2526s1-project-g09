@@ -6,6 +6,7 @@ import MatchSearch from "@/components/MatchSearch";
 import StartMatching from "@/components/StartMatching";
 import type { MatchingResponse, UserPreferences } from "@/api/matchingService";
 import { cancelMatch } from "@/api/matchingService";
+import type { CollabSession } from "@/api/collabService";
 
 type PageView = "initial" | "preferences" | "matching" | "matchFound";
 
@@ -27,6 +28,9 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user }) => {
   const [currentView, setCurrentView] = useState<PageView>("initial");
   const [matchData, setMatchData] = useState<MatchingResponse | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const [collabSession, setCollabSession] = useState<CollabSession | null>(
+    null,
+  );
 
   if (!user) {
     return (
@@ -57,6 +61,8 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user }) => {
     }
 
     setCurrentView("initial");
+    setMatchData(null);
+    setCollabSession(null);
   };
 
   return (
@@ -76,20 +82,24 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user }) => {
         <MatchSearch
           userId={username}
           preferences={preferences}
-          onMatchFound={(data) => {
+          onMatchFound={(data, session) => {
             setMatchData(data);
+            setCollabSession(session);
             handleMatchFound();
           }}
           onCancel={handleCancel}
         />
       )}
 
-      {currentView === "matchFound" && matchData && (
+      {currentView === "matchFound" && matchData && collabSession && (
         <MatchFound
           matchedName={matchData.userId}
           difficulty={matchData.difficulties[0]}
           timeMins={matchData.minTime}
           topic={matchData.topics[0]}
+          currentUser={username}
+          sessionId={collabSession.sessionId}
+          questionId={collabSession.questionId}
           onCancel={handleCancel}
         />
       )}

@@ -4,8 +4,10 @@ import QuestionDisplay from "questionUiService/QuestionDisplay";
 import ChatWindow from "collabUiService/ChatWindow";
 import WorkingWindow from "collabUiService/WorkingWindow";
 import NavHeader from "@components/collab/SessionHeader";
+import { useAuth } from "userUiService/useAuth";
 
 const SessionPage: React.FC = () => {
+  const { user } = useAuth();
   return (
     <SessionLayout navHeader={<NavHeader />}>
       <div className="flex h-[85vh] gap-4 px-4">
@@ -23,7 +25,7 @@ const SessionPage: React.FC = () => {
         </div>
 
         <div className="flex flex-1">
-          <WorkingWindow></WorkingWindow>
+          <WorkingWindow user={user}></WorkingWindow>
         </div>
       </div>
     </SessionLayout>

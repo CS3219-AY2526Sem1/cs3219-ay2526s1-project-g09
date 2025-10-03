@@ -3,23 +3,112 @@ import { Button } from "@/components/ui/button";
 
 interface SessionTimerProps {
   initialTimeInSeconds?: number;
+  sessionId: string;
 }
+
+interface SessionResponse {
+  success?: boolean;
+  session?: {
+    createdAt?: string;
+    endedAt?: string | null;
+    timeTaken?: number;
+  };
+  error?: string;
+}
+
+interface SessionPayload {
+  createdAt?: string;
+  endedAt?: string | null;
+  timeTaken?: number;
+}
+
+const retrieveStartTime = async (
+  sessionId: string,
+): Promise<SessionPayload> => {
+  const res = await fetch(`http://localhost:5276/api/collab/${sessionId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(
+      `Failed to fetch collaboration session (${res.status}): ${errorText}`,
+    );
+  }
+
+  const data = (await res.json()) as SessionResponse | SessionPayload;
+
+  if ("session" in data && data.session) {
+    return data.session;
+  }
+
+  return data as SessionPayload;
+};
 
 const SessionTimer: React.FC<SessionTimerProps> = ({
   initialTimeInSeconds = 310,
+  sessionId,
 }) => {
   const [time, setTime] = useState(initialTimeInSeconds);
+  const [loading, setLoading] = useState(true);
 
-  // Calculate if time is less than 5 minutes (300 seconds)
   const isLowTime = time < 300;
 
   useEffect(() => {
-    if (time <= 0) return;
-    const timerId = setInterval(() => {
-      setTime((prevTime) => prevTime - 1);
-    }, 1000);
-    return () => clearInterval(timerId);
-  }, [time]);
+    let timerId: NodeJS.Timeout;
+
+    const initTimer = async () => {
+      try {
+        const session = await retrieveStartTime(sessionId);
+
+        const startedAt = session.createdAt
+          ? new Date(session.createdAt).getTime()
+          : Number.NaN;
+
+        if (!Number.isFinite(startedAt)) {
+          throw new Error(`Invalid createdAt for session ${sessionId}`);
+        }
+
+        const now = Date.now();
+        const elapsedSeconds = Math.max(
+          0,
+          Math.round((now - startedAt) / 1000),
+        );
+
+        let initialRemaining = Math.max(
+          0,
+          initialTimeInSeconds - elapsedSeconds,
+        );
+
+        if (session.timeTaken && session.timeTaken > 0) {
+          initialRemaining = 0;
+        }
+
+        setTime(initialRemaining);
+        setLoading(false);
+
+        timerId = setInterval(() => {
+          setTime((prev) => {
+            if (prev <= 1) {
+              clearInterval(timerId);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } catch (err) {
+        console.error("Failed to init timer:", err);
+        setLoading(false);
+      }
+    };
+
+    initTimer();
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [sessionId, initialTimeInSeconds]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -28,6 +117,14 @@ const SessionTimer: React.FC<SessionTimerProps> = ({
     const pad = (num: number) => num.toString().padStart(2, "0");
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   };
+
+  if (loading) {
+    return (
+      <Button className="bg-gray-500 text-white" disabled>
+        Loading...
+      </Button>
+    );
+  }
 
   return (
     <Button

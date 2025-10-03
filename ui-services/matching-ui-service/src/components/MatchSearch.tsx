@@ -6,11 +6,16 @@ import {
   type MatchResult,
   type MatchingResponse,
 } from "@/api/matchingService";
+import {
+  startCollabSession,
+  type CollabSession,
+  waitForActiveSession,
+} from "@/api/collabService";
 
 interface MatchSearchProps {
   userId: string;
   preferences: Omit<UserPreferences, "userId">;
-  onMatchFound: (matchData: MatchingResponse) => void;
+  onMatchFound: (matchData: MatchingResponse, session: CollabSession) => void;
   onCancel: () => void;
 }
 
@@ -65,17 +70,59 @@ const MatchingSearch: React.FC<MatchSearchProps> = ({
         if (aborted) return;
 
         switch (result.status) {
-          case "found":
-            onMatchFound(result.data);
+          case "found": {
+            const sortedUsers = [userId, result.data.userId].sort();
+            const questionId =
+              result.data.questionId ?? "placeholder-questionId";
+
+            const isPrimaryRequester = sortedUsers[0] === userId;
+
+            try {
+              let session: CollabSession | null = null;
+
+              if (isPrimaryRequester) {
+                session = await startCollabSession({
+                  questionId,
+                  users: sortedUsers,
+                });
+              } else {
+                session = await waitForActiveSession(sortedUsers);
+              }
+
+              if (!session) {
+                throw new Error("No active session created");
+              }
+
+              if (aborted) {
+                return;
+              }
+
+              onMatchFound(result.data, session);
+            } catch (sessionError) {
+              console.error(
+                "Failed to initialise collaboration session",
+                sessionError,
+              );
+              if (!aborted) {
+                setView("matchError");
+              }
+            }
             break;
+          }
           case "notFound":
-            setView("matchNotFound");
+            if (!aborted) {
+              setView("matchNotFound");
+            }
             break;
           case "cancelled":
-            setView("matchError");
+            if (!aborted) {
+              setView("matchError");
+            }
             break;
           case "error":
-            setView("matchError");
+            if (!aborted) {
+              setView("matchError");
+            }
             break;
         }
       } catch (err) {

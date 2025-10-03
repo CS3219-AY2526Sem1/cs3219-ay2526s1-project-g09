@@ -12,6 +12,7 @@ export interface MatchingResponse {
   difficulties: string[];
   minTime: number;
   maxTime: number;
+  questionId?: string;
 }
 
 export type MatchResult =

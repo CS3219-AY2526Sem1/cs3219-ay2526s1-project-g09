@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 interface MatchFoundProps {
   matchedName: string;
@@ -6,6 +6,9 @@ interface MatchFoundProps {
   timeMins: number;
   topic: string;
   onCancel: () => void;
+  currentUser: string;
+  sessionId: string;
+  questionId: string;
 }
 
 const formatTime = (totalMinutes: number) => {
@@ -29,9 +32,21 @@ const MatchFound: React.FC<MatchFoundProps> = ({
   timeMins = 0,
   topic = "N/A",
   onCancel,
+  currentUser,
+  sessionId,
+  questionId,
 }) => {
   const initialTime: number = 15;
   const [timeLeft, setTimeLeft] = useState(initialTime);
+
+  const collabUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("sessionId", sessionId);
+    params.set("questionId", questionId);
+    params.append("user", currentUser);
+    params.append("user", matchedName);
+    return `/collab?${params.toString()}`;
+  }, [currentUser, matchedName, questionId, sessionId]);
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -87,7 +102,7 @@ const MatchFound: React.FC<MatchFoundProps> = ({
         >
           Cancel
         </button>
-        <a href="/collab">
+        <a href={collabUrl}>
           <button className="px-8 py-3 bg-orange-600 text-white rounded-md text-lg font-semibold shadow hover:bg-orange-700 transition">
             Accept Match!
           </button>

@@ -1,20 +1,46 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import Editor from "@monaco-editor/react";
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import CollabEditor from "./collab/CollabEditor";
 
-const WorkingWindow: React.FC = () => {
-  // State to hold the code content
-  const [code, setCode] = useState<string>(
-    "// Start coding here!\nfunction twoSum(nums, target) {\n    \n}",
-  );
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  isVerified: boolean;
+  createdAt: string;
+}
 
-  const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      setCode(value);
-    }
-  };
+interface CollabPageProps {
+  user: User | null;
+}
+
+const WorkingWindow: React.FC<CollabPageProps> = ({ user }) => {
+  const { sessionId, questionId, users } = useMemo(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const derivedUsers = searchParams.getAll("user");
+
+    return {
+      sessionId: searchParams.get("sessionId") ?? undefined,
+      questionId: searchParams.get("questionId") ?? undefined,
+      users: derivedUsers.length > 0 ? derivedUsers : [],
+    };
+  }, []);
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Please log in to access collab</p>
+      </div>
+    );
+  }
+  console.log("SessionPage is rendering");
+
+  console.log("WorkingWindow user:", user);
+  const username = user.username;
+  console.log(username);
 
   return (
     <div className="flex flex-1 bg-gray-800 rounded-lg shadow-md overflow-hidden relative">
@@ -24,7 +50,7 @@ const WorkingWindow: React.FC = () => {
             value="code"
             className="data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
           >
-            Code
+            Code {username}
           </TabsTrigger>
           <TabsTrigger
             value="whiteboard"
@@ -34,16 +60,10 @@ const WorkingWindow: React.FC = () => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="code" className="flex-1 p-4 overflow-hidden">
-          {/* The Monaco Editor component */}
-          <Editor
-            height="100%"
-            defaultLanguage="javascript"
-            defaultValue={code}
-            theme="vs-dark"
-            onChange={handleEditorChange}
-            options={{
-              minimap: { enabled: false },
-            }}
+          <CollabEditor
+            questionId={questionId}
+            users={users}
+            sessionId={sessionId}
           />
         </TabsContent>
         <TabsContent value="whiteboard" className="flex-1 p-4 overflow-hidden">

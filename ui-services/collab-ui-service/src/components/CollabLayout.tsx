@@ -2,9 +2,13 @@ import SessionHeader from "./SessionHeader";
 
 interface MatchingLayoutProps {
   children: React.ReactNode;
+  onLeaveSession?: () => void | Promise<void>;
 }
 
-const MatchingLayout: React.FC<MatchingLayoutProps> = ({ children }) => {
+const MatchingLayout: React.FC<MatchingLayoutProps> = ({
+  children,
+  onLeaveSession,
+}) => {
   return (
     <div className="relative flex flex-col min-h-screen bg-[#0a2342] text-white">
       {/* This renders first, behind everything else */}
@@ -23,7 +27,7 @@ const MatchingLayout: React.FC<MatchingLayoutProps> = ({ children }) => {
       </div>
 
       {/* Navbar and content are rendered on top */}
-      <SessionHeader></SessionHeader>
+      <SessionHeader onLeaveSession={onLeaveSession}></SessionHeader>
 
       {/* Main Content*/}
       <main className="flex flex-col flex-1 justify-center relative z-10">
