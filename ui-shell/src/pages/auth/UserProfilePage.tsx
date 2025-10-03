@@ -6,11 +6,12 @@ import { useAuth } from "@/data/UserStore";
 
 const UserProfile = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
   return (
     <Layout navHeader={<NavHeader />}>
       <div className="flex justify-center items-center pt-20">
         <UserProfileCard
+          user={user}
           onAccountDeleted={() => {
             setUser(null);
             navigate("/");
