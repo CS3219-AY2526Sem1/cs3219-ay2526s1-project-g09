@@ -7,7 +7,7 @@ import type { User } from "@/types/User";
 interface UserProfileCardProps {
   user: User;
   onAccountDeleted?: () => void;
-  onUserUpdated?: () => void;
+  onUserUpdated?: (user: User) => void;
 }
 
 const UserProfileCard: React.FC<UserProfileCardProps> = ({

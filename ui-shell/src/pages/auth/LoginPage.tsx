@@ -17,7 +17,7 @@ const LoginPage: React.FC = () => {
         }}
         onLoginSuccess={(user: User) => {
           setUser(user);
-          navigate("/matching")
+          navigate("/matching");
         }}
       />
     </AuthLayout>
