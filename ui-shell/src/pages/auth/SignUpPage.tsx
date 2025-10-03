@@ -1,7 +1,7 @@
 import AuthLayout from "@components/auth/AuthLayout";
 import SignUpForm from "userUiService/SignUpForm";
 import { useNavigate } from "react-router-dom";
-import type { User } from "../../types/User";
+import type { User } from "@/types/User";
 const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
 

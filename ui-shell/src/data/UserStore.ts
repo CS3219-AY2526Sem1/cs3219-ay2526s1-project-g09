@@ -1,5 +1,5 @@
 import { atom, useAtom } from "jotai";
-import type { User } from "@peerprep/types";
+import type { User } from "@/types/User";
 
 export const userAtom = atom<User | null>(null);
 export const loadingAtom = atom<boolean>(true);
