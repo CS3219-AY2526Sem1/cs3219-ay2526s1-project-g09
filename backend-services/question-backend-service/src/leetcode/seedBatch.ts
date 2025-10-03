@@ -88,9 +88,11 @@ export async function seedLeetCodeBatch() {
       // All update operators must be inside `update`
       update: {
         $set: {
-          globalSlug: `leetcode:${q.titleSlug}`, // unique identifier
+          // keep titleSlug in the doc
           source: "leetcode",
           titleSlug: q.titleSlug,
+
+          // ids/titles
           title: q.title,
 
           // metadata

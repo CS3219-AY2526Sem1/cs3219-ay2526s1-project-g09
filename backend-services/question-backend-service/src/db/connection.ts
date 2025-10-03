@@ -19,7 +19,7 @@ export default fp(async (app: FastifyInstance) => {
     mongoose.connection.readyState === mongoose.ConnectionStates.disconnected
   ) {
     await mongoose.connect(uri, {
-      dbName: "leetcode-service",
+      dbName: "question-service",
       serverSelectionTimeoutMS: 10000,
     });
   }

@@ -18,6 +18,11 @@ const QuestionSchema = new Schema(
   {
     // identity
     source: { type: String, required: true, index: true }, // e.g. "leetcode"
+    globalSlug: { type: String, required: true, unique: true, index: true }, // e.g. "leetcode:two-sum"
+    // use separate unique field instead of _id to allow easier migration in future
+    // and avoid issues with changing _id types
+    // e.g. from string to ObjectId or vice versa
+    // _id: { type: String, required: true, unique: true }, // e.g. "leetcode:two-sum"
     titleSlug: { type: String, required: true, index: true }, // titleSlug
     title: { type: String, required: true, index: true },
 

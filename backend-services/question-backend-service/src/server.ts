@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import leetcodeRoutes from "./routes/leetcode.js";
-import db from "./plugins/db.js";
+import leetcodeRoutes from "./routes/post-question.js";
+import db from "./db/connection.js";
 
 export async function buildServer() {
   const app = Fastify({ logger: true });
@@ -15,7 +15,7 @@ export async function buildServer() {
   });
 
   // routes
-  await app.register(leetcodeRoutes, { prefix: "/api/v1/leetcode" });
+  await app.register(leetcodeRoutes, { prefix: "/api/v1/questions" });
 
   return app;
 }
