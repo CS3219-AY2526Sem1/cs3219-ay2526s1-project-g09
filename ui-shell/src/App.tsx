@@ -18,8 +18,22 @@ import QuestionAttemptsPage from "@pages/history/QuestionAttemptsPage";
 import AttemptPage from "@pages/history/AttemptPage";
 
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import UnverifiedRoute from "./components/auth/UnverifiedRoute";
+
+import { useEffect } from "react";
+import { useAuth } from "@/data/UserStore";
+import { UserService } from "./api/UserService";
 
 export default function App() {
+  const { setUser, setLoading } = useAuth();
+
+  useEffect(() => {
+    setLoading(true);
+    UserService.verifyToken()
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, [setUser, setLoading]);
   return (
     <Routes>
       {/* Public access */}
@@ -27,8 +41,11 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgotPassword" element={<ForgotPasswordPage />} />
       <Route path="/signup" element={<SignUpPage />} />
-      {/* Requires authentication */}
-      <Route path="/otp" element={<OtpPage />} />
+      {/* Only unverified users */}
+      <Route element={<UnverifiedRoute />}>
+        <Route path="/otp" element={<OtpPage />} />
+      </Route>
+      {/* Only verified users */}
       <Route element={<ProtectedRoute />}>
         <Route path="/matching" element={<MatchingPage />} />
         <Route path="/collab" element={<SessionPage />} />

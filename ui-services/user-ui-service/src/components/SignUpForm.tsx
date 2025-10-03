@@ -1,6 +1,7 @@
 import { useState } from "react";
+import type { User } from "../types/User";
 import { UserService } from "../api/UserService";
-import type { User } from "../api/UserService";
+import { UserServiceApiError } from "../api/UserServiceErrors";
 import {
   validateUsername,
   validateEmail,
@@ -47,8 +48,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
       // Navigate to otp page
       onSignUpSuccess?.(newUser);
     } catch (err) {
-      if (err instanceof Error) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
         setError(err.message);
+      } else {
+        setError("Failed to Signup. Please refresh and try again.");
       }
     }
   }

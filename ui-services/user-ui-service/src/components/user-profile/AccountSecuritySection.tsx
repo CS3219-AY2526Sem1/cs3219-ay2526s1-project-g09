@@ -2,22 +2,27 @@ import { useState, useEffect } from "react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "../../context/useAuth";
 import { validatePassword, validateEmail } from "../../utils/InputValidation";
+import type { User } from "../../types/User";
+import { UserService } from "../../api/UserService";
+import { UserServiceApiError } from "../../api/UserServiceErrors";
 
-const AccountSecuritySection = () => {
-  const { user, updateUser } = useAuth();
+interface AccountSecuritySectionProps {
+  user: User;
+  onUserUpdated?: (user: User) => void;
+}
 
-  const [email, setEmail] = useState(user?.email || "");
+const AccountSecuritySection: React.FC<AccountSecuritySectionProps> = ({
+  user,
+  onUserUpdated,
+}) => {
+  const [email, setEmail] = useState(user.email);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Keep email in sync with context updates
   useEffect(() => {
-    if (user?.email) {
-      setEmail(user.email);
-    }
+    setEmail(user.email);
   }, [user]);
 
   const handleChangeEmail = async () => {
@@ -27,13 +32,15 @@ const AccountSecuritySection = () => {
       return;
     }
     setLoading(true);
-    setMessage("");
     try {
-      await updateUser({ email });
+      const res = await UserService.updateUser(user.id, { email });
       setMessage("Email updated successfully!");
+      onUserUpdated?.(res.data);
     } catch (err) {
-      if (err instanceof Error) {
-        setMessage(err.message || "Failed to update email");
+      if (err instanceof Error || err instanceof UserServiceApiError) {
+        setMessage(err.message);
+      } else {
+        setMessage("Failed to update email.");
       }
     } finally {
       setLoading(false);
@@ -46,15 +53,17 @@ const AccountSecuritySection = () => {
       setMessage(errors);
       return;
     }
-    setLoading(true);
     setMessage("");
     try {
-      await updateUser({ password });
+      const res = await UserService.updateUser(user.id, { password });
       setPassword("");
       setMessage("Password updated successfully!");
+      onUserUpdated?.(res.data);
     } catch (err) {
-      if (err instanceof Error) {
-        setMessage(err.message || "Failed to update password");
+      if (err instanceof Error || err instanceof UserServiceApiError) {
+        setMessage(err.message);
+      } else {
+        setMessage("Failed to update password.");
       }
     } finally {
       setLoading(false);

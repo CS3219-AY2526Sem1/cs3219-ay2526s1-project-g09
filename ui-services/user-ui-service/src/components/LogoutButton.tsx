@@ -1,17 +1,17 @@
-import { useAuth } from "../context/useAuth";
+import { UserService } from "../api/UserService";
+import { UserServiceApiError } from "../api/UserServiceErrors";
 
 interface LogOutButtonProps {
   onLogOutSuccess?: () => void;
 }
 
 const LogoutButton: React.FC<LogOutButtonProps> = ({ onLogOutSuccess }) => {
-  const { logout } = useAuth();
   async function handleLogOut() {
     try {
-      await logout();
+      await UserService.logout();
       onLogOutSuccess?.();
     } catch (err) {
-      if (err instanceof Error) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
         console.error(err.message);
       }
     }

@@ -20,8 +20,6 @@ export default defineConfig({
         "./SetDisplayNameForm": "./src/components/SetDisplayNameForm",
         "./SignUpForm": "./src/components/SignUpForm",
         "./LogoutButton": "./src/components/LogoutButton",
-        "./AuthProvider": "./src/context/AuthProvider",
-        "./useAuth": "./src/context/useAuth",
       },
       shared: ["react", "react-dom"],
     }),

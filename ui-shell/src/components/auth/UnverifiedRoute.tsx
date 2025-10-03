@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/data/UserStore";
 
-const ProtectedRoute: React.FC = () => {
+const UnverifiedRoute: React.FC = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -12,11 +12,15 @@ const ProtectedRoute: React.FC = () => {
     );
   }
 
-  if (!user || !user.isVerified) {
+  if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user.isVerified) {
+    return <Navigate to="/matching" replace />;
   }
 
   return <Outlet />;
 };
 
-export default ProtectedRoute;
+export default UnverifiedRoute;
