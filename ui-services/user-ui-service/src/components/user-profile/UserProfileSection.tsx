@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { validateUsername } from "../../utils/InputValidation";
 import type { User } from "@peerprep/types";
-import { UserService } from "@/api/UserService";
-import { ApiError } from "@/api/UserServiceErrors";
+import { UserService } from "@peerprep/api";
+import { UserServiceApiError } from "@peerprep/api";
 
 interface UserProfileSectionProps {
   user: User;
@@ -38,7 +38,7 @@ const UserProfileSection: React.FC<UserProfileSectionProps> = ({
       setMessage("Display name updated successfully!");
       onUserUpdated?.(res.data);
     } catch (err) {
-      if (err instanceof Error || err instanceof ApiError) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
         setMessage(err.message);
       } else {
         setMessage("Failed to update display name");

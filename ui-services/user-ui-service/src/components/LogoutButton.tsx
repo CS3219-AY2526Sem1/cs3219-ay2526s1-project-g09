@@ -1,5 +1,5 @@
-import { ApiError } from "@/api/UserServiceErrors";
-import { UserService } from "@/api/UserService";
+import { UserService } from "@peerprep/api";
+import { UserServiceApiError } from "@peerprep/api";
 
 interface LogOutButtonProps {
   onLogOutSuccess?: () => void;
@@ -11,7 +11,7 @@ const LogoutButton: React.FC<LogOutButtonProps> = ({ onLogOutSuccess }) => {
       await UserService.logout();
       onLogOutSuccess?.();
     } catch (err) {
-      if (err instanceof Error || err instanceof ApiError) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
         console.error(err.message);
       }
     }

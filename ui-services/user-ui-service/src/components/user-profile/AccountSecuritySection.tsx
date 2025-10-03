@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { User } from "@peerprep/types";
 import { validatePassword, validateEmail } from "../../utils/InputValidation";
-import { UserService } from "@/api/UserService";
-import { ApiError } from "@/api/UserServiceErrors";
+import { UserService } from "@peerprep/api";
+import { UserServiceApiError } from "@peerprep/api";
 
 interface AccountSecuritySectionProps {
   user: User;
@@ -37,7 +37,7 @@ const AccountSecuritySection: React.FC<AccountSecuritySectionProps> = ({
       setMessage("Email updated successfully!");
       onUserUpdated?.(res.data);
     } catch (err) {
-      if (err instanceof Error || err instanceof ApiError) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
         setMessage(err.message);
       } else {
         setMessage("Failed to update email.");
@@ -60,7 +60,7 @@ const AccountSecuritySection: React.FC<AccountSecuritySectionProps> = ({
       setMessage("Password updated successfully!");
       onUserUpdated?.(res.data);
     } catch (err) {
-      if (err instanceof Error || err instanceof ApiError) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
         setMessage(err.message);
       } else {
         setMessage("Failed to update password.");

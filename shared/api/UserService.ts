@@ -1,4 +1,4 @@
-import type { User } from "@peerprep/types";
+import type { User } from "../types";
 
 const BASE_URL = "http://localhost:5277/api/user-service";
 

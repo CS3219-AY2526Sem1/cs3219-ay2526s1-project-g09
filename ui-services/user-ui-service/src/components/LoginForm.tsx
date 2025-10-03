@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { UserService } from "../api/UserService";
 import type { User } from "@peerprep/types";
-import { ApiError } from "../api/UserServiceErrors";
+import { UserService } from "@peerprep/api";
+import { UserServiceApiError } from "@peerprep/api";
 
 interface LoginFormProps {
   onLoginSuccess?: (user: User) => void;
@@ -30,7 +30,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       // Notify parent
       onLoginSuccess?.(user);
     } catch (err) {
-      if (err instanceof ApiError) {
+      if (err instanceof UserServiceApiError) {
         console.error(err.message);
         setError("API Error. Please refresh the page and try again.");
       } else if (err instanceof Error) {

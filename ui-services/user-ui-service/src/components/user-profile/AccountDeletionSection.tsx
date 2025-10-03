@@ -5,8 +5,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserService } from "@/api/UserService";
-import { ApiError } from "@/api/UserServiceErrors";
+import { UserService } from "@peerprep/api";
+import { UserServiceApiError } from "@peerprep/api";
 import { useState } from "react";
 import type { User } from "@peerprep/types";
 
