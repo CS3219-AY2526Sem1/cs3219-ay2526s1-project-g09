@@ -29,9 +29,7 @@
       "@components/*": ["components/*"],
       "@pages/*": ["pages/*"],
       "@layouts/*": ["layouts/*"],
-      "@types/*": ["types/*"],
-      "@peerprep/types": ["../../shared/types"],
-      "@peerprep/api": ["../../shared/api"]
+      "@types/*": ["types/*"]
     }
   },
   "include": ["src"]

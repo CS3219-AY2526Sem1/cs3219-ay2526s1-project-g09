@@ -1,7 +1,7 @@
 import { useState } from "react";
-import type { User } from "@peerprep/types";
-import { UserService } from "@peerprep/api";
-import { UserServiceApiError } from "@peerprep/api";
+import type { User } from "../types/User";
+import { UserService } from "../api/UserService";
+import { UserServiceApiError } from "../api/UserServiceErrors";
 
 interface OtpFormProps {
   user: User;

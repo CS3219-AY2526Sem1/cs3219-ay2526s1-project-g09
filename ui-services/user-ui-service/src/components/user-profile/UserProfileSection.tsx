@@ -3,9 +3,9 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { validateUsername } from "../../utils/InputValidation";
-import type { User } from "@peerprep/types";
-import { UserService } from "@peerprep/api";
-import { UserServiceApiError } from "@peerprep/api";
+import type { User } from "../../types/User";
+import { UserService } from "../../api/UserService";
+import { UserServiceApiError } from "../../api/UserServiceErrors";
 
 interface UserProfileSectionProps {
   user: User;

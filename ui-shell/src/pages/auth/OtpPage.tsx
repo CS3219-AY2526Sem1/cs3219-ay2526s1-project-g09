@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import AuthLayout from "@components/auth/AuthLayout";
 import OtpForm from "userUiService/OtpForm";
-import type { User } from "@peerprep/types";
+import type { User } from "../../types/User";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/data/UserStore";
 

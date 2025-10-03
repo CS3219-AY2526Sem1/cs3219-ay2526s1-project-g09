@@ -1,5 +1,5 @@
-import { UserService } from "@peerprep/api";
-import { UserServiceApiError } from "@peerprep/api";
+import { UserService } from "../api/UserService";
+import { UserServiceApiError } from "../api/UserServiceErrors";
 
 interface LogOutButtonProps {
   onLogOutSuccess?: () => void;
