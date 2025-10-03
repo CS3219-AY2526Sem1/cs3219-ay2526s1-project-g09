@@ -36,7 +36,7 @@ const AccountDeletionSection: React.FC<AccountDeletionSectionProps> = ({
 
       setMessage("Account deleted successfully.");
     } catch (err) {
-      if (err instanceof Error || err instanceof ApiError) {
+      if (err instanceof Error || err instanceof UserServiceApiError) {
         setMessage(err.message);
       } else {
         setMessage("Failed to delete account.");
