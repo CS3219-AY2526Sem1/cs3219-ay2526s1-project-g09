@@ -1,0 +1,119 @@
+package com.peerprep.microservices.matching.model;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+
+/**
+ * Represents user preferences for matching.
+ */
+@Document(value = "userPreference")
+@Getter
+@Builder
+public class UserPreference {
+
+  @Id
+  @NonNull
+  private final String userId;
+
+  @NonNull
+  @JsonDeserialize(as = HashSet.class)
+  private final Set<String> topics;
+
+  @NonNull
+  @JsonDeserialize(as = HashSet.class)
+  private final Set<String> difficulties;
+
+  private final int minTime;
+  private final int maxTime;
+
+  /**
+   * Custom build method
+   */
+  public static class UserPreferenceBuilder {
+    public UserPreference build() {
+      validate(userId, topics, difficulties, minTime, maxTime);
+      return new UserPreference(userId, topics, difficulties, minTime, maxTime);
+    }
+  }
+
+  /**
+   * Constructor with validation
+   * 
+   * @param userId
+   * @param topics
+   * @param difficulties
+   * @param minTime
+   * @param maxTime
+   */
+  @JsonCreator
+  public UserPreference(
+      @JsonProperty("userId") String userId,
+      @JsonProperty("topics") Set<String> topics,
+      @JsonProperty("difficulties") Set<String> difficulties,
+      @JsonProperty("minTime") int minTime,
+      @JsonProperty("maxTime") int maxTime) {
+    validate(userId, topics, difficulties, minTime, maxTime);
+    this.userId = userId;
+    this.topics = topics;
+    this.difficulties = difficulties;
+    this.minTime = minTime;
+    this.maxTime = maxTime;
+  }
+
+  /**
+   * Validation logic for constructor
+   */
+  private static void validate(String userId, Set<String> topics, Set<String> difficulties, int minTime, int maxTime) {
+    if (userId == null || userId.isEmpty())
+      throw new IllegalArgumentException("userId cannot be null or empty");
+    if (topics == null || topics.isEmpty())
+      throw new IllegalArgumentException("topics cannot be null or empty");
+    if (difficulties == null || difficulties.isEmpty())
+      throw new IllegalArgumentException("difficulties cannot be null or empty");
+    if (minTime <= 0)
+      throw new IllegalArgumentException("minTime must be > 0");
+    if (maxTime <= 0)
+      throw new IllegalArgumentException("maxTime must be > 0");
+    if (maxTime < minTime)
+      throw new IllegalArgumentException("maxTime must be >= minTime");
+  }
+
+  /**
+   * Returns a new UserPreference containing only the overlapping topics and
+   * difficulties between this user and another user.
+   */
+  public UserPreference getOverlap(UserPreference other) {
+    Set<String> overlappingTopics = new HashSet<>(this.topics);
+    overlappingTopics.retainAll(other.topics);
+
+    Set<String> overlappingDifficulties = new HashSet<>(this.difficulties);
+    overlappingDifficulties.retainAll(other.difficulties);
+
+    // Calculate overlapping time range
+    int overlapMinTime = Math.max(this.minTime, other.minTime);
+    int overlapMaxTime = Math.min(this.maxTime, other.maxTime);
+
+    if (overlapMinTime > overlapMaxTime) {
+      overlapMinTime = overlapMaxTime;
+    }
+
+    return UserPreference.builder()
+        .userId(other.userId)
+        .topics(overlappingTopics)
+        .difficulties(overlappingDifficulties)
+        .minTime(overlapMinTime)
+        .maxTime(overlapMaxTime)
+        .build();
+  }
+}

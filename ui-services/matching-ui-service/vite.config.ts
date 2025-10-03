@@ -15,9 +15,6 @@ export default defineConfig({
       exposes: {
         "./MatchingUi": "./src/pages/MatchingUi",
       },
-      remotes: {
-        userUiService: "http://localhost:5177/assets/remoteEntry.js",
-      },
       shared: ["react", "react-dom"],
     }),
   ],

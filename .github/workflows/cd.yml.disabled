@@ -15,8 +15,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
 
       # To be updated depending on structure of project
       - name: Generate deployment package
@@ -36,4 +36,3 @@ jobs:
           version_label: Version-${{ github.sha }}
           deployment_package: peerprep-app.zip
           use_existing_version_if_available: true
-
