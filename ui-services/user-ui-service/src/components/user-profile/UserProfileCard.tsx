@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import UserProfileSection from "./UserProfileSection";
 import AccountSecuritySection from "./AccountSecuritySection";
 import AccountDeletionSection from "./AccountDeletionSection";
-import type { User } from "../../types/User";
+import type { User } from "@/types/User";
 
 interface UserProfileCardProps {
   user: User;

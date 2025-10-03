@@ -1,5 +1,5 @@
-import { UserService } from "../api/UserService";
-import { UserServiceApiError } from "../api/UserServiceErrors";
+import { UserService } from "@/api/UserService";
+import { UserServiceApiError } from "@/api/UserServiceErrors";
 
 interface LogOutButtonProps {
   onLogOutSuccess?: () => void;

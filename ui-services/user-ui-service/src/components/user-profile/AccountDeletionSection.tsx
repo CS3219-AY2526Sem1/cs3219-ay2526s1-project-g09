@@ -6,9 +6,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import type { User } from "../../types/User";
-import { UserService } from "../../api/UserService";
-import { UserServiceApiError } from "../../api/UserServiceErrors";
+import type { User } from "@/types/User";
+import { UserService } from "@/api/UserService";
+import { UserServiceApiError } from "@/api/UserServiceErrors";
 
 interface AccountDeletionSectionProps {
   user: User;

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import type { User } from "../types/User";
-import { UserService } from "../api/UserService";
-import { UserServiceApiError } from "../api/UserServiceErrors";
+import type { User } from "@/types/User";
+import { UserService } from "@/api/UserService";
+import { UserServiceApiError } from "@/api/UserServiceErrors";
 import {
   validateUsername,
   validateEmail,
