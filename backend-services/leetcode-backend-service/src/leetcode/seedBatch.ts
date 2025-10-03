@@ -89,6 +89,7 @@ export async function seedLeetCodeBatch() {
       update: {
         $set: {
           // keep titleSlug in the doc
+          source: "leetcode",
           titleSlug: q.titleSlug,
 
           // ids/titles

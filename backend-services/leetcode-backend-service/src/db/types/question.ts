@@ -1,0 +1,32 @@
+import type mongoose from "mongoose";
+
+/**
+ * Shape of a Question document in MongoDB.
+ * Used in change streams.
+ */
+export interface QuestionDoc {
+  _id: mongoose.Types.ObjectId;
+
+  // identity
+  title: string;
+  titleSlug: string;
+  source: "leetcode";
+
+  // metadata
+  difficulty?: "Easy" | "Medium" | "Hard";
+  isPaidOnly?: boolean;
+  categoryTitle?: string | null;
+
+  // content
+  content?: string | null; // HTML body
+  exampleTestcases?: string | null;
+  hints?: string[] | null;
+  codeSnippets?: Array<{
+    lang: string;
+    langSlug?: string;
+    code: string;
+  }> | null;
+
+  createdAt?: Date;
+  updatedAt?: Date;
+}

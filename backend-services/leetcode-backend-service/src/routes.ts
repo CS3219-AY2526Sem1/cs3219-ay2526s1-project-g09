@@ -6,10 +6,10 @@ import type {
   FastifyPluginCallback,
   FastifyRequest,
 } from "fastify";
-import { getQuestionDetail, fetchAllNonPaidSlugs } from "./service.js";
-import { seedLeetCodeBatch } from "./seedBatch.js";
-import { SeedCursor } from "../db/model/question.js";
-import { withDbLimit } from "../db/dbLimiter.js";
+import { getQuestionDetail, fetchAllNonPaidSlugs } from "./leetcode/service.js";
+import { seedLeetCodeBatch } from "./leetcode/seedBatch.js";
+import { SeedCursor } from "./db/model/question.js";
+import { withDbLimit } from "./db/dbLimiter.js";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
@@ -32,7 +32,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.post(
     "/seed-batch",
     {
-      config: { rateLimit: { max: 1, timeWindow: "1m" } },
+      config: { rateLimit: { max: 10, timeWindow: "1m" } },
     },
     async (req) => {
       assertAdmin(req);
