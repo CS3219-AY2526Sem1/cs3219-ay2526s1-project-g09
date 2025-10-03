@@ -6,7 +6,7 @@ import { useAuth } from "@/data/UserStore";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuth(); 
+  const { setUser } = useAuth();
 
   return (
     <AuthLayout>
