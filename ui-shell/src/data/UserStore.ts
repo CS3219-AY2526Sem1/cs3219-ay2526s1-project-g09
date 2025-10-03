@@ -12,5 +12,6 @@ export function useAuth() {
     user,
     loading,
     setUser,
+    setLoading,
   };
 }

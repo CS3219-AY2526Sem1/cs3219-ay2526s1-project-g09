@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { UserService } from "../api/UserService";
-import type { User } from "../api/UserService";
+import type { User } from "@peerprep/types";
 import { ApiError } from "../api/UserServiceErrors";
-import { useAuth } from "../context/useAuth";
 
 interface LoginFormProps {
   onLoginSuccess?: (user: User) => void;
@@ -13,8 +12,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
   onLoginSuccess,
   onLoginRequireOtp,
 }) => {
-  const { login } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -23,17 +20,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
   async function handleLogin() {
     try {
       const res = await UserService.login(email, password, rememberMe);
-      // check if user if verified or not
-      // if not verified, send otp and navigate to otp page
       if (!res.data.isVerified) {
         onLoginRequireOtp?.(res.data);
         return;
       }
 
       const user = res.data;
-      login(user);
 
-      // Navigate or notify parent
+      // Notify parent
       onLoginSuccess?.(user);
     } catch (err) {
       if (err instanceof ApiError) {

@@ -1,13 +1,6 @@
-const BASE_URL = "http://localhost:5277/api/user-service";
+import type { User } from "@peerprep/types";
 
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  isAdmin: boolean;
-  isVerified: boolean;
-  createdAt: string;
-}
+const BASE_URL = "http://localhost:5277/api/user-service";
 
 let csrfToken: string | null = null;
 
