@@ -7,17 +7,5 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ],
-  "compilerOptions": {
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["*"],
-      "@components/*": ["components/*"],
-      "@pages/*": ["pages/*"],
-      "@layouts/*": ["layouts/*"],
-      "@types/*": ["types/*"],
-      "@data/*": ["data/*"],
-      "@peerprep/types": ["../../shared/types"]
-    }
-  }
+  ]
 }

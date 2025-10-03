@@ -20,8 +20,6 @@ export default defineConfig({
         "./SetDisplayNameForm": "./src/components/SetDisplayNameForm",
         "./SignUpForm": "./src/components/SignUpForm",
         "./LogoutButton": "./src/components/LogoutButton",
-        "./AuthProvider": "./src/context/AuthProvider",
-        "./useAuth": "./src/context/useAuth",
       },
       shared: ["react", "react-dom"],
     }),
@@ -32,6 +30,7 @@ export default defineConfig({
       "@pages": path.resolve(__dirname, "./src/pages"),
       "@components": path.resolve(__dirname, "./src/components"),
       "@assets": path.resolve(__dirname, "./src/assets"),
+      "@peerprep/types": path.resolve(__dirname, "../../shared/types"),
     },
   },
   server: {

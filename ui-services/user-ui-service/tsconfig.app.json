@@ -23,13 +23,14 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["*"],
       "@components/*": ["components/*"],
       "@pages/*": ["pages/*"],
       "@layouts/*": ["layouts/*"],
-      "@types/*": ["types/*"]
+      "@types/*": ["types/*"],
+      "@peerprep/types": ["../../../shared/types"]
     }
   },
   "include": ["src"]
