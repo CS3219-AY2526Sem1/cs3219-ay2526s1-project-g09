@@ -31,6 +31,7 @@ const AccountSecuritySection: React.FC<AccountSecuritySectionProps> = ({
       setMessage(error);
       return;
     }
+    setMessage("");
     setLoading(true);
     try {
       const res = await UserService.updateUser(user.id, { email });
@@ -53,6 +54,7 @@ const AccountSecuritySection: React.FC<AccountSecuritySectionProps> = ({
       setMessage(errors);
       return;
     }
+    setMessage("");
     setLoading(true);
     try {
       const res = await UserService.updateUser(user.id, { password });
