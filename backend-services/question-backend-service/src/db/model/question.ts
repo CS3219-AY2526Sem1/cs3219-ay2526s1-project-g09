@@ -38,12 +38,12 @@ const QuestionSchema = new Schema(
     content: { type: String, required: true }, // HTML body
     codeSnippets: { type: [CodeSnippetSchema], default: [] },
     hints: { type: [String], default: [] },
-    sampleTestCase: { type: String, required: false },
+    exampleTestcases: { type: String, required: false },
   },
   { collection: "questions", timestamps: true },
 );
 
-QuestionSchema.index({ category: 1, difficulty: 1, title: 1 });
+QuestionSchema.index({ categoryTitle: 1, difficulty: 1, title: 1 });
 
 const CursorSchema = new mongoose.Schema(
   {

@@ -1,7 +1,3 @@
-/**
- * Model for MongoDB data insertion
- */
-
 import mongoose, {
   Schema,
   model,
@@ -21,7 +17,8 @@ const CodeSnippetSchema = new Schema(
 const QuestionSchema = new Schema(
   {
     // identity
-    titleSlug: { type: String, required: true, unique: true, index: true }, // titleSlug
+    source: { type: String, required: true, index: true }, // e.g. "leetcode"
+    titleSlug: { type: String, required: true, index: true }, // titleSlug
     title: { type: String, required: true, index: true },
 
     // meta
@@ -36,6 +33,7 @@ const QuestionSchema = new Schema(
 
     // content
     content: { type: String, required: true }, // HTML body
+    exampleTestcases: { type: String, required: false },
     codeSnippets: { type: [CodeSnippetSchema], default: [] },
     hints: { type: [String], default: [] },
     sampleTestCase: { type: String, required: false },
@@ -43,7 +41,12 @@ const QuestionSchema = new Schema(
   { collection: "questions", timestamps: true },
 );
 
-QuestionSchema.index({ category: 1, difficulty: 1, title: 1 });
+QuestionSchema.index({
+  source: 1,
+  titleSlug: 1,
+  categoryTitle: 1,
+  difficulty: 1,
+});
 
 const CursorSchema = new mongoose.Schema(
   {
