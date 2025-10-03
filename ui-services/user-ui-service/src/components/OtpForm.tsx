@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { UserService } from "../api/UserService";
-import type { User } from "../api/UserService";
-import { ApiError } from "../api/UserServiceErrors";
-import { useAuth } from "../context/useAuth";
+import type { User } from "@peerprep/types";
+import { UserService } from "@peerprep/api";
+import { UserServiceApiError } from "@peerprep/api";
 
 interface OtpFormProps {
   user: User;
@@ -12,7 +11,6 @@ interface OtpFormProps {
 const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
 
   const handleChange = (value: string, index: number) => {
     if (value.length > 1) return;
@@ -34,11 +32,9 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
     try {
       const res = await UserService.verifyOtp(user.email, code);
 
-      login(res.data);
-
       onOTPSuccess?.(res.data);
     } catch (err) {
-      if (err instanceof ApiError) {
+      if (err instanceof UserServiceApiError) {
         console.error("API Error: ", err);
         setError("API Error. Please refresh the page and try again.");
       } else {
