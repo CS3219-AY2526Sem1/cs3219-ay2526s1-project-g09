@@ -32,7 +32,7 @@ export default function App() {
       .then((res) => setUser(res.data))
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  });
+  }, []);
   return (
     <Routes>
       {/* Public access */}

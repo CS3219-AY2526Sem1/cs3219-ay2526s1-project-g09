@@ -23,7 +23,6 @@ interface MatchingPageProps {
 }
 
 const MatchingPage: React.FC<MatchingPageProps> = ({ user }) => {
-  // const { user } = useAuth();
   const [currentView, setCurrentView] = useState<PageView>("initial");
   const [matchData, setMatchData] = useState<MatchingResponse | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);

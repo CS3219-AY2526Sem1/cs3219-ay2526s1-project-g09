@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import Layout from "@components/layout/BlueBgLayout";
 import NavHeader from "@components/common/NavHeader";
-import { useAuth } from "userUiService/useAuth";
+import { useAuth } from "@/data/UserStore";
 
 // Lazy load the remote MFE
 const RemoteMatchingUi = React.lazy(
