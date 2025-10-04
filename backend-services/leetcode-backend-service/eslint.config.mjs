@@ -17,6 +17,9 @@ export default defineConfig(
     rules: {
       "no-unsafe-assignment": "off",
       "no-unsafe-call": "off",
+      "no-unsafe-member-access": "off",
+      "no-explicit-any": "off",
+      "no-unsafe-return": "off",
     },
   },
   eslint.configs.recommended,
