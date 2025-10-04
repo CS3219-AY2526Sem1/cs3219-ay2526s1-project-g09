@@ -49,6 +49,30 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     return !!exists; // returns just true or false
   });
 
+  app.get<{
+    Querystring: {
+      categoryTitle: string;
+      difficulty: "Easy" | "Medium" | "Hard";
+    };
+  }>("/random", async (req, reply) => {
+    const { categoryTitle, difficulty } = req.query;
+
+    if (!categoryTitle || !difficulty) {
+      return reply.status(400).send({ error: "Missing params" });
+    }
+
+    const [randomQuestion] = await Question.aggregate([
+      { $match: { categoryTitle, difficulty } },
+      { $sample: { size: 1 } }, // MongoDB picks 1 random document
+    ]);
+
+    if (!randomQuestion) {
+      return reply.status(404).send({ error: "No question found" });
+    }
+
+    return randomQuestion;
+  });
+
   app.post(
     "/post-question",
     {
