@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import leetcodeRoutes from "./routes/post-question.js";
+import leetcodeRoutes from "./routes.js";
 import db from "./db/connection.js";
 
 export async function buildServer() {
