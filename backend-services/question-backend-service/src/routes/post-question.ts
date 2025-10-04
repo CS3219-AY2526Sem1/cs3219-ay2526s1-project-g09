@@ -32,7 +32,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.post(
     "/post-question",
     {
-      config: { rateLimit: { max: 10, timeWindow: "1m" } },
+      config: { rateLimit: { max: 200, timeWindow: "1m" } },
     },
     async (req, res) => {
       assertAdmin(req);
@@ -42,9 +42,12 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       }
       const Body = z.object({
         source: z.string(),
+        globalSlug: z.string(),
         titleSlug: z.string(),
         categoryTitle: z.string().max(100),
         difficulty: z.enum(["Easy", "Medium", "Hard"]),
+        isPaidOnly: z.boolean(),
+        content: z.string(),
       });
       const parsed = Body.parse(req.body);
       const { source, titleSlug, categoryTitle, difficulty } = parsed;

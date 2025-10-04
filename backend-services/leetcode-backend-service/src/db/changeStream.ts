@@ -1,124 +1,88 @@
 import fp from "fastify-plugin";
 import type { FastifyInstance } from "fastify";
 import mongoose from "mongoose";
+import { Question } from "./model/question"; // if you use Question.watch()
+import type { ChangeStreamDocument } from "mongodb";
+import { type QuestionDoc } from "./types/question";
 import axios from "axios";
-import { type ChangeStreamDocument } from "mongodb";
-import { Question } from "./model/question";
-import type { QuestionDoc } from "./types/question";
-import hasFullDocument from "mongodb";
 
-const QUESTION_SERVICE_URL = process.env.QUESTION_SERVICE_URL ?? "";
-const TOKEN = process.env.QUESTIONS_SYNC_TOKEN ?? "";
+const TOKEN = process.env.ADMIN_TOKEN ?? "";
+
+async function postDoc(doc: QuestionDoc) {
+  try {
+    const res = await axios.post(
+      `http://localhost:5275/api/v1/questions/post-question`,
+      doc,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": TOKEN,
+        },
+      },
+    );
+    console.log("Response:", res.data);
+  } catch (err) {
+    console.error("Error posting doc:", err);
+  }
+}
 
 export default fp((app: FastifyInstance) => {
-  mongoose.connection.once("open", () => {
-    app.log.info("[ChangeStream] Mongo connected, starting watcher");
+  app.log.info("[ChangeStream] Plugin registered");
 
-    const changeStream = Question.watch(
+  let changeStream: mongoose.mongo.ChangeStream | null = null;
+
+  const startWatcher = () => {
+    if (changeStream) return; // already started
+    app.log.info("[ChangeStream] Starting watcher");
+
+    changeStream = Question.watch(
       [{ $match: { operationType: { $in: ["insert", "update", "replace"] } } }],
       { fullDocument: "updateLookup" },
     );
 
-    void (async () => {
-      try {
-        for await (const change of changeStream as AsyncIterable<
-          ChangeStreamDocument<QuestionDoc>
-        >) {
-          const full = change.fullDocument;
+    changeStream.on("change", async (change: ChangeStreamDocument) => {
+      app.log.info("[ChangeStream] Event");
+      const doc = change.fullDocument;
+      await postDoc(doc);
 
-          if (!full) {
-            app.log.warn(
-              { op: change.operationType },
-              "[ChangeStream] missing fullDocument; skipping",
-            );
-            continue;
-          }
-
-          // Skip if env not set to avoid throwing in dev
-          if (!QUESTION_SERVICE_URL) {
-            app.log.warn(
-              "[ChangeStream] QUESTION_SERVICE_URL is not set; skipping sync",
-            );
-            continue;
-          }
-
-          const payload: QuestionDoc = {
-            source: full.source,
-            globalSlug: `leetcode:${full.titleSlug}`,
-            titleSlug: full.titleSlug,
-            title: full.title,
-            difficulty: full.difficulty,
-            isPaidOnly: full.isPaidOnly,
-            categoryTitle: full.categoryTitle ?? null,
-            content: full.content ?? null,
-            exampleTestcases: full.exampleTestcases ?? null,
-            hints: full.hints ?? [],
-            codeSnippets: full.codeSnippets ?? [],
-            createdAt: full.createdAt,
-            updatedAt: full.updatedAt,
-          };
-
-          // Retry with linear backoff
-          let ok = false;
-          for (let attempt = 1; attempt <= 3; attempt++) {
-            try {
-              await axios.post(
-                `${QUESTION_SERVICE_URL}/api/v1/questions/post-question`,
-                payload,
-                TOKEN ? { headers: { "x-sync-token": TOKEN } } : undefined,
-              );
-
-              app.log.info(
-                { op: change.operationType, slug: full.titleSlug },
-                "[ChangeStream] Synced",
-              );
-              ok = true;
-              break;
-            } catch (e: unknown) {
-              const message =
-                e instanceof Error ? e.message : "Unknown error during sync";
-              app.log.warn(
-                { attempt, message, slug: full.titleSlug },
-                "[ChangeStream] Sync failed",
-              );
-              if (attempt < 3) {
-                await new Promise((r) => setTimeout(r, 1000 * attempt));
-              }
-            }
-          }
-
-          if (!ok) {
-            app.log.error(
-              { slug: full.titleSlug },
-              "[ChangeStream] Giving up after 3 attempts",
-            );
-            // optional: push to a DLQ here
-          }
-
-          app.log.debug(
-            { op: change.operationType },
-            "[ChangeStream] processed event",
-          );
-        }
-
-        app.log.info("[ChangeStream] stream ended");
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Unknown error in async iterator";
-        app.log.error({ message }, "[ChangeStream] iterator crashed");
+      if (!doc) {
+        console.warn("Change event without fullDocument:", change);
+        return;
       }
-    })();
 
-    changeStream.on("error", (err: unknown) => {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      app.log.error({ message }, "[ChangeStream] error in change stream");
+      console.log("Got changed document:", doc);
     });
 
-    app.addHook("onClose", async () => {
-      await changeStream.close();
-      app.log.info("[ChangeStream] closed");
+    changeStream.on("error", (err) => {
+      app.log.error({ err }, "[ChangeStream] error");
     });
+
+    changeStream.on("end", () => {
+      app.log.warn("[ChangeStream] ended");
+      changeStream = null;
+    });
+  };
+
+  // Start immediately if already connected; otherwise wait once for 'open'
+  if (mongoose.connection.readyState === mongoose.ConnectionStates.connected) {
+    app.log.info("[ChangeStream] already connected");
+    startWatcher();
+  } else {
+    mongoose.connection.once("open", () => {
+      app.log.info("[ChangeStream] 'open' fired");
+      startWatcher();
+    });
+  }
+
+  // Always register onClose at plugin scope
+  app.addHook("onClose", async () => {
+    app.log.info("[ChangeStream] plugin onClose hook");
+    try {
+      await changeStream?.close();
+    } catch (e) {
+      app.log.error({ e }, "[ChangeStream] close failed");
+    } finally {
+      changeStream = null;
+    }
   });
 });
