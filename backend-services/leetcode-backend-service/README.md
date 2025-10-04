@@ -1,15 +1,17 @@
-# Question Backend Service
+# LeetCode Backend Service
 
 Fastify (TypeScript, ESM) service that:
 
 - Pings LeetCode’s GraphQL API to fetch problems and details
-- Seeds the all problem into MongoDB Atlas (Currently WIP)
-- Exposes simple query endpoints
+- Parse to readable to question service
+- Run Cron Job from GitHub Actions
+- Push simple information to GraphQL to Question Service when there are information being retrieved
+- POST attained information to the leetcode-service for insertion
+- Check if there are information in GraphQL - if there are, insert it.
 
 ## Tech
 
 - Fastify, @fastify/cors
-- Mongoose (MongoDB)
 - TypeScript (ESM)
 
 ## Getting Started
@@ -17,7 +19,7 @@ Fastify (TypeScript, ESM) service that:
 ### 1. Requirements
 
 - Node.js ≥ 20
-- MongoDB Atlas (or local MongoDB)
+- MongoDB Atlas
 - npm
 
 ### 2. Clone & Install
@@ -47,20 +49,20 @@ npm start
 OR
 
 ```bash
-docker build --tag question-service .
-docker run --rm --publish 5275:5275 --env-file .env question-service
+docker build --tag leetcode-service .
+docker run --rm --publish 5285:5285 --env-file .env leetcode-service
 ```
 
 You should see logs like:
 
-```
+```text
 Mongo connected
-Server listening on http://localhost:5275
+Server listening on http://localhost:5285
 ```
 
 ## Project Structure
 
-```
+```text
 src/
   index.ts            # tiny bootstrap (reads env, starts server)
   server.ts           # buildServer(): registers plugins + routes
@@ -69,7 +71,7 @@ src/
     db.ts             # Mongoose connect
 
   models/
-    Question.ts       # slug, title, content (collection: leetcode_questions)
+    Question.ts       # titleSlug, title, content (collection: leetcode_questions)
 
   services/
     leetcode.ts       # wrappers around gql + queries
@@ -78,26 +80,27 @@ src/
     leetcode.ts       # QUERY_LIST, QUERY_DETAIL
 
   routes/
-    leetcode.ts       # GET /leetcode-test, POST /leetcode/seed-first
+    leetcode.ts       # GET /leetcode/test, POST /leetcode/seed-first
 ```
 
 ## API
 
-Base URL: `http://localhost:5275/api/v1`
+Base URL: `http://localhost:5285/api/v1`
 
 ### LeetCode Test for manual testing of Graph QL endpoint
 
-**GET** `/leetcode-test`  
-Fetches first page (limit=5) and details of the first problem.
+**GET** `/leetcode/test`  
+Fetches details of all leetcode questions.
 
 ```bash
-curl http://localhost:5275/api/v1/leetcode-test
+# For window users
+curl.exe http://localhost:5285/api/v1/leetcode/test
 ```
 
 ### Seed first problem into Mongo
 
-**POST** `/leetcode/seed-first`  
-Fetches the first problem (title & HTML content) and **upserts** to Mongo.
+**POST** `/leetcode/seed-batch`  
+Fetches the next 20 problem and **upserts** to Mongo within 2 minutes.
 
 Query params:
 
@@ -106,8 +109,8 @@ Query params:
 Examples:
 
 ```bash
-# With jq
-curl --silent --request POST --url "http://localhost:5275/api/v1/leetcode/seed-first?full=1" | jq .
+# For window users
+curl.exe --request POST -H "X-Admin-Token: <ADMIN_TOKEN>" --url "http://localhost:5285/api/v1/leetcode/seed-batch"
 ```
 
 Response (fields):
@@ -127,14 +130,29 @@ curl http://localhost:5275/api/v1/questions
 
 ## Data Model
 
-`Question` (collection: `leetcode_questions`) - will further expand when need
+`Question` (collection: `leetcode_questions`)
 
 ```ts
 {
-  slug: string,      // unique
-  title: string,
-  content: string,   // HTML from LeetCode
-  createdAt: Date,   // via timestamps: true
+  // identity
+  titleSlug: String,           // titleSlug, unique
+  title: String,
+
+  // meta
+  difficulty: String,     // Contains either "Easy", "Medium", "Hard"
+  isPaidOnly: Boolean,
+  categoryTitle: String,
+
+  // content
+  content: String,        // HTML body
+  codeSnippets: [{        // Array of Objects 
+    lang: String, 
+    langSlug: String,
+    code: String,
+  }],
+  hints: [String],
+  sampleTestCase: String,
+  createdAt: Date,
   updatedAt: Date
 }
 ```
@@ -143,11 +161,5 @@ curl http://localhost:5275/api/v1/questions
 
 - **`curl: (7) Failed to connect`**  
   Server isn’t running or wrong port. Start `npm run dev` and check logs.
-
-## Security
-
-- **Never commit `.env`** (ensure it’s in `.gitignore`).
-- Rotate leaked credentials immediately.
-- Use least-privilege DB users per environment.
 
 ---

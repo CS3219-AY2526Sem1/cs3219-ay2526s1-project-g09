@@ -13,6 +13,6 @@ COPY . .
 RUN npm run build
 
 # Expose port
-EXPOSE 5275
+EXPOSE 5285
 
 CMD ["node", "dist/index.js"]
