@@ -88,3 +88,22 @@ services:
       - MONGODB_URI=${MONGODB_MATCHING_URI}
     depends_on:
       - redis
+  leetcode-backend-service:
+    build:
+      context: ./backend-services/leetcode-backend-service
+      dockerfile: Dockerfile
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    ports:
+      - "5285:5285"
+    container_name: peerprep-leetcode-backend
+  # user-service:
+  #   build:
+  #     context: ./backend-services/user-backend-service
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - ./backend-services/user-backend-service/.env
+  #   ports:
+  #     - "5277:5277"
+  #   container_name: peerprep-user-service-backend

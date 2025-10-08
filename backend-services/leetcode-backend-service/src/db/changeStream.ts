@@ -1,12 +1,38 @@
 import fp from "fastify-plugin";
 import type { FastifyInstance } from "fastify";
 import mongoose from "mongoose";
-import { Question } from "./model/question"; // if you use Question.watch()
-import type { ChangeStreamDocument } from "mongodb";
-import { type QuestionDoc } from "./types/question";
+import { Question } from "./model/question.js";
+import type {
+  ChangeStreamDocument,
+  ChangeStreamInsertDocument,
+  ChangeStreamReplaceDocument,
+  ChangeStreamUpdateDocument,
+} from "mongodb";
+import { type QuestionDoc } from "./types/question.js";
 import axios from "axios";
 
 const TOKEN = process.env.ADMIN_TOKEN ?? "";
+
+function hasFullDocument<T>(
+  c: ChangeStreamDocument<
+    T extends mongoose.mongo.BSON.Document ? T : mongoose.mongo.BSON.Document
+  >,
+): c is
+  | ChangeStreamInsertDocument<
+      T extends mongoose.mongo.BSON.Document ? T : mongoose.mongo.BSON.Document
+    >
+  | ChangeStreamReplaceDocument<
+      T extends mongoose.mongo.BSON.Document ? T : mongoose.mongo.BSON.Document
+    >
+  | ChangeStreamUpdateDocument<
+      T extends mongoose.mongo.BSON.Document ? T : mongoose.mongo.BSON.Document
+    > {
+  return (
+    c.operationType === "insert" ||
+    c.operationType === "replace" ||
+    c.operationType === "update"
+  );
+}
 
 async function postDoc(doc: QuestionDoc) {
   try {
@@ -35,22 +61,24 @@ export default fp((app: FastifyInstance) => {
     if (changeStream) return; // already started
     app.log.info("[ChangeStream] Starting watcher");
 
-    changeStream = Question.watch(
+    changeStream = Question.watch<QuestionDoc>(
       [{ $match: { operationType: { $in: ["insert", "update", "replace"] } } }],
       { fullDocument: "updateLookup" },
     );
 
-    changeStream.on("change", async (change: ChangeStreamDocument) => {
+    let processing = Promise.resolve();
+
+    changeStream.on("change", (change: ChangeStreamDocument) => {
       app.log.info("[ChangeStream] Event");
-      const doc = change.fullDocument;
-      await postDoc(doc);
+      processing = processing.then(async () => {
+        if (!hasFullDocument(change)) return;
+        const doc = change.fullDocument as QuestionDoc;
 
-      if (!doc) {
-        console.warn("Change event without fullDocument:", change);
-        return;
-      }
+        if (!doc) return;
 
-      console.log("Got changed document:", doc);
+        await postDoc(doc);
+        console.log("Got changed document:", doc);
+      });
     });
 
     changeStream.on("error", (err) => {

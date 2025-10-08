@@ -5,6 +5,8 @@ import mongoose, {
   type InferSchemaType,
 } from "mongoose";
 
+import type { QuestionDoc } from "../types/question";
+
 const CodeSnippetSchema = new Schema(
   {
     lang: { type: String, required: true },
@@ -14,17 +16,12 @@ const CodeSnippetSchema = new Schema(
   { _id: false },
 );
 
-const QuestionSchema = new Schema(
+const QuestionSchema = new Schema<QuestionDoc>(
   {
-    // identity
-    source: { type: String, required: true, index: true }, // e.g. "leetcode"
-    globalSlug: { type: String, required: true, unique: true, index: true }, // e.g. "leetcode:two-sum"
-    // use separate unique field instead of _id to allow easier migration in future
-    // and avoid issues with changing _id types
-    // e.g. from string to ObjectId or vice versa
-    // _id: { type: String, required: true, unique: true }, // e.g. "leetcode:two-sum"
-    titleSlug: { type: String, required: true, index: true }, // titleSlug
+    source: { type: String, required: true, index: true },
+    globalSlug: { type: String, required: true, unique: true, index: true },
     title: { type: String, required: true, index: true },
+    titleSlug: { type: String, required: true, index: true },
 
     // meta
     difficulty: {
@@ -41,7 +38,6 @@ const QuestionSchema = new Schema(
     exampleTestcases: { type: String, required: false },
     codeSnippets: { type: [CodeSnippetSchema], default: [] },
     hints: { type: [String], default: [] },
-    sampleTestCase: { type: String, required: false },
   },
   { collection: "questions", timestamps: true },
 );
@@ -64,8 +60,6 @@ const CursorSchema = new mongoose.Schema(
   },
   { collection: "seed-cursor", timestamps: true },
 );
-
-export type QuestionDoc = InferSchemaType<typeof QuestionSchema>;
 
 // Reuse existing model in dev/hot-reload to avoid OverwriteModelError
 export const Question: Model<QuestionDoc> =
