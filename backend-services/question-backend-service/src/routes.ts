@@ -6,7 +6,7 @@ import type {
   FastifyPluginCallback,
   FastifyRequest,
 } from "fastify";
-import { SeedCursor } from "./db/model/question.js";
+import { SeedCursor, type QuestionDoc } from "./db/model/question.js";
 import { withDbLimit } from "./db/dbLimiter.js";
 import { Question } from "./db/model/question.js";
 import { z } from "zod";
@@ -64,7 +64,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     }
 
     const [randomQuestion] = await withDbLimit(() =>
-      Question.aggregate([
+      Question.aggregate<QuestionDoc>([
         { $match: { categoryTitle, difficulty } },
         { $sample: { size: 1 } }, // MongoDB picks 1 random document
       ]),
