@@ -21,13 +21,6 @@ function getHeader(req: FastifyRequest, name: string): string | undefined {
   return undefined;
 }
 
-function assertAdmin(req: FastifyRequest) {
-  const token = getHeader(req, "x-admin-token");
-  if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
-    throw new Error("Unauthorized");
-  }
-}
-
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   app.get("/health", () => {
     return { ok: true };
@@ -82,8 +75,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     {
       config: { rateLimit: { max: 200, timeWindow: "1m" } },
     },
-    async (req) => {
-      assertAdmin(req);
+    async (req, res) => {
+      const token = getHeader(req, "x-admin-token");
+      if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+        return res.status(401).send({ error: "Unauthorized" });
+      }
       const reset = (req.query as { reset?: string })?.reset === "1";
       if (reset) {
         await withDbLimit(() => SeedCursor.findByIdAndDelete("questions"));
@@ -92,12 +88,22 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         source: z.string(),
         globalSlug: z.string(),
         titleSlug: z.string(),
+        title: z.string(),
         categoryTitle: z.string().max(100),
         difficulty: z.enum(["Easy", "Medium", "Hard"]),
         isPaidOnly: z.boolean(),
         content: z.string(),
+        codeSnippets: z.array(z.any()).optional(),
+        hints: z.array(z.string()).optional(),
+        exampleTestcases: z.array(z.string()).optional(),
       });
-      const parsed = Body.parse(req.body);
+      const result = Body.safeParse(req.body);
+      if (!result.success) {
+        return res
+          .status(400)
+          .send({ error: "Invalid input", details: result.error.issues });
+      }
+      const parsed = result.data;
       const { source, titleSlug, categoryTitle, difficulty } = parsed;
       const doc = {
         ...parsed,

@@ -77,7 +77,7 @@ export default fp((app: FastifyInstance) => {
         if (!doc) return;
 
         await postDoc(doc);
-        console.log("Got changed document:", doc);
+        app.log.info({ doc }, "Got changed document:");
       });
     });
 

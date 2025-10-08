@@ -17,7 +17,6 @@ export interface QuestionDoc {
   difficulty?: "Easy" | "Medium" | "Hard";
   isPaidOnly?: boolean;
   categoryTitle?: string | null;
-  topicTags?: string[];
 
   // content
   content?: string | null; // HTML body
@@ -25,7 +24,7 @@ export interface QuestionDoc {
   hints?: string[] | null;
   codeSnippets?: Array<{
     lang: string;
-    langSlug?: string;
+    langSlug: string;
     code: string;
   }> | null;
 

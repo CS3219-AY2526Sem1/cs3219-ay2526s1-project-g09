@@ -11,7 +11,6 @@ export type BasicInformation = {
   isPaidOnly: boolean;
   difficulty: "Easy" | "Medium" | "Hard";
   categoryTitle?: string | null;
-  topicTags: { name: string; titleSlug: string; id: string }[];
 };
 
 export type QuestionList = {
@@ -97,7 +96,6 @@ export async function seedLeetCodeBatch() {
           difficulty: q.difficulty,
           isPaidOnly: q.isPaidOnly,
           categoryTitle: q.categoryTitle ?? null,
-          topicTags: q.topicTags ?? [],
 
           // content & extras
           content: q.content ?? null,

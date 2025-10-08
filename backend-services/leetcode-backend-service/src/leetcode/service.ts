@@ -5,52 +5,32 @@ import { gql } from "./client.js";
 import { QUERY_LIST, QUERY_DETAIL } from "./queries.js";
 import pLimit from "p-limit";
 import { Question } from "../db/model/question.js";
-
-export type BasicInformation = {
-  title: string;
-  titleSlug: string;
-  isPaidOnly: boolean;
-  difficulty: "Easy" | "Medium" | "Hard";
-  categoryTitle?: string | null;
-  topicTags: { name: string; titleSlug: string; id: string }[];
-};
-
-export type QuestionList = {
-  problemsetQuestionList: {
-    total: number;
-    questions: BasicInformation[];
-  };
-};
-
-export type Details = {
-  question:
-    | (BasicInformation & {
-        content: string | null;
-        exampleTestcases?: string | null;
-        hints?: string[] | null;
-        codeSnippets?:
-          | { lang: string; langSlug: string; code: string }[]
-          | null;
-      })
-    | null;
-};
+import type { BasicInformation, Details, QuestionList } from "./types.js";
 
 const PAGE_SIZE = 10;
 const DETAIL_CONCURRENCY = 6;
 
 export async function upsertMany(questions: Details["question"][]) {
-  const aggregate = questions.filter(Boolean).map((question) => ({
-    updateOne: {
-      filter: { titleSlug: question!.titleSlug },
-      update: {
-        $set: {
-          ...question!,
-          lastSyncedAt: new Date(),
+  const aggregate = questions
+    .filter(
+      (question): question is NonNullable<Details["question"]> =>
+        Boolean(question) &&
+        question != null &&
+        typeof question.titleSlug === "string" &&
+        question.titleSlug.length > 0,
+    )
+    .map((question) => ({
+      updateOne: {
+        filter: { titleSlug: question.titleSlug },
+        update: {
+          $set: {
+            ...question,
+            lastSyncedAt: new Date(),
+          },
         },
+        upsert: true,
       },
-      upsert: true,
-    },
-  }));
+    }));
 
   if (aggregate.length) {
     await Question.bulkWrite(aggregate, { ordered: false });
