@@ -51,15 +51,6 @@ services:
     ports:
       - "5178:5178"
     container_name: peerprep-history-ui
-  question-backend-service:
-    build:
-      context: ./backend-services/question-backend-service
-      dockerfile: Dockerfile
-    environment:
-      - MONGODB_URI=${MONGODB_URI}
-    ports:
-      - "5275:5275"
-    container_name: peerprep-question-backend
   user-service:
     build:
       context: ./backend-services/user-backend-service
@@ -92,9 +83,8 @@ services:
     build:
       context: ./backend-services/leetcode-backend-service
       dockerfile: Dockerfile
-    environment:
-      - MONGODB_URI=${MONGODB_URI}
-      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    env_file:
+      - ./backend-services/leetcode-backend-service/.env
     ports:
       - "5285:5285"
     container_name: peerprep-leetcode-backend
@@ -103,18 +93,8 @@ services:
     build:
       context: ./backend-services/question-backend-service
       dockerfile: Dockerfile
-    environment:
-      - MONGODB_URI=${MONGODB_URI}
-      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    env_file:
+      - ./backend-services/question-backend-service/.env
     ports:
-      - "5285:5285"
+      - "5275:5275"
     container_name: peerprep-question-backend
-  # user-service:
-  #   build:
-  #     context: ./backend-services/user-backend-service
-  #     dockerfile: Dockerfile
-  #   env_file:
-  #     - ./backend-services/user-backend-service/.env
-  #   ports:
-  #     - "5277:5277"
-  #   container_name: peerprep-user-service-backend

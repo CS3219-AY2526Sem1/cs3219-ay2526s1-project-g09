@@ -4,7 +4,7 @@ Fastify (TypeScript, ESM) service that:
 
 - Pings LeetCode’s GraphQL API to fetch problems and details
 - If successful retrieval and storage in `leetcode-service` database,
-POST the question to question service (to allow retrival by other microservices)
+  POST the question to question service (to allow retrival by other microservices)
 - Run Cron Job from GitHub Actions
 
 ## Tech
@@ -143,8 +143,8 @@ curl http://localhost:5275/api/v1/questions
 
   // content
   content: String,        // HTML body
-  codeSnippets: [{        // Array of Objects 
-    lang: String, 
+  codeSnippets: [{        // Array of Objects
+    lang: String,
     langSlug: String,
     code: String,
   }],

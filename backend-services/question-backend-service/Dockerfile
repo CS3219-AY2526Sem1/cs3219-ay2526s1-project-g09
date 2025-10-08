@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install deps
 COPY package*.json .
-RUN npm ci --no-audit --no-fund
+RUN npm install --frozen-lockfile
 
 # Copy source
 COPY . .
