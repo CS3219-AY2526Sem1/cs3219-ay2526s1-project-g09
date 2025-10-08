@@ -98,6 +98,17 @@ services:
     ports:
       - "5285:5285"
     container_name: peerprep-leetcode-backend
+
+  question-backend-service:
+    build:
+      context: ./backend-services/question-backend-service
+      dockerfile: Dockerfile
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    ports:
+      - "5285:5285"
+    container_name: peerprep-question-backend
   # user-service:
   #   build:
   #     context: ./backend-services/user-backend-service
