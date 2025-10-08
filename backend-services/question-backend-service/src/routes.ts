@@ -29,7 +29,7 @@ function assertAdmin(req: FastifyRequest) {
 }
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
-  app.get("/health", async () => {
+  app.get("/health", () => {
     return { ok: true };
   });
 
@@ -45,7 +45,9 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       return reply.status(400).send(false);
     }
 
-    const exists = await Question.exists({ categoryTitle, difficulty });
+    const exists = await withDbLimit(() =>
+      Question.exists({ categoryTitle, difficulty }),
+    );
     return !!exists; // returns just true or false
   });
 
@@ -61,10 +63,12 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       return reply.status(400).send({ error: "Missing params" });
     }
 
-    const [randomQuestion] = await Question.aggregate([
-      { $match: { categoryTitle, difficulty } },
-      { $sample: { size: 1 } }, // MongoDB picks 1 random document
-    ]);
+    const [randomQuestion] = await withDbLimit(() =>
+      Question.aggregate([
+        { $match: { categoryTitle, difficulty } },
+        { $sample: { size: 1 } }, // MongoDB picks 1 random document
+      ]),
+    );
 
     if (!randomQuestion) {
       return reply.status(404).send({ error: "No question found" });
@@ -78,7 +82,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     {
       config: { rateLimit: { max: 200, timeWindow: "1m" } },
     },
-    async (req, res) => {
+    async (req) => {
       assertAdmin(req);
       const reset = (req.query as { reset?: string })?.reset === "1";
       if (reset) {
@@ -99,10 +103,12 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         ...parsed,
       };
 
-      const saved = await Question.findOneAndUpdate(
-        { source, titleSlug, categoryTitle, difficulty },
-        { $set: doc },
-        { new: true, upsert: true },
+      const saved = await withDbLimit(() =>
+        Question.findOneAndUpdate(
+          { source, titleSlug, categoryTitle, difficulty },
+          { $set: doc },
+          { new: true, upsert: true },
+        ),
       );
 
       return { ok: true, id: saved._id.toString(), updatedAt: saved.updatedAt };
