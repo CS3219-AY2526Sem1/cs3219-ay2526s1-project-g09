@@ -11,15 +11,30 @@ jobs:
 
       - name: Run published docker image
         run: |
-          docker pull ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/peerprep-question-backend:latest
-          docker run --rm ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/peerprep-question-backend:latest
-
+          docker pull ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/peerprep-leetcode-backend:latest
+          docker run -d --name leetcode-backend \
+            -p 5285:5285 \
+            -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+            -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
+            ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/peerprep-leetcode-backend:latest
+      - name: Wait for LeetCode Backend to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s "http://localhost:5285/health" >/dev/null; then
+              echo "LeetCode backend is up!"
+              break
+            fi
+            echo "Waiting for backend..."
+            sleep 2
+          done
       - name: Sync LeetCode Questions
         run: |
-          response=$(curl --request POST -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" --url "http://localhost:5285/api/v1/leetcode/seed-batch" | jq .)
-          if [ $response -ne 200 ]; then
+          response=$(curl -o /dev/null -s -w "%{http_code}" --request POST -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" --url "http://localhost:5285/api/v1/leetcode/seed-batch")
+          if [ "$response" -ne 200 ]; then
             echo "Upload is NOT successful!"
-            1
+            exit 1
           else 
             echo "Upload is successful!"
           fi
+      - name: Stop LeetCode Backend
+        run: docker stop leetcode-backend
