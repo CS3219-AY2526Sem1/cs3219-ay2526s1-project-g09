@@ -98,15 +98,9 @@ Examples:
 curl.exe --request POST -H "X-Admin-Token: <ADMIN_TOKEN>" --url "http://localhost:5285/api/v1/leetcode/seed-batch"
 ```
 
-Response (fields):
-
-- `upserted` — true if inserted new
-- `modified` — true if updated existing
-- `doc` — the stored document (by default without `content` unless `full=1`)
-
 ## Data Model
 
-`Question` (collection: `leetcode_questions`)
+`Question` (database: `leetcode-service`)
 
 ```ts
 {

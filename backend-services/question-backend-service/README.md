@@ -2,8 +2,8 @@
 
 Fastify (TypeScript, ESM) service that:
 
-- Post request for inserting questions from other microservices
-- Provide API endpoints for question status and random question generation
+- Accepts POSTs from other services to upsert LeetCode question data
+- Exposes endpoints for question existence checks and random question retrieval
 
 ## Tech
 
@@ -62,47 +62,62 @@ Server listening on http://localhost:5275
 src/
   db/
     model/
-      question.ts     # Mongoose schema definition for Question documents
+      question.ts     # Mongoose schema for Question
     types/
-      question.ts     # TypeScript interface for Question
+      question.ts     # TypeScript interface
     connection.ts     # Handles MongoDB connection setup (Mongoose Connect)
     dbLimiter.ts      # Rate limiter for database operations  
   index.ts            # Tiny bootstrap: loads env, creates server, starts listening
-  routes.ts           # Fastify routes: GET /questions/exists, GET /questions/random, POST /questions/post-question
-  server.ts           # buildServer(): registers plugins + routes
+  routes.ts           # REST endpoints
+  server.ts           # buildServer(): plugins + routes
 ```
 
 ## API
 
 Base URL: `http://localhost:5275/api/v1`
 
-### Calls required by other microservices
+### Questions — existence check
 
 **GET** `/question/exists`  
-Given the parameter, check if there exist a corresponding question with the same attribute.
+Checks whether a question with the given attributes exists.
+
+Query params
+
+- categoryTitle (string)
+- difficulty (Easy|Medium|Hard)
+
+Example:
 
 ```bash
 # For window users
 curl.exe  http://localhost:5275/api/questions/exists?categoryTitle=Algorithms&difficulty=Easy
 ```
 
+### Questions — random fetch
+
 **GET** `/question/random`  
-Fetch a random question based on the category Title and Difficulty level provided. 
+Returns a single random question filtered by query.
+
+Query params
+
+- categoryTitle (string)
+- difficulty (Easy|Medium|Hard)
+
+Example:
 
 ```bash
 # For window users
 curl.exe http://localhost:5275/api/questions/random?categoryTitle=Algorithms&difficulty=Easy
 ```
 
-Response (fields):
+### Questions — insert
 
-- `upserted` — true if inserted new
-- `modified` — true if updated existing
-- `doc` — the stored document (by default without `content` unless `full=1`)
+**POST** `/questions/post-question`
+Upserts a question document.
 
 ## Data Model
 
-`Question` (collection: `leetcode_questions`)
+`Question` (database: `question-service`)
 
 ```ts
 {
