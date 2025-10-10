@@ -70,6 +70,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     return randomQuestion;
   });
 
+  /**
+   * Post a new question to the database.
+   * Only create if it does not already exist.
+   * If it already exists, return 200 with a message.
+   */
   app.post(
     "/post-question",
     {
@@ -118,14 +123,25 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       };
 
       const saved = await withDbLimit(() =>
-        Question.findOneAndUpdate(
+        Question.updateOne(
           { source, titleSlug, categoryTitle, difficulty },
-          { $set: doc },
-          { new: true, upsert: true },
+          { $setOnInsert: doc },
+          { upsert: true },
         ),
       );
-
-      return { ok: true, id: saved._id.toString(), updatedAt: saved.updatedAt };
+      if (saved.acknowledged !== true)
+        return res.status(500).send({ error: "Failed to save question" });
+      if (saved.matchedCount > 0)
+        return res
+          .status(200)
+          .send({ ok: true, message: "Question already exists" });
+      if (saved.upsertedCount === 0)
+        return res.status(500).send({ error: "Failed to save question" });
+      return {
+        ok: true,
+        id: saved.upsertedId?.toString(),
+        message: "Question inserted successfully",
+      };
     },
   );
 };
