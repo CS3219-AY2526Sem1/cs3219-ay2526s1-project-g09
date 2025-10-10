@@ -22,10 +22,6 @@ function getHeader(req: FastifyRequest, name: string): string | undefined {
 }
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
-  app.get("/health", () => {
-    return { ok: true };
-  });
-
   app.get<{
     Querystring: {
       categoryTitle: string;
@@ -75,72 +71,66 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
    * Only create if it does not already exist.
    * If it already exists, return 200 with a message.
    */
-  app.post(
-    "/post-question",
-    {
-      config: { rateLimit: { max: 200, timeWindow: "1m" } },
-    },
-    async (req, res) => {
-      const token = getHeader(req, "x-admin-token");
-      if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
-        return res.status(401).send({ error: "Unauthorized" });
-      }
-      const Body = z.object({
-        source: z.string(),
-        globalSlug: z.string().min(1),
-        titleSlug: z.string().min(1),
-        title: z.string().min(1),
-        categoryTitle: z.string().max(100),
-        difficulty: z.enum(["Easy", "Medium", "Hard"]),
-        timeLimit: z.number().min(1).max(240), // in minutes
-        content: z.string(),
-        hints: z.array(z.string()).nullable().optional(),
-        exampleTestcases: z.string().nullable().optional(),
-        codeSnippets: z
-          .array(
-            z.object({
-              lang: z.string(),
-              langSlug: z.string(),
-              code: z.string(),
-            }),
-          )
-          .nullable()
-          .optional(),
-      });
-      const result = Body.safeParse(req.body);
-      if (!result.success) {
-        return res
-          .status(400)
-          .send({ error: "Invalid input", details: result.error.issues });
-      }
-      const parsed = result.data;
-      const { source, titleSlug, categoryTitle, difficulty } = parsed;
-      const doc = {
-        ...parsed,
-      };
+  app.post("/post-question", async (req, res) => {
+    const token = getHeader(req, "x-admin-token");
+    if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+      return res.status(401).send({ error: "Unauthorized" });
+    }
+    const Body = z.object({
+      source: z.string(),
+      globalSlug: z.string().min(1),
+      titleSlug: z.string().min(1),
+      title: z.string().min(1),
+      categoryTitle: z.string().max(100),
+      difficulty: z.enum(["Easy", "Medium", "Hard"]),
+      timeLimit: z.number().min(1).max(240), // in minutes
+      content: z.string(),
+      hints: z.array(z.string()).nullable().optional(),
+      exampleTestcases: z.string().nullable().optional(),
+      codeSnippets: z
+        .array(
+          z.object({
+            lang: z.string(),
+            langSlug: z.string(),
+            code: z.string(),
+          }),
+        )
+        .nullable()
+        .optional(),
+    });
+    const result = Body.safeParse(req.body);
+    if (!result.success) {
+      return res
+        .status(400)
+        .send({ error: "Invalid input", details: result.error.issues });
+    }
+    const parsed = result.data;
+    const { source, titleSlug, categoryTitle, difficulty } = parsed;
+    const doc = {
+      ...parsed,
+    };
 
-      const saved = await withDbLimit(() =>
-        Question.updateOne(
-          { source, titleSlug, categoryTitle, difficulty },
-          { $setOnInsert: doc },
-          { upsert: true },
-        ),
-      );
-      if (saved.acknowledged !== true)
-        return res.status(500).send({ error: "Failed to save question" });
-      if (saved.matchedCount > 0)
-        return res
-          .status(200)
-          .send({ ok: true, message: "Question already exists" });
-      if (saved.upsertedCount === 0)
-        return res.status(500).send({ error: "Failed to save question" });
-      return {
-        ok: true,
-        id: saved.upsertedId?.toString(),
-        message: "Question inserted successfully",
-      };
-    },
-  );
+    const saved = await withDbLimit(() =>
+      Question.updateOne(
+        { source, titleSlug, categoryTitle, difficulty },
+        { $setOnInsert: doc },
+        { upsert: true },
+      ),
+    );
+    if (saved.acknowledged !== true)
+      return res.status(500).send({ error: "Failed to save question" });
+    if (saved.matchedCount > 0)
+      return res
+        .status(200)
+        .send({ ok: true, message: "Question already exists" });
+    if (saved.upsertedCount === 0)
+      return res.status(500).send({ error: "Failed to save question" });
+    return {
+      ok: true,
+      id: saved.upsertedId?.toString(),
+      message: "Question inserted successfully",
+    };
+  });
 };
 
 export default leetcodeRoutes;

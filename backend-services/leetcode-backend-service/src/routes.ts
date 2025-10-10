@@ -30,26 +30,16 @@ function assertAdmin(req: FastifyRequest) {
 }
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
-  app.get("/health", () => {
-    return { ok: true };
+  app.post("/seed-batch", async (req) => {
+    assertAdmin(req);
+    const reset = (req.query as { reset?: string })?.reset === "1";
+    if (reset) {
+      await withDbLimit(() => SeedCursor.findByIdAndDelete("questions"));
+    }
+
+    const res = await seedLeetCodeBatch();
+    return res;
   });
-
-  app.post(
-    "/seed-batch",
-    {
-      config: { rateLimit: { max: 10, timeWindow: "1m" } },
-    },
-    async (req) => {
-      assertAdmin(req);
-      const reset = (req.query as { reset?: string })?.reset === "1";
-      if (reset) {
-        await withDbLimit(() => SeedCursor.findByIdAndDelete("questions"));
-      }
-
-      const res = await seedLeetCodeBatch();
-      return res;
-    },
-  );
 };
 
 export default leetcodeRoutes;
