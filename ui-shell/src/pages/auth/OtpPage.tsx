@@ -15,19 +15,17 @@ const OtpPage: React.FC = () => {
     }
   }, [user, navigate]);
 
-  if (!user) {
-    return null;
-  }
+  const handleOTPSuccess = async (verifiedUser: User) => {
+    console.log("OTP verified, logging user in.");
+    setUser(verifiedUser);
+    navigate("/matching");
+  };
 
   return (
     <AuthLayout>
       <OtpForm
         user={user}
-        onOTPSuccess={(verifiedUser: User) => {
-          setUser(verifiedUser);
-
-          navigate("/matching");
-        }}
+        onOTPSuccess={(verifiedUser: User) => handleOTPSuccess(verifiedUser)}
       />
     </AuthLayout>
   );

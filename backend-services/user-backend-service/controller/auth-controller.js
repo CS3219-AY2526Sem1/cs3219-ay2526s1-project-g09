@@ -158,7 +158,7 @@ export async function verifyOTP(req, res) {
     const user = await _findUserByEmail(email);
 
     // Update verification status
-    await _updateVerificationById(user._id, true);
+    const updatedUser = await _updateVerificationById(user._id, true);
     await _updateUserExpirationById(user._id, null);
 
     const accessToken = await generateToken(user);
@@ -174,7 +174,7 @@ export async function verifyOTP(req, res) {
 
     return res.status(200).json({
       message: "Email verified successfully",
-      data: formatUserResponse(user),
+      data: formatUserResponse(updatedUser),
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });

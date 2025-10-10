@@ -46,6 +46,12 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
     }
   };
 
+  const handleResendOTP = async () => {
+    // Generate and send otp to email
+    await UserService.sendOtp(user.email);
+    console.log("OTP has been sent.");
+  };
+
   return (
     <div className="text-center">
       {/* Title */}
@@ -82,7 +88,10 @@ const OtpForm: React.FC<OtpFormProps> = ({ user, onOTPSuccess }) => {
           Didn’t receive the code?{" "}
           <button
             type="button"
-            onClick={() => console.log("Resend OTP")}
+            onClick={() => {
+              console.log("Resend OTP");
+              handleResendOTP();
+            }}
             className="text-orange-600 font-medium hover:underline"
           >
             Resend it
