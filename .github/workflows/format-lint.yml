@@ -285,7 +285,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd ./backend-services/question-backend-service
-          npm install --frozen-lockfile
+          npm ci
 
       - name: Install reviewdog
         uses: reviewdog/action-setup@v1
@@ -325,7 +325,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd ./backend-services/leetcode-backend-service
-          npm install --frozen-lockfile
+          npm ci
 
       - name: Install reviewdog
         uses: reviewdog/action-setup@v1

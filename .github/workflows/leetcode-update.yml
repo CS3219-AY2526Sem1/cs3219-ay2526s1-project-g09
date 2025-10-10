@@ -20,7 +20,7 @@ jobs:
       - name: Wait for LeetCode Backend to be ready
         run: |
           for i in {1..30}; do
-            if curl -s "http://localhost:5285/health" >/dev/null; then
+            if curl -s "http://localhost:5285/api/v1/leetcode/health" >/dev/null; then
               echo "LeetCode backend is up!"
               break
             fi

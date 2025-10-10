@@ -4,43 +4,16 @@
 import { Question, SeedCursor } from "../db/model/question.js";
 import { gql } from "./client.js";
 import { QUERY_LIST, QUERY_DETAIL } from "./queries.js";
-
-export type BasicInformation = {
-  title: string;
-  titleSlug: string;
-  isPaidOnly: boolean;
-  difficulty: "Easy" | "Medium" | "Hard";
-  categoryTitle?: string | null;
-};
-
-export type QuestionList = {
-  problemsetQuestionList: {
-    total: number;
-    questions: BasicInformation[];
-  };
-};
-
-export type Details = {
-  question:
-    | (BasicInformation & {
-        content: string | null;
-        exampleTestcases?: string | null;
-        hints?: string[] | null;
-        codeSnippets?:
-          | { lang: string; langSlug: string; code: string }[]
-          | null;
-      })
-    | null;
-};
+import type { BasicInformation, QuestionList, Details } from "./types.js";
 
 /**
- * Run one batch (default pageSize=20). Returns a summary.
+ * Run one batch (default pageSize=200). Returns a summary.
  */
 export async function seedLeetCodeBatch() {
   const id = "questions";
   const cursor =
     (await SeedCursor.findById(id)) ??
-    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 20, done: false });
+    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 200, done: false });
 
   if (cursor.done) {
     return {
