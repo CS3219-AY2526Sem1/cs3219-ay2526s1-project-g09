@@ -75,8 +75,8 @@ src/
     queries.ts        # Contains LeetCode GraphQL queries (QUERY_LIST, QUERY_DETAIL)
     seedBatch.ts      # Resumable batch seeding using persisted cursor; upserts windowed pages
     service.ts        # wrappers around gql + queries
-    types.ts          # TypeScript interface for 
-  
+    types.ts          # TypeScript interface for
+
   index.ts            # Tiny bootstrap: loads env, creates server, starts listening
   routes.ts           # Fastify routes: GET /leetcode/test, POST /leetcode/seed-batch
   server.ts           # buildServer(): registers plugins + routes

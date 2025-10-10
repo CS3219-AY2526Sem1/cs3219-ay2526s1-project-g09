@@ -66,7 +66,7 @@ src/
     types/
       question.ts     # TypeScript interface
     connection.ts     # Handles MongoDB connection setup (Mongoose Connect)
-    dbLimiter.ts      # Rate limiter for database operations  
+    dbLimiter.ts      # Rate limiter for database operations
   index.ts            # Tiny bootstrap: loads env, creates server, starts listening
   routes.ts           # REST endpoints
   server.ts           # buildServer(): plugins + routes
