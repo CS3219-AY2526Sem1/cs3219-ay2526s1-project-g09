@@ -1,7 +1,7 @@
 name: Sync Question Bank
 on:
   schedule:
-    - cron: "*/15 * * * *" # Every 15 minutes
+    - cron: "0 * * * *" # Every hour
 jobs:
   sync_leetcode:
     runs-on: ubuntu-latest

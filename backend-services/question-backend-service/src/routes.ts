@@ -22,6 +22,15 @@ function getHeader(req: FastifyRequest, name: string): string | undefined {
 }
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
+  app.get("/health", () => {
+    return { status: "ok" };
+  });
+
+  /**
+   * Check if a question exists based on categoryTitle and difficulty.
+   * Returns 400 if params are missing.
+   * Returns true or false.
+   */
   app.get<{
     Querystring: {
       categoryTitle: string;
@@ -40,6 +49,12 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     return !!exists; // returns just true or false
   });
 
+  /**
+   * Get a random question based on categoryTitle and difficulty.
+   * Returns 400 if params are missing.
+   * Returns 404 if no question found.
+   * Returns the question document if found.
+   */
   app.get<{
     Querystring: {
       categoryTitle: string;
@@ -125,11 +140,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         .send({ ok: true, message: "Question already exists" });
     if (saved.upsertedCount === 0)
       return res.status(500).send({ error: "Failed to save question" });
-    return {
+    return res.status(200).send({
       ok: true,
       id: saved.upsertedId?.toString(),
       message: "Question inserted successfully",
-    };
+    });
   });
 };
 

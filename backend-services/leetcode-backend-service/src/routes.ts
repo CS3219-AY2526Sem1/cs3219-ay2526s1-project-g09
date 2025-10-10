@@ -30,6 +30,10 @@ function assertAdmin(req: FastifyRequest) {
 }
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
+  app.get("/health", () => {
+    return { status: "ok" };
+  });
+
   app.post("/seed-batch", async (req) => {
     assertAdmin(req);
     const reset = (req.query as { reset?: string })?.reset === "1";

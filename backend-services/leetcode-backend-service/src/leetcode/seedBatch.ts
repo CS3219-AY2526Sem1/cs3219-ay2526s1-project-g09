@@ -13,6 +13,12 @@ import pLimit from "p-limit";
 
 const DETAIL_CONCURRENCY = 6;
 
+const DIFFICULTY_TIME_LIMITS: Record<string, number> = {
+  Easy: 30,
+  Medium: 60,
+  Hard: 120,
+};
+
 /**
  * Run one batch (default pageSize=200). Returns a summary.
  * @returns An object containing the result of the seeding operation.
@@ -71,14 +77,7 @@ export async function seedLeetCodeBatch() {
           // metadata
           difficulty: q.difficulty,
           categoryTitle: q.categoryTitle ?? null,
-          timeLimit:
-            q.difficulty === "Easy"
-              ? 30
-              : q.difficulty === "Medium"
-                ? 60
-                : q.difficulty === "Hard"
-                  ? 120
-                  : 0, // in minutes
+          timeLimit: DIFFICULTY_TIME_LIMITS[q.difficulty] ?? 60,
 
           // content & extras
           content: q.content ?? null,
