@@ -66,11 +66,9 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     const { categoryTitle, difficulty } = req.query;
 
     if (!categoryTitle || !difficulty) {
-      return reply
-        .status(400)
-        .send({
-          error: "Missing required parameters: categoryTitle, difficulty",
-        });
+      return reply.status(400).send({
+        error: "Missing required parameters: categoryTitle, difficulty",
+      });
     }
 
     const [randomQuestion] = await withDbLimit(() =>
