@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/passwordinput";
 import { Button } from "@/components/ui/button";
 import { validatePassword, validateEmail } from "@/utils/InputValidation";
 import type { User } from "@/types/User";
@@ -106,7 +107,7 @@ const AccountSecuritySection: React.FC<AccountSecuritySectionProps> = ({
             <label htmlFor="password" className="text-sm font-semibold">
               Password
             </label>
-            <Input
+            <PasswordInput
               id="password"
               type="password"
               value={password}
