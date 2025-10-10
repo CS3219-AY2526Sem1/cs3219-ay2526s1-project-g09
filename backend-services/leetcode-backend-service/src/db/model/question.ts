@@ -31,6 +31,7 @@ const QuestionSchema = new Schema<QuestionDoc>(
       index: true,
     },
     categoryTitle: { type: String, required: false, index: true },
+    timeLimit: { type: Number, required: true }, // in minutes
 
     // content
     content: { type: String, required: true }, // HTML body

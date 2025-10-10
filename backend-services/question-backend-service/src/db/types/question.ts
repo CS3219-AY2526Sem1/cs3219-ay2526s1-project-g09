@@ -16,6 +16,7 @@ export interface QuestionDoc {
   // metadata
   difficulty?: "Easy" | "Medium" | "Hard";
   categoryTitle?: string | null;
+  timeLimit?: number; // in seconds
 
   // content
   content?: string | null; // HTML body

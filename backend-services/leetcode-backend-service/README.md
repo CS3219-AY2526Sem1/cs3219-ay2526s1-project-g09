@@ -133,6 +133,7 @@ curl http://localhost:5275/api/v1/leetcode/test
   title: String,
   difficulty: "Easy" | "Medium" | "Hard",
   categoryTitle: String,
+  timeLimit: Number,
   content: String,
   codeSnippets: [{
     lang: String,

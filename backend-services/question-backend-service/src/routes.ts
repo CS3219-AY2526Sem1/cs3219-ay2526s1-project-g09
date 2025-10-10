@@ -6,7 +6,7 @@ import type {
   FastifyPluginCallback,
   FastifyRequest,
 } from "fastify";
-import { SeedCursor, type QuestionDoc } from "./db/model/question.js";
+import { type QuestionDoc } from "./db/model/question.js";
 import { withDbLimit } from "./db/dbLimiter.js";
 import { Question } from "./db/model/question.js";
 import { z } from "zod";
@@ -85,10 +85,6 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
         return res.status(401).send({ error: "Unauthorized" });
       }
-      const reset = (req.query as { reset?: string })?.reset === "1";
-      if (reset) {
-        await withDbLimit(() => SeedCursor.findByIdAndDelete("questions"));
-      }
       const Body = z.object({
         source: z.string(),
         globalSlug: z.string().min(1),
@@ -96,6 +92,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         title: z.string().min(1),
         categoryTitle: z.string().max(100),
         difficulty: z.enum(["Easy", "Medium", "Hard"]),
+        timeLimit: z.number().min(1).max(240), // in minutes
         content: z.string(),
         hints: z.array(z.string()).nullable().optional(),
         exampleTestcases: z.string().nullable().optional(),

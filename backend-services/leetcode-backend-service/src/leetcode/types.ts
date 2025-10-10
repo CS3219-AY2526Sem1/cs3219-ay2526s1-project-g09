@@ -1,3 +1,7 @@
+/**
+ * Types for LeetCode GraphQL API responses.
+ */
+
 export type BasicInformation = {
   title: string;
   titleSlug: string;

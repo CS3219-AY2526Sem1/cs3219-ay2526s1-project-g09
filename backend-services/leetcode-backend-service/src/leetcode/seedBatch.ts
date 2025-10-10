@@ -71,6 +71,14 @@ export async function seedLeetCodeBatch() {
           // metadata
           difficulty: q.difficulty,
           categoryTitle: q.categoryTitle ?? null,
+          timeLimit:
+            q.difficulty === "Easy"
+              ? 30
+              : q.difficulty === "Medium"
+                ? 60
+                : q.difficulty === "Hard"
+                  ? 120
+                  : 60, // in minutes
 
           // content & extras
           content: q.content ?? null,

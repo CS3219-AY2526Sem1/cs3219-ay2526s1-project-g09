@@ -30,6 +30,7 @@ const QuestionSchema = new Schema(
       index: true,
     },
     categoryTitle: { type: String, required: false, index: true },
+    timeLimit: { type: Number, required: true }, // in minutes
 
     // content
     content: { type: String, required: true }, // HTML body
@@ -48,27 +49,9 @@ QuestionSchema.index({
   difficulty: 1,
 });
 
-const CursorSchema = new mongoose.Schema(
-  {
-    _id: { type: String, required: true },
-    nextSkip: { type: Number, default: 0, index: true },
-    pageSize: { type: Number, default: 200 },
-    done: { type: Boolean, default: false },
-    lastRunAt: { type: Date },
-    total: { type: Number, default: 0 },
-  },
-  { collection: "seed-cursor", timestamps: true },
-);
-
 export type QuestionDoc = InferSchemaType<typeof QuestionSchema>;
 
 // Reuse existing model in dev/hot-reload to avoid OverwriteModelError
 export const Question: Model<QuestionDoc> =
   (mongoose.models.Question as Model<QuestionDoc> | undefined) ||
   model<QuestionDoc>("Question", QuestionSchema);
-
-export type SeedCursor = InferSchemaType<typeof CursorSchema>; // _id is string now
-export const SeedCursor = mongoose.model<SeedCursor>(
-  "SeedCursor",
-  CursorSchema,
-);
