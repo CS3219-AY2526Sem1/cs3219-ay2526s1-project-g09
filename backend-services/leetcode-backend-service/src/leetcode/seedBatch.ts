@@ -13,6 +13,7 @@ import pLimit from "p-limit";
 
 const DETAIL_CONCURRENCY = 6;
 
+// Time limits (in minutes) for each difficulty level.
 const DIFFICULTY_TIME_LIMITS: Record<string, number> = {
   Easy: 30,
   Medium: 60,
