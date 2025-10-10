@@ -78,7 +78,7 @@ export async function seedLeetCodeBatch() {
                 ? 60
                 : q.difficulty === "Hard"
                   ? 120
-                  : 60, // in minutes
+                  : 0, // in minutes
 
           // content & extras
           content: q.content ?? null,

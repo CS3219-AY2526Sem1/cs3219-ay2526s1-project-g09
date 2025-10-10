@@ -5,7 +5,7 @@ Fastify (TypeScript, ESM) service that:
 - Pings LeetCode’s GraphQL API to fetch problems and details
 - If successful retrieval and storage in `leetcode-service` database,
   POST the question to question service (to allow retrieval by other microservices)
-- Run Cron Job from GitHub Actions
+- Run Cron Job to sync information from LeetCode API daily
 
 ## Tech
 
@@ -86,20 +86,10 @@ src/
 
 Base URL: `http://localhost:5285/api/v1`
 
-### LeetCode Test for manual testing of Graph QL endpoint
-
-**GET** `/leetcode/test`  
-Fetches titleSlug of all leetcode questions and question detail of the first leetcode question.
-
-```bash
-# For window users
-curl.exe http://localhost:5285/api/v1/leetcode/test
-```
-
-### Seed first 200 problems into Mongo
+### Seed 200 problems into Mongo
 
 **POST** `/leetcode/seed-batch`  
-Fetches the next 200 problems and **upserts** to Mongo within 2 minutes.
+Fetches the next 200 problems and **upserts** to Mongo.
 
 Examples:
 
@@ -113,15 +103,6 @@ Response (fields):
 - `upserted` — true if inserted new
 - `modified` — true if updated existing
 - `doc` — the stored document (by default without `content` unless `full=1`)
-
-### (Optional) List saved questions
-
-**GET** `/test`  
-Optional route if enabled.
-
-```bash
-curl http://localhost:5275/api/v1/leetcode/test
-```
 
 ## Data Model
 
