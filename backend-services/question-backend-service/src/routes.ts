@@ -86,16 +86,24 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       }
       const Body = z.object({
         source: z.string(),
-        globalSlug: z.string(),
-        titleSlug: z.string(),
-        title: z.string(),
+        globalSlug: z.string().min(1),
+        titleSlug: z.string().min(1),
+        title: z.string().min(1),
         categoryTitle: z.string().max(100),
         difficulty: z.enum(["Easy", "Medium", "Hard"]),
-        isPaidOnly: z.boolean(),
         content: z.string(),
-        codeSnippets: z.array(z.any()).optional(),
-        hints: z.array(z.string()).optional(),
-        exampleTestcases: z.array(z.string()).optional(),
+        hints: z.array(z.string()).nullable().optional(),
+        exampleTestcases: z.string().nullable().optional(),
+        codeSnippets: z
+          .array(
+            z.object({
+              lang: z.string(),
+              langSlug: z.string(),
+              code: z.string(),
+            }),
+          )
+          .nullable()
+          .optional(),
       });
       const result = Body.safeParse(req.body);
       if (!result.success) {

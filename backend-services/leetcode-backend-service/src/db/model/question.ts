@@ -30,7 +30,6 @@ const QuestionSchema = new Schema<QuestionDoc>(
       required: true,
       index: true,
     },
-    isPaidOnly: { type: Boolean, required: true, index: true },
     categoryTitle: { type: String, required: false, index: true },
 
     // content

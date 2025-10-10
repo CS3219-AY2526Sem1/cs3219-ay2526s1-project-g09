@@ -1,13 +1,21 @@
 /**
- * Seed the database with LeetCode questions in batches.
+ * Fetch and store a batch of LeetCode questions.
+ * This script fetches a batch of questions from LeetCode's GraphQL API,
+ * filters out paid questions, and stores the non-paid questions in the database.
+ * It uses a cursor to keep track of progress and can be run multiple times
+ * to continue fetching more questions until all are processed.
  */
 import { Question, SeedCursor } from "../db/model/question.js";
 import { gql } from "./client.js";
 import { QUERY_LIST, QUERY_DETAIL } from "./queries.js";
 import type { BasicInformation, QuestionList, Details } from "./types.js";
+import pLimit from "p-limit";
+
+const DETAIL_CONCURRENCY = 6;
 
 /**
  * Run one batch (default pageSize=200). Returns a summary.
+ * @returns An object containing the result of the seeding operation.
  */
 export async function seedLeetCodeBatch() {
   const id = "questions";
@@ -44,20 +52,15 @@ export async function seedLeetCodeBatch() {
     };
   }
 
-  // fetch the question details from skip with size pageSize
-  // these are the information that needs to be inserted
   const questionInfos: QuestionDetail[] = await fetchNonPaidQuestionInfo(
     pageSize,
     nextSkip,
   );
 
-  // Build bulk ops (idempotent upserts keyed by titleSlug)
   const ops = questionInfos.map((q) => ({
     updateOne: {
-      // Use the same field you persist & index
       filter: { titleSlug: q.titleSlug },
 
-      // All update operators must be inside `update`
       update: {
         $set: {
           globalSlug: `leetcode:${q.titleSlug}`, // unique identifier
@@ -67,7 +70,6 @@ export async function seedLeetCodeBatch() {
 
           // metadata
           difficulty: q.difficulty,
-          isPaidOnly: q.isPaidOnly,
           categoryTitle: q.categoryTitle ?? null,
 
           // content & extras
@@ -78,7 +80,6 @@ export async function seedLeetCodeBatch() {
           updatedAt: new Date(),
         },
 
-        // only on first insert
         $setOnInsert: {
           createdAt: new Date(),
         },
@@ -114,12 +115,18 @@ export async function seedLeetCodeBatch() {
 
 type QuestionDetail = NonNullable<Details["question"]>;
 
+/**
+ * Fetch non-paid question information.
+ * We will only store non-paid questions in our database because
+ * content of paid questions will not be accessible without a premium account.
+ * @param limit - The maximum number of questions to fetch.
+ * @param skip - The number of questions to skip.
+ * @returns An array of non-paid question details.
+ */
 export async function fetchNonPaidQuestionInfo(
   limit: number,
   skip: number,
 ): Promise<QuestionDetail[]> {
-  const out: QuestionDetail[] = [];
-
   const res = await gql<
     QuestionList,
     {
@@ -133,18 +140,31 @@ export async function fetchNonPaidQuestionInfo(
   const questionList = res.problemsetQuestionList;
   const questions: BasicInformation[] = questionList.questions;
 
-  for (const question of questions) {
-    if (!question.isPaidOnly) {
-      const questionDetail = await getQuestionDetail(question.titleSlug);
-      if (questionDetail) {
-        out.push(questionDetail);
-      }
-    }
-  }
+  const limitConcurrency = pLimit(DETAIL_CONCURRENCY);
 
-  return out;
+  const tasks = questions
+    .filter((q) => !q.isPaidOnly)
+    .map((q) =>
+      limitConcurrency(async () => {
+        try {
+          const detail = await getQuestionDetail(q.titleSlug);
+          return detail ?? null;
+        } catch {
+          console.log(`Failed to fetch details for ${q.titleSlug}`);
+          return null;
+        }
+      }),
+    );
+
+  const results = await Promise.all(tasks);
+  return results.filter((d): d is QuestionDetail => d !== null);
 }
 
+/**
+ * Fetch non-paid question list.
+ * We will only store non-paid questions in our database because
+ * content of paid questions will not be accessible without a premium account.
+ */
 export async function fetchNonPaidQuestionList(
   limit: number,
   skip: number,

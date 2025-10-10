@@ -17,10 +17,10 @@ const CodeSnippetSchema = new Schema(
 const QuestionSchema = new Schema(
   {
     // identity
-    source: { type: String, required: true, index: true }, // e.g. "leetcode"
-    globalSlug: { type: String, required: true, unique: true, index: true }, // e.g. "leetcode:two-sum"
-    titleSlug: { type: String, required: true, index: true }, // titleSlug
-    title: { type: String, required: true, index: true },
+    source: { type: String, required: true, index: true }, // source of the question, e.g. "leetcode"
+    globalSlug: { type: String, required: true, unique: true, index: true }, // unique identifier, e.g. "leetcode:two-sum"
+    titleSlug: { type: String, required: true, index: true }, // slug of the title, e.g. "two-sum"
+    title: { type: String, required: true, index: true }, // full title, e.g. "Two Sum"
 
     // meta
     difficulty: {
@@ -29,7 +29,6 @@ const QuestionSchema = new Schema(
       required: true,
       index: true,
     },
-    isPaidOnly: { type: Boolean, required: true, index: true },
     categoryTitle: { type: String, required: false, index: true },
 
     // content

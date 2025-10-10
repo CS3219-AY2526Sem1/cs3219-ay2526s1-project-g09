@@ -15,7 +15,6 @@ export interface QuestionDoc {
 
   // metadata
   difficulty?: "Easy" | "Medium" | "Hard";
-  isPaidOnly?: boolean;
   categoryTitle?: string | null;
 
   // content

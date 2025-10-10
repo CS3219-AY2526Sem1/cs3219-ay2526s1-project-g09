@@ -6,6 +6,7 @@ import type mongoose from "mongoose";
  */
 export interface QuestionDoc {
   _id: mongoose.Types.ObjectId;
+
   // identity
   globalSlug: string; // e.g. "leetcode:two-sum"
   title: string;
@@ -14,7 +15,6 @@ export interface QuestionDoc {
 
   // metadata
   difficulty?: "Easy" | "Medium" | "Hard";
-  isPaidOnly?: boolean;
   categoryTitle?: string | null;
 
   // content

@@ -1,12 +1,13 @@
 /**
- * Routes including seeding leetcode questions.
+ * Routes for seeding LeetCode questions.
+ * These routes are protected by an admin token set in the environment variable ADMIN_TOKEN.
+ * The token must be provided in the `x-admin-token` header of the request.
  */
 import type {
   FastifyInstance,
   FastifyPluginCallback,
   FastifyRequest,
 } from "fastify";
-import { getQuestionDetail, fetchAllNonPaidSlugs } from "./leetcode/service.js";
 import { seedLeetCodeBatch } from "./leetcode/seedBatch.js";
 import { SeedCursor } from "./db/model/question.js";
 import { withDbLimit } from "./db/dbLimiter.js";
@@ -49,26 +50,6 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       return res;
     },
   );
-
-  app.get("/test", async () => {
-    const list = await fetchAllNonPaidSlugs();
-    const slugs = list.map((q) => q.titleSlug);
-    const firstSlug = slugs[0];
-    const detail = firstSlug ? await getQuestionDetail(firstSlug) : null;
-
-    return {
-      ok: true,
-      titleSlugs: slugs,
-      title: detail?.title ?? null,
-      isPaidOnly: detail?.isPaidOnly,
-      difficulty: detail?.difficulty,
-      categoryTitle: detail?.categoryTitle ?? null,
-      content: detail?.content ?? null,
-      exampleTestcases: detail?.exampleTestcases ?? null,
-      codeSnippets: detail?.codeSnippets,
-      hints: detail?.hints ?? null,
-    };
-  });
 };
 
 export default leetcodeRoutes;
