@@ -109,7 +109,6 @@ const AccountSecuritySection: React.FC<AccountSecuritySectionProps> = ({
             </label>
             <PasswordInput
               id="password"
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="bg-gray-900 border-gray-700 text-gray-200"
