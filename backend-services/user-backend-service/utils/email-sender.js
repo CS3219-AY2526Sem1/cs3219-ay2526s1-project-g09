@@ -8,7 +8,7 @@ const OAuth2_client = new OAuth2(
 );
 OAuth2_client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
 
-const accessToken = OAuth2_client.getAccessToken();
+const accessToken = await OAuth2_client.getAccessToken();
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
