@@ -1,0 +1,89 @@
+name: Build & Push Docker images
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  packages: write
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          # Add one entry per microservice
+          - name: matching-ui
+            context: ./ui-services/matching-ui-service
+          - name: questions-ui
+            context: ./ui-services/question-ui-service
+          - name: collab-ui
+            context: ./ui-services/collab-ui-service
+          - name: user-ui
+            context: ./ui-services/user-ui-service
+          - name: history-ui
+            context: ./ui-services/history-ui-service
+          - name: question-backend
+            context: ./backend-services/question-backend-service
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Force owner to lowercase
+        id: lc
+        run: echo "value=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ steps.lc.outputs.value }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata (tags/labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ steps.lc.outputs.value }}/peerprep-${{ matrix.service.name }}
+          tags: |
+            type=raw,value=${{ github.sha }}
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref_name == 'master' }}
+
+      - name: Build (no push for PRs)
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.dockerfile }}
+          push: false
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            MONGODB_URI=${{ secrets.MONGODB_URI }}
+
+      - name: Build & Push
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
