@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { google } from "googleapis";
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
