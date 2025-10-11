@@ -93,6 +93,10 @@ jobs:
             -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" \
             http://localhost:5285/api/v1/leetcode/seed-batch
 
+          echo "Seed triggered successfully — waiting 2 minutes for background sync..."
+          sleep 120
+          echo "Wait complete — proceeding with cleanup."
+
       - name: Dump logs on failure
         if: failure()
         run: |
