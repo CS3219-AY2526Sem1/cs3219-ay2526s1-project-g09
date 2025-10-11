@@ -2,6 +2,9 @@
 FROM node:22-alpine
 WORKDIR /app
 
+# Install deps for build AND curl for healthcheck
+RUN apk add --no-cache curl
+
 # Install deps
 COPY package*.json .
 RUN npm ci
@@ -17,6 +20,6 @@ EXPOSE 5285
 
 # Add healthcheck (runs every 10s, times out after 3s, fails after 5 bad tries)
 HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
-    CMD wget -qO- http://localhost:5285/api/v1/leetcode/health || exit 1
+    CMD curl -fsS http://localhost:5285/api/v1/leetcode/health > /dev/null || exit 1
 
 CMD ["node", "dist/index.js"]
