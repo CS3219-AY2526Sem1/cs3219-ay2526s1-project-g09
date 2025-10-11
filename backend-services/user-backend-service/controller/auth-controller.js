@@ -245,8 +245,8 @@ export async function handleResetPassword(req, res) {
     }
 
     // Hash the new password
-    const saltRounds = Number(process.env.BCRYPT_ROUNDS || 10);
-    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+    const salt = bcrypt.genSaltSync(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
 
     // Update password, set passwordChangedAt, and clear token fields
     await _updateUserPasswordAndInvalidateSessions(user._id, newPasswordHash);
