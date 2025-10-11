@@ -35,6 +35,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
       await UserService.requestPasswordReset(email.trim());
       setSent(true);
     } catch (err) {
+      // send true regardless, avoid revealing whether email exists or not
       console.error(err);
       setSent(true);
     } finally {
@@ -45,20 +46,22 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   if (sent) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-        <h2 className="text-lg font-semibold mb-2">Check your email</h2>
-        <p className="text-gray-600">
-          If an account exists with <strong>{email}</strong>, you’ll receive a
-          password reset link shortly.
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            if (onEmailSent) onEmailSent();
-          }}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
-        >
-          Back to Login
-        </button>
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold mb-2">Check your email</h2>
+          <p className="text-gray-600">
+            If an account exists with <strong>{email}</strong>, you’ll receive a
+            password reset link shortly.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (onEmailSent) onEmailSent();
+            }}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
+          >
+            Back to Login
+          </button>
+        </div>
       </div>
     );
   }
