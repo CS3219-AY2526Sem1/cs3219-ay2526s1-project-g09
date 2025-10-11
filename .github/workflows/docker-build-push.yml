@@ -31,6 +31,8 @@ jobs:
             context: ./ui-services/history-ui-service
           - name: question-backend
             context: ./backend-services/question-backend-service
+          - name: leetcode-backend
+            context: ./backend-services/leetcode-backend-service
 
     steps:
       - name: Checkout Repository
@@ -73,8 +75,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            MONGODB_URI=${{ secrets.MONGODB_URI }}
 
       - name: Build & Push
         if: ${{ github.event_name != 'pull_request' }}

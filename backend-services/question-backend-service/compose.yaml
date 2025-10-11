@@ -1,0 +1,10 @@
+services:
+  question-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: question-service
+    ports:
+      - "5275:5275"
+    env_file:
+      - .env
