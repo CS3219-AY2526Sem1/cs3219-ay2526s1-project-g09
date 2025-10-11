@@ -19,6 +19,8 @@ const LoginPage: React.FC = () => {
           setUser(user);
           navigate("/matching");
         }}
+        onCreateAccount={() => navigate("/signup")}
+        onForgotPassword={() => navigate("/forgotPassword")}
       />
     </AuthLayout>
   );

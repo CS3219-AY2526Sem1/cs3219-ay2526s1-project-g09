@@ -398,7 +398,7 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
 
   ```json
   {
-    "ok": "true"
+    "ok": true
   }
   ```
 

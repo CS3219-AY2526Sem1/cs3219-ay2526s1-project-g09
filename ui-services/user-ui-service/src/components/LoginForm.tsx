@@ -7,11 +7,15 @@ import { Eye, EyeOff } from "lucide-react";
 interface LoginFormProps {
   onLoginSuccess?: (user: User) => void;
   onLoginRequireOtp?: (user: User) => void;
+  onCreateAccount: () => void;
+  onForgotPassword: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({
   onLoginSuccess,
   onLoginRequireOtp,
+  onCreateAccount,
+  onForgotPassword,
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -88,12 +92,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
           />
           <span className="text-gray-600 text-sm">Remember me</span>
         </label>
-        <a
-          href="/forgotPassword"
-          className="text-orange-500 text-sm hover:underline"
+        <button
+          onClick={() => {
+            onForgotPassword();
+          }}
+          className="text-orange-500 hover:underline focus:outline-none bg-transparent border-none cursor-pointer"
         >
           Forgot password?
-        </a>
+        </button>
       </div>
 
       <button
@@ -109,9 +115,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
       </div>
 
       <div className="text-center">
-        <a href="/signup" className="text-orange-500 hover:underline">
+        <button
+          onClick={() => {
+            onCreateAccount();
+          }}
+          className="text-orange-500 hover:underline focus:outline-none bg-transparent border-none cursor-pointer"
+        >
           Create an account?
-        </a>
+        </button>
       </div>
     </form>
   );

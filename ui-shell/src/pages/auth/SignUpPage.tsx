@@ -14,7 +14,10 @@ const SignUpPage: React.FC = () => {
 
   return (
     <AuthLayout>
-      <SignUpForm onSignUpSuccess={(user: User) => handleSignUp(user)} />
+      <SignUpForm
+        onSignUpSuccess={(user: User) => handleSignUp(user)}
+        onBackToLogin={() => navigate("/login")}
+      />
     </AuthLayout>
   );
 };
