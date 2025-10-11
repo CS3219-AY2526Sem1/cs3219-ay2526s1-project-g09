@@ -15,4 +15,8 @@ RUN npm run build
 # Expose port
 EXPOSE 5275
 
+# Add healthcheck (runs every 10s, times out after 3s, fails after 5 bad tries)
+HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
+    CMD wget -qO- http://localhost:5275/health || exit 1s
+
 CMD ["node", "dist/index.js"]
