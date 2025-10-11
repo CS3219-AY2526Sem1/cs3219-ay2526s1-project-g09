@@ -36,7 +36,8 @@ jobs:
 
       - name: Pull images (ensure latest tag exists)
         run: |
-          docker pull  ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest ghcr.io/${{ steps.lc.outputs.value }}/peerprep-question-backend:latest
+          docker pull ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
+          docker pull ghcr.io/${{ steps.lc.outputs.value }}/peerprep-question-backend:latest
 
       - name: Run Question Backend (internal only)
         run: |
