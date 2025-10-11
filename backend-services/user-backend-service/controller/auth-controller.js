@@ -63,7 +63,7 @@ export async function handleLogin(req, res) {
       secure: isProd, // HTTPS in prod
       sameSite: isProd ? "None" : "Lax", // None in prod, Lax in dev
       path: "/",
-      ...(rememberMe ? { maxAge: 24 * 60 * 60 * 1000 } : {}), // 7 days
+      ...(rememberMe ? { maxAge: 24 * 60 * 60 * 1000 } : {}), // 1 day
     });
 
     return res.status(200).json({
@@ -269,7 +269,7 @@ export async function handleValidateResetToken(req, res) {
   const user = await _findUserByValidResetHash(tokenHash);
 
   // If user found and token not expired => valid
-  const isUserFound = !user;
+  const isUserFound = !!user;
   return res.json({ valid: isUserFound });
 }
 
