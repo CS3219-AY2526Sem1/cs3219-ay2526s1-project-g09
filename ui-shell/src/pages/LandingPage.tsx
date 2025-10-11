@@ -1,7 +1,18 @@
 import { Routes, Route, Link } from "react-router-dom";
 import LoginPage from "@pages/auth/LoginPage";
 import peerPrepIconWhite from "@assets/icon_white.svg";
-import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 /* Header Component */
 const Header: React.FC = () => (
@@ -165,6 +176,18 @@ const Footer: React.FC = () => (
 
 /* Landing Page Composition */
 const LandingPage: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.loggedOut) {
+      setShowLogoutDialog(true);
+      // clear state so dialog doesn’t reappear after refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
+
   return (
     <div className="flex flex-col bg-[#0a2342] text-white">
       <Header />
@@ -174,6 +197,26 @@ const LandingPage: React.FC = () => {
       <WaveDivider />
       <FAQSection />
       <Footer />
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Logged Out</DialogTitle>
+            <DialogDescription>
+              You have successfully logged out of your account.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                onClick={() => setShowLogoutDialog(false)}
+              >
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

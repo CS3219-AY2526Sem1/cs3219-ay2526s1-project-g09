@@ -9,7 +9,7 @@ const NavHeader: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { setUser, setIsLoggingOut } = useAuth();
 
   // Function to apply active/inactive styles
   const getLinkClasses = (path: string) => {
@@ -47,8 +47,10 @@ const NavHeader: React.FC = () => {
 
         <LogoutButton
           onLogOutSuccess={() => {
+            setIsLoggingOut(true);
             setUser(null);
-            navigate("/");
+            navigate("/", { state: { loggedOut: true } });
+            setTimeout(() => setIsLoggingOut(false), 500);
           }}
         />
       </div>
