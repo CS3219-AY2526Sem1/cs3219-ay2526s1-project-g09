@@ -10,6 +10,7 @@ import type {
 } from "mongodb";
 import { type QuestionDoc } from "./types/question.js";
 import axios from "axios";
+import { type SeedBatchResponse } from "./types/seedBatchResponse.js";
 
 const TOKEN = process.env.ADMIN_TOKEN ?? "";
 
@@ -43,21 +44,25 @@ function hasFullDocument<T>(
   );
 }
 
-async function postDoc(doc: QuestionDoc) {
-  try {
-    const res = await axios.post(`${QUESTION_API_URL}/post-question`, doc, {
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-token": TOKEN,
-      },
-    });
-    console.log("Response:", res.data);
-  } catch (err) {
-    console.error("Error posting doc:", err);
-  }
-}
-
 export default fp((app: FastifyInstance) => {
+  async function postDoc(doc: QuestionDoc) {
+    try {
+      const res = await axios.post<SeedBatchResponse>(
+        `${QUESTION_API_URL}/post-question`,
+        doc,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-token": TOKEN,
+          },
+        },
+      );
+      app.log.info({ response: res.data }, "Seed-batch response");
+    } catch (err) {
+      app.log.error({ err }, "Error posting doc");
+    }
+  }
+
   app.log.info("[ChangeStream] Plugin registered");
 
   let changeStream: mongoose.mongo.ChangeStream | null = null;
