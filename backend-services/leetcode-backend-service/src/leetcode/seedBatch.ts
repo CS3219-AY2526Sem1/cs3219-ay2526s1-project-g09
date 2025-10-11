@@ -10,6 +10,7 @@ import { gql } from "./client.js";
 import { QUERY_LIST, QUERY_DETAIL } from "./queries.js";
 import type { BasicInformation, QuestionList, Details } from "./types.js";
 import pLimit from "p-limit";
+import { logger } from "../logger.js";
 
 const DETAIL_CONCURRENCY = 6;
 
@@ -158,7 +159,7 @@ export async function fetchNonPaidQuestionInfo(
           const detail = await getQuestionDetail(q.titleSlug);
           return detail ?? null;
         } catch {
-          console.log(`Failed to fetch details for ${q.titleSlug}`);
+          logger.error(`Failed to fetch details for ${q.titleSlug}`);
           return null;
         }
       }),

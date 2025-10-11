@@ -11,6 +11,7 @@ import type {
 import { type QuestionDoc } from "./types/question.js";
 import axios from "axios";
 import { type SeedBatchResponse } from "./types/seedBatchResponse.js";
+import { logger } from "../logger.js";
 
 const TOKEN = process.env.ADMIN_TOKEN ?? "";
 
@@ -44,32 +45,32 @@ function hasFullDocument<T>(
   );
 }
 
-export default fp((app: FastifyInstance) => {
-  async function postDoc(doc: QuestionDoc) {
-    try {
-      const res = await axios.post<SeedBatchResponse>(
-        `${QUESTION_API_URL}/post-question`,
-        doc,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "x-admin-token": TOKEN,
-          },
+async function postDoc(doc: QuestionDoc) {
+  try {
+    const res = await axios.post<SeedBatchResponse>(
+      `${QUESTION_API_URL}/post-question`,
+      doc,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": TOKEN,
         },
-      );
-      app.log.info({ response: res.data }, "Seed-batch response");
-    } catch (err) {
-      app.log.error({ err }, "Error posting doc");
-    }
+      },
+    );
+    logger.info("Seed-batch response", res.data);
+  } catch (err) {
+    logger.error("Error posting doc", err);
   }
+}
 
-  app.log.info("[ChangeStream] Plugin registered");
+export default fp((app: FastifyInstance) => {
+  logger.info("[ChangeStream] Plugin registered");
 
   let changeStream: mongoose.mongo.ChangeStream | null = null;
 
   const startWatcher = () => {
     if (changeStream) return; // already started
-    app.log.info("[ChangeStream] Starting watcher");
+    logger.info("[ChangeStream] Starting watcher");
 
     changeStream = Question.watch<QuestionDoc>(
       [{ $match: { operationType: { $in: ["insert", "update", "replace"] } } }],
@@ -79,7 +80,7 @@ export default fp((app: FastifyInstance) => {
     let processing = Promise.resolve();
 
     changeStream.on("change", (change: ChangeStreamDocument) => {
-      app.log.info("[ChangeStream] Event");
+      logger.info("[ChangeStream] Event");
       processing = processing.then(async () => {
         if (!hasFullDocument(change)) return;
         const doc = change.fullDocument as QuestionDoc;
@@ -87,38 +88,38 @@ export default fp((app: FastifyInstance) => {
         if (!doc) return;
 
         await postDoc(doc);
-        app.log.info({ doc }, "Got changed document:");
+        logger.info("Got changed document: ", doc);
       });
     });
 
     changeStream.on("error", (err) => {
-      app.log.error({ err }, "[ChangeStream] error");
+      logger.error("[ChangeStream] error", err);
     });
 
     changeStream.on("end", () => {
-      app.log.warn("[ChangeStream] ended");
+      logger.warn("[ChangeStream] ended");
       changeStream = null;
     });
   };
 
   // Start immediately if already connected; otherwise wait once for 'open'
   if (mongoose.connection.readyState === mongoose.ConnectionStates.connected) {
-    app.log.info("[ChangeStream] already connected");
+    logger.info("[ChangeStream] already connected");
     startWatcher();
   } else {
     mongoose.connection.once("open", () => {
-      app.log.info("[ChangeStream] 'open' fired");
+      logger.info("[ChangeStream] 'open' fired");
       startWatcher();
     });
   }
 
   // Always register onClose at plugin scope
   app.addHook("onClose", async () => {
-    app.log.info("[ChangeStream] plugin onClose hook");
+    logger.info("[ChangeStream] plugin onClose hook");
     try {
       await changeStream?.close();
-    } catch (e) {
-      app.log.error({ e }, "[ChangeStream] close failed");
+    } catch (err) {
+      logger.error("[ChangeStream] close failed", err);
     } finally {
       changeStream = null;
     }
