@@ -46,6 +46,22 @@ jobs:
             -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
             ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
 
+      - name: Wait for Leetcode Backend to be ready
+        run: |
+          echo "Waiting for leetcode-backend to respond..."
+          for i in {1..60}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5285/api/v1/health || true)
+            if [ "$code" = "200" ]; then
+              echo "Leetcode backend is ready (HTTP 200)"
+              exit 0
+            fi
+            echo "Still waiting... (attempt $i, got $code)"
+            sleep 2
+          done
+          echo "::error::Leetcode backend did not become ready in time"
+          docker logs leetcode-backend || true
+          exit 1
+
       # ---------- QUESTION BACKEND ----------
       - name: Run Question Backend (internal only)
         run: |
@@ -54,6 +70,22 @@ jobs:
             -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
             -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
             ghcr.io/${{ steps.lc.outputs.value }}/peerprep-question-backend:latest
+
+      - name: Wait for Question Backend to be ready
+        run: |
+          echo "Waiting for question-backend to respond..."
+          for i in {1..60}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5275/api/v1/health || true)
+            if [ "$code" = "200" ]; then
+              echo "Question backend is ready (HTTP 200)"
+              exit 0
+            fi
+            echo "Still waiting... (attempt $i, got $code)"
+            sleep 2
+          done
+          echo "::error::Question backend did not become ready in time"
+          docker logs question-backend || true
+          exit 1
 
       - name: Trigger seed-batch
         run: |
