@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { UserService } from "@/api/UserService";
 
 interface ForgotPasswordFormProps {
-  onEmailSent?: () => void;
+  onBackToLogin?: () => void;
   errorType?: string | null;
   onClearError?: () => void;
 }
 
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
-  onEmailSent,
+  onBackToLogin,
   errorType,
   onClearError,
 }) => {
@@ -55,7 +55,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (onEmailSent) onEmailSent();
+              if (onBackToLogin) onBackToLogin();
             }}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition"
           >
@@ -94,16 +94,27 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className={`w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition ${
-          loading ? "opacity-70 cursor-not-allowed" : ""
-        }`}
-      >
-        {loading ? "Sending..." : "Send Email"}
-      </button>
+      <div className="space-y-2">
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow-md transition ${
+            loading ? "opacity-70 cursor-not-allowed" : ""
+          }`}
+        >
+          {loading ? "Sending..." : "Send Email"}
+        </button>
 
+        <button
+          type="button"
+          onClick={() => {
+            if (onBackToLogin) onBackToLogin();
+          }}
+          className="w-full bg-gray-300 hover:bg-gray-200 text-black font-semibold py-3 rounded-lg shadow-md transition"
+        >
+          Back to Login
+        </button>
+      </div>
       {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
     </form>
   );

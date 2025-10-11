@@ -14,7 +14,7 @@ const ForgotPasswordPage: React.FC = () => {
     <AuthLayout>
       <ForgotPasswordForm
         errorType={errorType}
-        onEmailSent={() => {
+        onBackToLogin={() => {
           navigate("/login");
         }}
         onClearError={() =>
