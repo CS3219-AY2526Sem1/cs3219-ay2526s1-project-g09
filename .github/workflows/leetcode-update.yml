@@ -1,8 +1,5 @@
 name: Sync Question Bank
 on:
-  pull_request:
-    branches:
-      - master
   schedule:
     - cron: "0 18 * * *" # Every day at 18:00 UTC (02:00 SGT)
   workflow_dispatch: {}
