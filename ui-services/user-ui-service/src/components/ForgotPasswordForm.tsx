@@ -110,7 +110,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
           onClick={() => {
             if (onBackToLogin) onBackToLogin();
           }}
-          className="w-full bg-gray-300 hover:bg-gray-200 text-black font-semibold py-3 rounded-lg shadow-md transition"
+          className="w-full bg-gray-200 hover:bg-gray-300 text-black font-semibold py-3 rounded-lg shadow-md transition"
         >
           Back to Login
         </button>

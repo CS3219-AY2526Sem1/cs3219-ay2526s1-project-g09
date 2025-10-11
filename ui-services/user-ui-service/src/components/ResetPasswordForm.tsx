@@ -115,7 +115,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   // Password reset Success
   if (done) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-sm text-center">
+      <div className="bg-white p-6 rounded-lg shadow-sm">
         <h2 className="text-lg font-semibold mb-2">
           Password Reset Successful
         </h2>
@@ -129,7 +129,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
           }}
           className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg transition"
         >
-          Back to App
+          Back to Login
         </button>
       </div>
     );
@@ -137,7 +137,9 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="bg-white">
-      <div className="space-y-4">
+      <div className="space-y-4 text-center mb-2">
+        <h2 className="text-lg font-semibold mb-2">Password Reset</h2>
+        <p className="text-gray-600 mb-4">Enter your new password.</p>
         <div className="inline-flex items-center w-full rounded-lg border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-blue-400">
           <input
             type={showPassword ? "text" : "password"}
