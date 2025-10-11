@@ -77,19 +77,34 @@ export default fp((app: FastifyInstance) => {
       { fullDocument: "updateLookup" },
     );
 
-    let processing = Promise.resolve();
-
+    // Queue-based processing to avoid unbounded promise chains
+    const changeQueue: ChangeStreamDocument[] = [];
+    let isProcessing = false;
+    async function processQueue() {
+      if (isProcessing) return;
+      isProcessing = true;
+      while (changeQueue.length > 0) {
+        const change = changeQueue.shift();
+        if (!change) continue;
+        try {
+          if (!hasFullDocument(change)) continue;
+          const doc = change.fullDocument as QuestionDoc;
+          if (!doc) continue;
+          await postDoc(doc);
+          app.log.info({ doc }, "Got changed document:");
+        } catch (err) {
+          app.log.error(
+            { err },
+            "[ChangeStream] Error processing change event",
+          );
+        }
+      }
+      isProcessing = false;
+    }
     changeStream.on("change", (change: ChangeStreamDocument) => {
-      logger.info("[ChangeStream] Event");
-      processing = processing.then(async () => {
-        if (!hasFullDocument(change)) return;
-        const doc = change.fullDocument as QuestionDoc;
-
-        if (!doc) return;
-
-        await postDoc(doc);
-        logger.info("Got changed document: ", doc);
-      });
+      app.log.info("[ChangeStream] Event");
+      changeQueue.push(change);
+      void processQueue();
     });
 
     changeStream.on("error", (err) => {
