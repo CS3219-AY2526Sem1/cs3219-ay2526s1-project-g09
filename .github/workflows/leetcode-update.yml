@@ -50,7 +50,7 @@ jobs:
         run: |
           echo "Waiting for leetcode-backend to respond..."
           for i in {1..60}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5285/api/v1/health || true)
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5285/api/v1/leetcode/health || true)
             if [ "$code" = "200" ]; then
               echo "Leetcode backend is ready (HTTP 200)"
               exit 0
@@ -75,7 +75,7 @@ jobs:
         run: |
           echo "Waiting for question-backend to respond..."
           for i in {1..60}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5275/api/v1/health || true)
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5275/api/v1/questions/health || true)
             if [ "$code" = "200" ]; then
               echo "Question backend is ready (HTTP 200)"
               exit 0
