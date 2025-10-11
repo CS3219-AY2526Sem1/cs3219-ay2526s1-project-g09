@@ -12,7 +12,16 @@ import type { BasicInformation, QuestionList, Details } from "./types.js";
 import pLimit from "p-limit";
 import { logger } from "../logger.js";
 
-const DETAIL_CONCURRENCY = 6;
+/**
+ * Maximum number of concurrent requests for fetching question details.
+ * This can be configured via the LEETCODE_DETAIL_CONCURRENCY environment variable.
+ * The default value (6) is chosen to balance performance and avoid hitting LeetCode's API rate limits (if any).
+ */
+const DETAIL_CONCURRENCY = (() => {
+  const env = process.env.LEETCODE_DETAIL_CONCURRENCY;
+  const parsed = Number(env);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 6;
+})();
 
 // Time limits (in minutes) for each difficulty level.
 const DIFFICULTY_TIME_LIMITS: Record<string, number> = {

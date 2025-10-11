@@ -16,6 +16,12 @@ if (!process.env.ADMIN_TOKEN) {
   throw new Error("ADMIN_TOKEN environment variable must be set");
 }
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+const MAX_TIME_LIMIT_MINUTES = 240;
+
+/**
+ * Extract a header value from the request.
+ * Returns undefined if the header is not present or not a string.
+ */
 
 function getHeader(req: FastifyRequest, name: string): string | undefined {
   const headers = req.headers as Record<string, unknown> | undefined;
@@ -121,7 +127,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       title: z.string().min(1),
       categoryTitle: z.string().max(100),
       difficulty: z.enum(["Easy", "Medium", "Hard"]),
-      timeLimit: z.number().min(1).max(240), // in minutes
+      timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES), // in minutes
       content: z.string(),
       hints: z.array(z.string()).nullable().optional(),
       exampleTestcases: z.string().nullable().optional(),
@@ -142,15 +148,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
         .status(400)
         .send({ error: "Invalid input", details: result.error.issues });
     }
-    const parsed = result.data;
-    const { source, titleSlug, categoryTitle, difficulty } = parsed;
-    const doc = {
-      ...parsed,
-    };
+    const doc = result.data;
 
     const saved = await withDbLimit(() =>
       Question.updateOne(
-        { source, titleSlug, categoryTitle, difficulty },
+        { globalSlug: doc.globalSlug },
         { $setOnInsert: doc },
         { upsert: true },
       ),

@@ -21,7 +21,7 @@ const TOKEN = process.env.ADMIN_TOKEN ?? "";
  */
 const QUESTION_API_URL = process.env.QUESTION_API_URL;
 if (!QUESTION_API_URL) {
-  throw new Error("Environment variable QUESTION_API_URL must be set.");
+  throw new Error("QUESTION_API_URL environment variable must be set");
 }
 
 function hasFullDocument<T>(
