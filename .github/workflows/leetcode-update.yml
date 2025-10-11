@@ -1,8 +1,8 @@
 name: Sync Question Bank
 on:
-  push:
+  pull_request:
     branches:
-      - add-bulk-question-transfer
+      - master
   schedule:
     - cron: "0 * * * *" # Every hour
   workflow_dispatch: {}
@@ -30,26 +30,35 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create shared network
-        run: docker network create peerprep_net
+        run: docker network create peerprep_net || true
 
+        # ---------- QUESTION BACKEND ----------
       - name: Run Question Backend (internal only)
         run: |
           docker run -d --name question-backend --network peerprep_net \
             -e PORT=5275 \
             -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
             -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
+            --health-cmd="wget -qO- http://localhost:5275/api/v1/questions/health >/dev/null 2>&1 || exit 1" \
+            --health-interval=5s --health-timeout=3s --health-retries=24 \
             ghcr.io/${{ steps.lc.outputs.value }}/peerprep-question-backend:latest
 
-      - name: Wait for Question (internal)
+      - name: Wait for Question to be healthy (or fail fast)
         run: |
-          for i in {1..40}; do
-            if docker exec question-backend sh -c 'wget -qO- http://localhost:5275/api/v1/questions/health >/dev/null 2>&1'; then
-              exit 0
+          set -euo pipefail
+          for i in {1..60}; do
+            state=$(docker inspect question-backend --format '{{.State.Status}}')
+            health=$(docker inspect question-backend --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}')
+            echo "question-backend State=$state Health=$health"
+            if [ "$state" = "exited" ] || [ "$state" = "dead" ]; then
+              echo "::error::question-backend exited early"; docker logs question-backend || true; exit 1
             fi
+            [ "$health" = "healthy" ] && break
             sleep 2
           done
-          docker logs question-backend; exit 1
+          [ "$(docker inspect question-backend --format '{{.State.Health.Status}}')" = "healthy" ]
 
+      # ---------- LEETCODE BACKEND ----------
       - name: Run LeetCode Backend (exposed for triggering)
         run: |
           docker run -d --name leetcode-backend --network peerprep_net \
@@ -58,15 +67,24 @@ jobs:
             -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
             -e QUESTION_SERVICE_URL="http://question-backend:5275" \
             -e QUESTION_SERVICE_ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
+            --health-cmd="wget -qO- http://localhost:5285/api/v1/leetcode/health >/dev/null 2>&1 || exit 1" \
+            --health-interval=5s --health-timeout=3s --health-retries=24 \
             ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
 
-      - name: Wait for LeetCode
+      - name: Wait for LeetCode to be healthy (or fail fast)
         run: |
-          for i in {1..40}; do
-            curl -sf http://localhost:5285/api/v1/leetcode/health && exit 0
+          set -euo pipefail
+          for i in {1..60}; do
+            state=$(docker inspect leetcode-backend --format '{{.State.Status}}')
+            health=$(docker inspect leetcode-backend --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}')
+            echo "leetcode-backend State=$state Health=$health"
+            if [ "$state" = "exited" ] || [ "$state" = "dead" ]; then
+              echo "::error::leetcode-backend exited early"; docker logs leetcode-backend || true; exit 1
+            fi
+            [ "$health" = "healthy" ] && break
             sleep 2
           done
-          docker logs leetcode-backend; exit 1
+          [ "$(docker inspect leetcode-backend --format '{{.State.Health.Status}}')" = "healthy" ]
 
       - name: Trigger seed-batch
         run: |
@@ -74,6 +92,14 @@ jobs:
             -X POST -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" \
             http://localhost:5285/api/v1/leetcode/seed-batch)
           test "$code" -eq 200 || { echo "seed-batch failed: $code"; exit 1; }
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo "===== question-backend logs ====="
+          docker logs question-backend || true
+          echo "===== leetcode-backend logs ====="
+          docker logs leetcode-backend || true
 
       - name: Cleanup
         if: always()
