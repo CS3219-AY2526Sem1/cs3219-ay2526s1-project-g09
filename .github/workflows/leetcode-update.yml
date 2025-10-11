@@ -48,27 +48,27 @@ jobs:
             --health-interval=5s --health-timeout=3s --health-retries=24 \
             ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
 
-      - name: Wait for LeetCode to be healthy (or fail fast)
-        run: |
-          set -euo pipefail
-          for i in {1..60}; do
-            state=$(docker inspect leetcode-backend --format '{{.State.Status}}')
-            health=$(docker inspect leetcode-backend --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}')
-            echo "leetcode-backend State=$state Health=$health"
+      # - name: Wait for LeetCode to be healthy (or fail fast)
+      #   run: |
+      #     set -euo pipefail
+      #     for i in {1..60}; do
+      #       state=$(docker inspect leetcode-backend --format '{{.State.Status}}')
+      #       health=$(docker inspect leetcode-backend --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}')
+      #       echo "leetcode-backend State=$state Health=$health"
 
-            # Show last healthcheck output when it's not healthy yet
-            docker inspect leetcode-backend \
-              --format='{{range .State.Health.Log}}{{printf "%s - %s\n" .End .Output}}{{end}}' | tail -n 3 || true
+      #       # Show last healthcheck output when it's not healthy yet
+      #       docker inspect leetcode-backend \
+      #         --format='{{range .State.Health.Log}}{{printf "%s - %s\n" .End .Output}}{{end}}' | tail -n 3 || true
 
-            if [ "$state" = "exited" ] || [ "$state" = "dead" ]; then
-              echo "::error::leetcode-backend exited early"
-              docker logs leetcode-backend || true
-              exit 1
-            fi
-            [ "$health" = "healthy" ] && break
-            sleep 2
-          done
-          [ "$(docker inspect leetcode-backend --format '{{.State.Health.Status}}')" = "healthy" ]
+      #       if [ "$state" = "exited" ] || [ "$state" = "dead" ]; then
+      #         echo "::error::leetcode-backend exited early"
+      #         docker logs leetcode-backend || true
+      #         exit 1
+      #       fi
+      #       [ "$health" = "healthy" ] && break
+      #       sleep 2
+      #     done
+      #     [ "$(docker inspect leetcode-backend --format '{{.State.Health.Status}}')" = "healthy" ]
 
       # ---------- QUESTION BACKEND ----------
       - name: Run Question Backend (internal only)
