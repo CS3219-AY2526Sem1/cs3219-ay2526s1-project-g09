@@ -2,7 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/data/UserStore";
 
 const ProtectedRoute: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isLoggingOut } = useAuth();
 
   if (loading) {
     return (
@@ -12,7 +12,11 @@ const ProtectedRoute: React.FC = () => {
     );
   }
 
-  if (!user || !user.isVerified) {
+  if (!user && !isLoggingOut) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user && !user.isVerified) {
     return <Navigate to="/login" replace />;
   }
 

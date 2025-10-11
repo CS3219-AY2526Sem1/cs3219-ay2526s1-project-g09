@@ -11,9 +11,13 @@ import { Eye, EyeOff } from "lucide-react";
 
 interface SignUpFormProps {
   onSignUpSuccess?: (user: User) => void;
+  onBackToLogin: () => void;
 }
 
-const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
+const SignUpForm: React.FC<SignUpFormProps> = ({
+  onSignUpSuccess,
+  onBackToLogin,
+}) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -130,9 +134,14 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSignUpSuccess }) => {
       </div>
 
       <div className="text-center">
-        <a href="/login" className="text-orange-500 hover:underline">
+        <button
+          onClick={() => {
+            onBackToLogin();
+          }}
+          className="text-orange-500 hover:underline focus:outline-none bg-transparent border-none cursor-pointer"
+        >
           Already have an account? Login
-        </a>
+        </button>
       </div>
     </form>
   );

@@ -15,6 +15,7 @@ export default defineConfig({
       exposes: {
         "./UserProfileCard": "./src/components/user-profile/UserProfileCard",
         "./ForgotPasswordForm": "./src/components/ForgotPasswordForm",
+        "./ResetPasswordForm": "./src/components/ResetPasswordForm",
         "./LoginForm": "./src/components/LoginForm",
         "./OtpForm": "./src/components/OtpForm",
         "./SetDisplayNameForm": "./src/components/SetDisplayNameForm",

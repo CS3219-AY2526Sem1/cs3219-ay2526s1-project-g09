@@ -9,6 +9,10 @@ import {
   createOTPForEmail as _createOTPForEmail,
   updateVerificationById as _updateVerificationById,
   updateUserExpirationById as _updateUserExpirationById,
+  findUserByValidResetHash as _findUserByValidResetHash,
+  setResetToken as _setResetToken,
+  clearResetToken as _clearResetToken,
+  updateUserPasswordAndInvalidateSessions as _updateUserPasswordAndInvalidateSessions,
 } from "../model/repository.js";
 import { formatUserResponse } from "./user-controller.js";
 import { sendEmail as _sendEmail } from "../utils/email-sender.js";
@@ -49,8 +53,9 @@ export async function handleLogin(req, res) {
       });
     }
 
-    const accessToken = await generateToken(user);
+    const tokenLifetime = rememberMe ? "30d" : "1d";
 
+    const accessToken = generateAccessToken(user, tokenLifetime);
     const isProd = process.env.NODE_ENV === "production";
 
     res.cookie("authToken", accessToken, {
@@ -58,7 +63,7 @@ export async function handleLogin(req, res) {
       secure: isProd, // HTTPS in prod
       sameSite: isProd ? "None" : "Lax", // None in prod, Lax in dev
       path: "/",
-      ...(rememberMe ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}), // 7 days
+      ...(rememberMe ? { maxAge: 24 * 60 * 60 * 1000 } : {}), // 1 day
     });
 
     return res.status(200).json({
@@ -73,19 +78,6 @@ export async function handleLogin(req, res) {
     console.log(err);
     return res.status(500).json({ message: err.message });
   }
-}
-
-async function generateToken(user) {
-  const accessToken = jwt.sign(
-    {
-      id: user.id,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "1d",
-    },
-  );
-  return accessToken;
 }
 
 export async function handleVerifyToken(req, res) {
@@ -161,7 +153,7 @@ export async function verifyOTP(req, res) {
     const updatedUser = await _updateVerificationById(user._id, true);
     await _updateUserExpirationById(user._id, null);
 
-    const accessToken = await generateToken(user);
+    const accessToken = generateAccessToken(user, "1d"); // token expiry 1 day by default
     const isProd = process.env.NODE_ENV === "production";
 
     // give user a cookie
@@ -189,4 +181,100 @@ export async function handleLogout(req, res) {
     path: "/",
   });
   return res.status(200).json({ message: "Logged out" });
+}
+
+export async function handleForgotPassword(req, res) {
+  try {
+    const { email: dirtyEmail } = req.body || {};
+    // Always return 200 to avoid user enumeration
+    if (!dirtyEmail) return res.status(200).json({ ok: true });
+
+    const email = checkEmail(dirtyEmail);
+    const user = await _findUserByEmail(email);
+
+    // If user doesn't exist, still 200
+    if (!user) return res.status(200).json({ ok: true });
+
+    // Create secure single-use token (store only its hash)
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min
+    await _setResetToken(user._id, resetTokenHash, expiresAt);
+
+    const uiOrigin = process.env.UI_ORIGIN || "http://localhost:5173";
+    const resetUrl = `${uiOrigin}/resetPassword?token=${rawToken}`;
+
+    const subject = "Reset your PeerPrep password";
+    const body = [
+      "You requested a password reset.",
+      `Click the link to reset your password: ${resetUrl}`,
+      "This link expires in 30 minutes. If you didn’t request this, you can ignore this email.",
+    ].join("\n\n");
+
+    await _sendEmail(email, subject, body);
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(200).json({ ok: true });
+  }
+}
+
+export async function handleResetPassword(req, res) {
+  try {
+    const { token: rawToken, newPassword: dirtyPassword } = req.body || {};
+    if (!rawToken || !dirtyPassword) {
+      return res.status(400).json({ message: "Invalid payload" });
+    }
+
+    const newPassword = checkPassword(dirtyPassword);
+
+    // Hash provided token and find valid user
+    const providedHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+    const user = await _findUserByValidResetHash(providedHash);
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    // Hash the new password
+    const salt = bcrypt.genSaltSync(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    // Update password, set passwordChangedAt, and clear token fields
+    await _updateUserPasswordAndInvalidateSessions(user._id, newPasswordHash);
+
+    // Clear token
+    await _clearResetToken(user._id);
+
+    return res.status(200).json({ message: "Password has been reset." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Unable to reset password" });
+  }
+}
+
+export async function handleValidateResetToken(req, res) {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ valid: false });
+
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const user = await _findUserByValidResetHash(tokenHash);
+
+  // If user found and token not expired => valid
+  const isUserFound = !!user;
+  return res.json({ valid: isUserFound });
+}
+
+function generateAccessToken(user, expiresIn) {
+  return jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: expiresIn,
+  });
 }

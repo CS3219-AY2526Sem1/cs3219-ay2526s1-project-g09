@@ -111,9 +111,6 @@ export async function updateUser(req, res) {
           "No field to update: username and email and password are all missing!",
       });
     }
-    const username = checkUsername(dirtyUsername);
-    const email = checkEmail(dirtyEmail);
-    const password = checkPassword(dirtyPassword);
     const userId = req.params.id;
     if (!isValidObjectId(userId)) {
       return res.status(404).json({ message: `User ${userId} not found` });
@@ -122,13 +119,22 @@ export async function updateUser(req, res) {
     if (!user) {
       return res.status(404).json({ message: `User ${userId} not found` });
     }
-    let existingUser = await _findUserByUsername(username);
-    if (existingUser && existingUser.id !== userId) {
-      return res.status(409).json({ message: "username already exists" });
+    const username = dirtyUsername ? checkUsername(dirtyUsername) : undefined;
+    const email = dirtyEmail ? checkEmail(dirtyEmail) : undefined;
+    const password = dirtyPassword ? checkPassword(dirtyPassword) : undefined;
+
+    if (username) {
+      const existingUser = await _findUserByUsername(username);
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
     }
-    existingUser = await _findUserByEmail(email);
-    if (existingUser && existingUser.id !== userId) {
-      return res.status(409).json({ message: "email already exists" });
+
+    if (email) {
+      const existingUser = await _findUserByEmail(email);
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(409).json({ message: "Email already exists" });
+      }
     }
 
     let hashedPassword;

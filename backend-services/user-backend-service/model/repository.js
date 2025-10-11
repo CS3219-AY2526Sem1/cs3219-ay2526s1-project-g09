@@ -92,6 +92,61 @@ export async function deleteUserById(userId) {
   return UserModel.findByIdAndDelete(userId);
 }
 
+// Reset password (User Model)
+
+export async function setResetToken(userId, resetTokenHash, expiresAt) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        resetTokenHash,
+        resetTokenExpiresAt: expiresAt,
+      },
+    },
+    { new: true },
+  );
+}
+
+export async function clearResetToken(userId) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        resetTokenHash: null,
+        resetTokenExpiresAt: null,
+      },
+    },
+    { new: true },
+  );
+}
+
+export async function findUserByValidResetHash(resetTokenHash) {
+  return UserModel.findOne({
+    resetTokenHash,
+    resetTokenExpiresAt: { $gt: new Date() },
+  });
+}
+
+export async function updateUserPasswordAndInvalidateSessions(
+  userId,
+  newPasswordHash,
+) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        password: newPasswordHash,
+        passwordChangedAt: new Date(),
+      },
+      $unset: {
+        resetTokenHash: 1,
+        resetTokenExpiresAt: 1,
+      },
+    },
+    { new: true },
+  );
+}
+
 // OTP Model
 export async function findOTPByEmail(email) {
   return OTPModel.findOne({ email });
