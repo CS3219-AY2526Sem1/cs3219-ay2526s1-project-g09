@@ -4,6 +4,7 @@ import LandingPage from "@pages/LandingPage";
 
 import LoginPage from "@pages/auth/LoginPage";
 import ForgotPasswordPage from "@pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@pages/auth/ResetPasswordPage";
 import SignUpPage from "@pages/auth/SignUpPage";
 import OtpPage from "@pages/auth/OtpPage";
 
@@ -39,6 +40,7 @@ export default function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgotPassword" element={<ForgotPasswordPage />} />
+      <Route path="/resetPassword" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       {/* Only unverified users */}
       <Route element={<UnverifiedRoute />}>
