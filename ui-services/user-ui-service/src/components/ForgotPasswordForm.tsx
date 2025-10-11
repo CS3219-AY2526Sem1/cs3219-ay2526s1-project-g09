@@ -1,17 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserService } from "@/api/UserService";
 
 interface ForgotPasswordFormProps {
   onEmailSent?: () => void;
+  errorType?: string | null;
+  onClearError?: () => void;
 }
 
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   onEmailSent,
+  errorType,
+  onClearError,
 }) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (errorType === "invalid-link") {
+      setLinkError("The password reset link you used is invalid or expired.");
+      // clear router state after showing once
+      if (onClearError) onClearError();
+    }
+  }, [errorType, onClearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +36,6 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
       setSent(true);
     } catch (err) {
       console.error(err);
-      // still mark as sent — backend hides whether the email exists
       setSent(true);
     } finally {
       setLoading(false);
@@ -53,6 +65,12 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="bg-white">
+      {linkError && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-center">
+          {linkError}
+        </div>
+      )}
+
       <div className="space-y-4">
         <div className="text-center mb-2">
           <h2 className="text-xl font-semibold text-gray-800 mb-1">

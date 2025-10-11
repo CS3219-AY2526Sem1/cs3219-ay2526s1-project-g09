@@ -112,4 +112,9 @@ export const UserService = {
       method: "POST",
       body: JSON.stringify({ token, newPassword }),
     }),
+  validateResetToken: async (token: string) =>
+    request<{ valid: boolean }>("/auth/validate-reset-token", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
 };

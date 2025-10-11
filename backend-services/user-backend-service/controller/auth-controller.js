@@ -259,6 +259,18 @@ export async function handleResetPassword(req, res) {
   }
 }
 
+export async function handleValidateResetToken(req, res) {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ valid: false });
+
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const user = await _findUserByValidResetHash(tokenHash);
+
+  // If user found and token not expired => valid
+  const isUserFound = !user;
+  return res.json({ valid: isUserFound });
+}
+
 function generateAccessToken(user, expiresIn) {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
     expiresIn: expiresIn,

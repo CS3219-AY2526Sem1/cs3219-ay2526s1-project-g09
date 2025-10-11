@@ -1,13 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { UserService } from "@/api/UserService";
 import { Eye, EyeOff } from "lucide-react";
 
 interface ResetPasswordFormProps {
   onResetSuccess?: () => void;
+  onTokenInvalid?: () => void;
 }
 
 const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   onResetSuccess,
+  onTokenInvalid,
 }) => {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -16,12 +18,42 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
+  const [valid, setValid] = useState(false);
 
   // Extract token from query string (?token=xyz)
   const token = useMemo(() => {
     const url = new URL(window.location.href);
     return url.searchParams.get("token") || "";
   }, []);
+
+  useEffect(() => {
+    const validateToken = async () => {
+      if (!token) {
+        setValid(false);
+        setChecking(false);
+        if (onTokenInvalid) onTokenInvalid();
+        return;
+      }
+
+      try {
+        const { valid } = await UserService.validateResetToken(token);
+        setValid(valid);
+
+        if (!valid) {
+          if (onTokenInvalid) onTokenInvalid();
+        }
+      } catch (err) {
+        console.error("Token validation failed:", err);
+        setValid(false);
+        if (onTokenInvalid) onTokenInvalid();
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    validateToken();
+  }, [token, onTokenInvalid]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +83,36 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
     }
   };
 
+  // Component while validating token
+  if (checking) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm text-center">
+        <p className="text-gray-600">Validating your reset link...</p>
+      </div>
+    );
+  }
+
+  // Invalid token case
+  if (!valid) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm text-center">
+        <h2 className="text-lg font-semibold text-red-600 mb-2">
+          Invalid or Expired Link
+        </h2>
+        <p className="text-gray-600 mb-4">
+          Please request a new password reset link.
+        </p>
+        <a
+          href="/forgot-password"
+          className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition"
+        >
+          Request New Link
+        </a>
+      </div>
+    );
+  }
+
+  // Password reset Success
   if (done) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm text-center">
