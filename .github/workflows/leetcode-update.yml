@@ -1,5 +1,8 @@
 name: Sync Question Bank
 on:
+  push:
+    branches:
+      - add-bulk-question-transfer
   schedule:
     - cron: "0 * * * *" # Every hour
   workflow_dispatch: {}
