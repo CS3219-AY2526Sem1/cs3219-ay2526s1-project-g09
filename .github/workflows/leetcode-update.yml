@@ -33,10 +33,15 @@ jobs:
         run: docker network create peerprep_net || true
 
         # ---------- QUESTION BACKEND ----------
+
+      - name: Pull images (ensure latest tag exists)
+        run: |
+          docker pull ghcr.io/${{ steps.lc.outputs.value }}/peerprep-question-backend:latest
+          docker pull ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
+
       - name: Run Question Backend (internal only)
         run: |
           docker run -d --name question-backend --network peerprep_net \
-            -e PORT=5275 \
             -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
             -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
             --health-cmd="wget -qO- http://localhost:5275/api/v1/questions/health >/dev/null 2>&1 || exit 1" \
@@ -65,8 +70,6 @@ jobs:
             -p 5285:5285 \
             -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
             -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
-            -e QUESTION_SERVICE_URL="http://question-backend:5275" \
-            -e QUESTION_SERVICE_ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
             --health-cmd="wget -qO- http://localhost:5285/api/v1/leetcode/health >/dev/null 2>&1 || exit 1" \
             --health-interval=5s --health-timeout=3s --health-retries=24 \
             ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
