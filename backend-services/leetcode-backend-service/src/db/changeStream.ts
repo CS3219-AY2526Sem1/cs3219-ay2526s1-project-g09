@@ -13,6 +13,14 @@ import axios from "axios";
 
 const TOKEN = process.env.ADMIN_TOKEN ?? "";
 
+/**
+ * The URL of the question backend service.
+ * Change this if the service is hosted elsewhere.
+ */
+const QUESTION_API_URL =
+  process.env.QUESTION_API_URL ||
+  "http://question-backend:5275/api/v1/questions";
+
 function hasFullDocument<T>(
   c: ChangeStreamDocument<
     T extends mongoose.mongo.BSON.Document ? T : mongoose.mongo.BSON.Document
@@ -36,16 +44,12 @@ function hasFullDocument<T>(
 
 async function postDoc(doc: QuestionDoc) {
   try {
-    const res = await axios.post(
-      `http://localhost:5275/api/v1/questions/post-question`,
-      doc,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": TOKEN,
-        },
+    const res = await axios.post(`${QUESTION_API_URL}/post-question`, doc, {
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": TOKEN,
       },
-    );
+    });
     console.log("Response:", res.data);
   } catch (err) {
     console.error("Error posting doc:", err);

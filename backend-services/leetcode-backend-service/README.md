@@ -47,8 +47,9 @@ npm start
 OR
 
 ```bash
+docker network create peerprep_net # If not created yet
 docker build --tag leetcode-service .
-docker run --rm --publish 5285:5285 --env-file .env leetcode-service
+docker run --rm --publish 5285:5285 --env-file .env  --name leetcode-backend --network peerprep_net leetcode-service
 ```
 
 You should see logs like:
@@ -94,7 +95,8 @@ Fetches the next 200 problems and **upserts** to Mongo.
 Examples:
 
 ```bash
-# For window users
+# Replace ADMIN_TOKEN with DB password
+# MUSt run the question-service before running the follow command
 curl.exe --request POST -H "X-Admin-Token: <ADMIN_TOKEN>" --url "http://localhost:5285/api/v1/leetcode/seed-batch"
 ```
 
