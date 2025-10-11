@@ -22,8 +22,8 @@ function getHeader(req: FastifyRequest, name: string): string | undefined {
 }
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
-  app.get("/health", () => {
-    return { status: "ok" };
+  app.get("/health", async (_req, reply) => {
+    return reply.send({ ok: true });
   });
 
   /**
