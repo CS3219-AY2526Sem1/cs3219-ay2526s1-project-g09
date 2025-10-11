@@ -25,15 +25,17 @@ Express.js service that:
 
 2. Run the command: `npm install`. This will install all the necessary dependencies.
 
-3. Clone `.env.example` and rename as `.env`. Then replace <db_password> with your MongoDB Atlas account password. Then replace <gmail_app_password> with your Gmail account app password.
+3. Clone `.env.example` and rename as `.env`.
 
-4. Run the command `npm start` to start the User Service in production mode, or use `npm run dev` for development mode, which includes features like automatic server restart when you make code changes.
+4. Replace <db_password> with your MongoDB Atlas account password. Replace <gmail_account> with your Gmail address. Replace <client_id>, <client_secret> and <refresh_token> with the respective values from OAuth Provider. Gmail OAuth setup guide can be found [here](https://dev.to/chandrapantachhetri/sending-emails-securely-using-node-js-nodemailer-smtp-gmail-and-oauth2-g3a)
 
-5. Using applications like Postman, you can interact with the User Service on port 5277. If you wish to change this, please update the `.env` file.
+5. Run the command `npm start` to start the User Service in production mode, or use `npm run dev` for development mode, which includes features like automatic server restart when you make code changes.
+
+6. Using applications like Postman, you can interact with the User Service on port 5277. If you wish to change this, please update the `.env` file.
 
 ## Running with Docker
 
-1. Follow steps 1 to 3 from [Running User Service](#running-user-service).
+1. Follow steps 1 to 4 from [Running User Service](#running-user-service).
 
 2. Run `docker compose up --build`.
 
@@ -69,7 +71,7 @@ src/
     repository-security.js    # Enforces user input security and password strength
 ```
 
-## API
+## API Overview
 
 Base URL: `http://localhost:5277/api/user-service`
 
@@ -93,6 +95,15 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
 ```
 
 2. Then for each **POST**, **PUT**, **PATCH** or **DELETE** request, ensure that the headers include `X-CSRF-Token: <derived token>` before sending the request.
+
+### Authentication & Session Behavior
+
+| rememberMe | JWT Lifetime | Cookie Lifetime              | Behavior                                         |
+| ---------- | ------------ | ---------------------------- | ------------------------------------------------ |
+| false      | 1 day        | 1 day (`maxAge` set)         | Expires in 24 hours                              |
+| true       | 30 days      | Session cookie (no `maxAge`) | Persists until browser closed, JWT valid 30 days |
+
+## API Reference
 
 ### Registering a User
 
@@ -353,3 +364,69 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
     }
   }
   ```
+
+### Logging Out
+
+- Usage:
+
+**POST** `http://localhost:5277/api/user-service/auth/logout`
+
+- Headers
+  - Required: `X-CSRF-Token: <CSRF-derived-token>`
+
+  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+
+- Expected Response:
+  ```json
+  {
+    "message": "Logged out"
+  }
+  ```
+
+### User forgot password, Request reset link
+
+- Usage:
+
+**POST** `http://localhost:5277/api/user-service/auth/forgot-password`
+
+- Headers
+  - Required: `X-CSRF-Token: <CSRF-derived-token>`
+
+  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+
+- Expected Response:
+
+  ```json
+  {
+    "ok": "true"
+  }
+  ```
+
+- Note: `"ok": "true"` will be returned regardless of email delivered successfully or not.
+
+### Reset password
+
+- Usage:
+
+**POST** `http://localhost:5277/api/user-service/auth/reset-password?token={resetToken}`
+
+- Parameters
+  - Required: `resetToken` path parameter
+
+- Body
+  - Required: `newPassword` (string)
+
+    ```json
+    {
+      "email": "newPassword123!"
+    }
+    ```
+
+  - Note: Password should meet the following requirements:
+    - Password is 12 characters long
+    - Password should have at least 1 uppercase and 1 lowercase character
+    - Password should contain a number
+    - Password should contain a special character
+      - Special characters include: `!"#$%&'()*+,-./\:;<=>?@[]^_`{|}~`
+    - Password should not contain any whitespace
+    - Password should not exceed 64 characters
