@@ -153,7 +153,7 @@ export async function verifyOTP(req, res) {
     const updatedUser = await _updateVerificationById(user._id, true);
     await _updateUserExpirationById(user._id, null);
 
-    const accessToken = await generateAccessToken(user, "1d"); // token expiry 1 day by default
+    const accessToken = generateAccessToken(user, "1d"); // token expiry 1 day by default
     const isProd = process.env.NODE_ENV === "production";
 
     // give user a cookie
