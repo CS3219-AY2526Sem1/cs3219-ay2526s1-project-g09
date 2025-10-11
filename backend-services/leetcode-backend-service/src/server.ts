@@ -1,5 +1,4 @@
 import Fastify from "fastify";
-import cors from "@fastify/cors";
 import leetcodeRoutes from "./routes.js";
 import db from "./db/connection.js";
 import changeStream from "./db/changeStream.js";
@@ -9,7 +8,6 @@ export async function buildServer() {
   const app = Fastify({ logger: true });
 
   // plugins
-  await app.register(cors, { origin: "*" });
   await app.register(db);
   await app.register(changeStream);
   await app.register(rateLimit, {
