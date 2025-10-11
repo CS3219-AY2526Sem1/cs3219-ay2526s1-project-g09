@@ -50,6 +50,7 @@ jobs:
       - name: Run Question Backend (internal only)
         run: |
           docker run -d --name question-backend --network peerprep_net \
+            -p 5275:5275 \
             -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
             -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
             ghcr.io/${{ steps.lc.outputs.value }}/peerprep-question-backend:latest
@@ -58,7 +59,7 @@ jobs:
         run: |
           curl -X POST \
             -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" \
-            http://leetcode-backend:5285/api/v1/leetcode/seed-batch
+            http://localhost:5285/api/v1/leetcode/seed-batch
 
       - name: Dump logs on failure
         if: failure()
