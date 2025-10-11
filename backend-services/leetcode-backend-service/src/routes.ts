@@ -13,7 +13,10 @@ import { SeedCursor } from "./db/model/question.js";
 import { withDbLimit } from "./db/dbLimiter.js";
 import crypto from "crypto";
 
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
+if (!process.env.ADMIN_TOKEN) {
+  throw new Error("ADMIN_TOKEN environment variable must be set");
+}
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
 function getHeader(req: FastifyRequest, name: string): string | undefined {
   const headers = req.headers as Record<string, unknown> | undefined;
@@ -23,6 +26,14 @@ function getHeader(req: FastifyRequest, name: string): string | undefined {
   return undefined;
 }
 
+/**
+ * Safely compares two strings for equality.
+ * Prevents timing attacks.
+ *
+ * @param a The first string.
+ * @param b The second string.
+ * @returns True if the strings are equal, false otherwise.
+ */
 function safeCompare(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);

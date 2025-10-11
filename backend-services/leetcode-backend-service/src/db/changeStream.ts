@@ -17,9 +17,10 @@ const TOKEN = process.env.ADMIN_TOKEN ?? "";
  * The URL of the question backend service.
  * Change this if the service is hosted elsewhere.
  */
-const QUESTION_API_URL =
-  process.env.QUESTION_API_URL ||
-  "http://question-backend:5275/api/v1/questions";
+const QUESTION_API_URL = process.env.QUESTION_API_URL;
+if (!QUESTION_API_URL) {
+  throw new Error("Environment variable QUESTION_API_URL must be set.");
+}
 
 function hasFullDocument<T>(
   c: ChangeStreamDocument<

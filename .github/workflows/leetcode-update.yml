@@ -41,6 +41,7 @@ jobs:
             -p 5285:5285 \
             -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
             -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
+            -e QUESTION_API_URL=${{ vars.QUESTION_API_URL }} \
             ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
 
       - name: Wait for Leetcode Backend to be ready

@@ -34,19 +34,6 @@ npm install
 ### 4. Run
 
 ```bash
-npm run dev
-```
-
-OR
-
-```bash
-npm run build
-npm start
-```
-
-OR
-
-```bash
 docker network create peerprep_net # If not created yet
 docker build --tag leetcode-service .
 docker run --rm --publish 5285:5285 --env-file .env  --name leetcode-backend --network peerprep_net leetcode-service
@@ -58,6 +45,20 @@ You should see logs like:
 Mongo connected
 Server listening on http://localhost:5285
 ```
+
+**Note**: Local development (e.g. `npm run dev`) is possible (though not recommended). To enable it, update the .env file by changing:
+
+```bash
+QUESTION_API_URL=http://question-backend:5275/api/v1/questions
+```
+
+to:
+
+```bash
+QUESTION_API_URL=http://localhost:5275/api/v1/questions
+```
+
+Do change the `QUESTION_API_URL` back when using docker run.
 
 ## Project Structure
 
@@ -97,7 +98,7 @@ Examples:
 ```bash
 # Replace ADMIN_TOKEN with DB password
 # MUSt run the question-service before running the follow command
-curl.exe --request POST -H "X-Admin-Token: <ADMIN_TOKEN>" --url "http://localhost:5285/api/v1/leetcode/seed-batch"
+curl.exe --request POST -H "X-Admin-Token: <>" --url "http://localhost:5285/api/v1/leetcode/seed-batch"
 ```
 
 ## Data Model
