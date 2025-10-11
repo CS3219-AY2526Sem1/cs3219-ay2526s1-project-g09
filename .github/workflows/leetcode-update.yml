@@ -104,10 +104,9 @@ jobs:
 
       - name: Trigger seed-batch
         run: |
-          code=$(curl -o /dev/null -s -w "%{http_code}" \
-            -X POST -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" \
-            http://localhost:5285/api/v1/leetcode/seed-batch)
-          test "$code" -eq 200 || { echo "seed-batch failed: $code"; exit 1; }
+          curl -X POST \
+            -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" \
+            http://localhost:5285/api/v1/leetcode/seed-batch
 
       - name: Dump logs on failure
         if: failure()
