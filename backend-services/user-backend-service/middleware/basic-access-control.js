@@ -21,6 +21,16 @@ export function verifyAccessToken(req, res, next) {
           return res.status(401).json({ message: "User not found" });
         }
 
+        const tokenIssuedAtMs = (payload.iat || 0) * 1000; //iat: issued at
+        if (
+          dbUser.passwordChangedAt &&
+          tokenIssuedAtMs < new Date(dbUser.passwordChangedAt).getTime()
+        ) {
+          return res
+            .status(401)
+            .json({ message: "Token invalidated due to password change" });
+        }
+
         req.user = {
           id: dbUser.id,
           username: dbUser.username,
@@ -31,12 +41,12 @@ export function verifyAccessToken(req, res, next) {
 
         next();
       } catch (dbErr) {
-        console.error(dbErr);
+        console.error("verifyAccessToken DB error:", dbErr);
         return res.status(500).json({ message: "Internal server error" });
       }
     });
   } catch (err) {
-    console.log(err);
+    console.log("verifyAccessToken outer error:", err);
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 }

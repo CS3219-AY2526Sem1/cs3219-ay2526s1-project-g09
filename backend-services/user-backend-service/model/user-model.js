@@ -36,6 +36,21 @@ const UserModelSchema = new Schema({
     required: false,
     expires: 0, // Unverified users should automatically be cleared at given timestamp; Verified users should have a null timestamp
   },
+
+  // Reset password parameters
+  resetTokenHash: {
+    type: String,
+    required: false,
+    index: true,
+  },
+  resetTokenExpiresAt: {
+    type: Date,
+    required: false,
+  },
+  passwordChangedAt: {
+    type: Date,
+    required: false,
+  },
 });
 
 export default mongoose.model("UserModel", UserModelSchema);
