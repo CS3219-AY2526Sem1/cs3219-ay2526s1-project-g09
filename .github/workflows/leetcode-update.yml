@@ -52,8 +52,19 @@ jobs:
         run: |
           set -euo pipefail
           for i in {1..60}; do
-            health=$(docker inspect question-backend --format '{{.State.Health.Status}}')
-            echo "Health=$health"
+            state=$(docker inspect question-backend --format '{{.State.Status}}')
+            health=$(docker inspect question-backend --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}')
+            echo "question-backend State=$state Health=$health"
+
+            # Show last healthcheck output when it's not healthy yet
+            docker inspect question-backend \
+              --format='{{range .State.Health.Log}}{{printf "%s - %s\n" .End .Output}}{{end}}' | tail -n 3 || true
+
+            if [ "$state" = "exited" ] || [ "$state" = "dead" ]; then
+              echo "::error::question-backend exited early"
+              docker logs question-backend || true
+              exit 1
+            fi
             [ "$health" = "healthy" ] && break
             sleep 2
           done
@@ -73,8 +84,19 @@ jobs:
         run: |
           set -euo pipefail
           for i in {1..60}; do
-            health=$(docker inspect question-backend --format '{{.State.Health.Status}}')
-            echo "Health=$health"
+            state=$(docker inspect question-backend --format '{{.State.Status}}')
+            health=$(docker inspect question-backend --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}')
+            echo "question-backend State=$state Health=$health"
+
+            # Show last healthcheck output when it's not healthy yet
+            docker inspect question-backend \
+              --format='{{range .State.Health.Log}}{{printf "%s - %s\n" .End .Output}}{{end}}' | tail -n 3 || true
+
+            if [ "$state" = "exited" ] || [ "$state" = "dead" ]; then
+              echo "::error::question-backend exited early"
+              docker logs question-backend || true
+              exit 1
+            fi
             [ "$health" = "healthy" ] && break
             sleep 2
           done
