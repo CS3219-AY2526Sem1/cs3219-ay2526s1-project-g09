@@ -31,7 +31,6 @@ public class RedisConfig {
   /**
    * Configures a {@link RedisCacheManager} for application-level caching.
    * 
-   *
    * @param connectionFactory the Redis connection factory
    * @return the configured Redis cache manager
    */
@@ -82,12 +81,17 @@ public class RedisConfig {
    * @return the configured message listener container
    */
   @Bean
-  public RedisMessageListenerContainer redisContainer(RedisConnectionFactory connectionFactory,
-      MatchNotificationListener messageListener) {
+  public RedisMessageListenerContainer redisContainer(
+      RedisConnectionFactory connectionFactory,
+      MatchNotificationListener messageListener,
+      RedisChannels channels) {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
-    container.addMessageListener(messageListener, new PatternTopic("match-notifications"));
-    container.addMessageListener(messageListener, new PatternTopic("cancel-notifications"));
+
+    container.addMessageListener(messageListener, new PatternTopic(channels.MATCH_CHANNEL));
+    container.addMessageListener(messageListener, new PatternTopic(channels.CANCEL_CHANNEL));
+    container.addMessageListener(messageListener, new PatternTopic(channels.MATCH_ACCEPTANCE_CHANNEL));
+
     return container;
   }
 

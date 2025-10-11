@@ -1,3 +1,7 @@
+-- Redis Lua script for atomic removal of a user's matchmaking entry.
+-- KEYS[1] = poolKey
+-- ARGV[1] = userId to remove
+-- ARGV[2] = userPrefKeyPrefix
 local poolKey = KEYS[1]
 local userId = ARGV[1]
 local prefKeyPrefix = ARGV[2]

@@ -7,11 +7,11 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.peerprep.microservices.matching.dto.MatchNotification;
+import com.peerprep.microservices.matching.dto.MatchingNotification;
 import com.peerprep.microservices.matching.model.UserPreference;
 
 /**
- * Custom Jackson deserializer for {@link MatchNotification}.
+ * Custom Jackson deserializer for {@link MatchingNotification}.
  * 
  * Ensures that the required fields {@code user1RequestId},
  * {@code user2RequestId},
@@ -21,39 +21,40 @@ import com.peerprep.microservices.matching.model.UserPreference;
  * is thrown with details of the invalid input.
  *
  */
-public class MatchResultDeserializer extends StdDeserializer<MatchNotification> {
+public class MatchResultDeserializer extends StdDeserializer<MatchingNotification> {
 
   private static final String USER1_REQUEST_ID = "user1RequestId";
   private static final String USER2_REQUEST_ID = "user2RequestId";
   private static final String USER1_PREFERENCE = "user1Preference";
   private static final String USER2_PREFERENCE = "user2Preference";
+  private static final String MATCH_ID = "matchId";
 
   /**
-   * Creates a new deserializer for {@link MatchNotification}.
+   * Creates a new deserializer for {@link MatchingNotification}.
    */
   public MatchResultDeserializer() {
-    super(MatchNotification.class);
+    super(MatchingNotification.class);
   }
 
   /**
-   * Deserializes a JSON structure into a {@link MatchNotification}.
+   * Deserializes a JSON structure into a {@link MatchingNotification}.
    * 
    * @param jp   the JSON parser
    * @param ctxt the deserialization context
-   * @return a fully populated {@link MatchNotification} instance
+   * @return a fully populated {@link MatchingNotification} instance
    * @throws IOException          if parsing fails
    * @throws JsonMappingException if any required field is missing or invalid
    */
   @Override
-  public MatchNotification deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+  public MatchingNotification deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
     JsonNode node = jp.getCodec().readTree(jp);
 
     String user1RequestId = getRequiredText(jp, node, USER1_REQUEST_ID);
     String user2RequestId = getRequiredText(jp, node, USER2_REQUEST_ID);
     UserPreference user1Pref = getRequiredValue(jp, node, USER1_PREFERENCE);
     UserPreference user2Pref = getRequiredValue(jp, node, USER2_PREFERENCE);
-
-    return new MatchNotification(user1RequestId, user2RequestId, user1Pref, user2Pref);
+    String matchId = getRequiredText(jp, node, MATCH_ID);
+    return new MatchingNotification(user1RequestId, user2RequestId, user1Pref, user2Pref, matchId);
   }
 
   /**

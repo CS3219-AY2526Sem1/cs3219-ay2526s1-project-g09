@@ -69,6 +69,26 @@ public class DefaultExceptionHandler {
   }
 
   /**
+   * Handles AcceptanceMappingException.
+   * Returns a 500 Internal Server Error response.
+   */
+  @ExceptionHandler(AcceptanceMappingException.class)
+  public ResponseEntity<String> handleAcceptanceMappingException(AcceptanceMappingException ex) {
+    log.error("AcceptanceMappingException occurred", ex);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+  }
+
+  /**
+   * Handles AcceptanceDeserializationException.
+   * Returns a 500 Internal Server Error response.
+   */
+  @ExceptionHandler(AcceptanceDeserializationException.class)
+  public ResponseEntity<String> handleAcceptanceDeserializationException(AcceptanceDeserializationException ex) {
+    log.error("AcceptanceDeserializationException occurred", ex);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+  }
+
+  /**
    * Handles UserPreferenceDeserializationException.
    * Returns a 500 Internal Server Error response.
    */

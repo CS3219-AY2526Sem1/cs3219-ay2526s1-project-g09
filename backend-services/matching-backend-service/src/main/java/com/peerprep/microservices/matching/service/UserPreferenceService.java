@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.peerprep.microservices.matching.dto.UserPreferenceRequest;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.exception.UserPreferenceNotFoundException;
+import com.peerprep.microservices.matching.model.QuestionPreference;
 import com.peerprep.microservices.matching.model.UserPreference;
 import com.peerprep.microservices.matching.repository.MatchingRepository;
 
@@ -84,12 +85,16 @@ public class UserPreferenceService {
    */
   public UserPreference mapToUserPreference(UserPreferenceRequest userPref) {
 
-    return UserPreference.builder()
-        .userId(userPref.userId())
+    QuestionPreference questionPreference = QuestionPreference.builder()
         .topics(Set.copyOf(userPref.topics()))
         .difficulties(Set.copyOf(userPref.difficulties()))
         .minTime(userPref.minTime())
         .maxTime(userPref.maxTime())
+        .build();
+
+    return UserPreference.builder()
+        .userId(userPref.userId())
+        .questionPreference(questionPreference)
         .build();
   }
 
@@ -101,12 +106,14 @@ public class UserPreferenceService {
    * @return a {@link UserPreferenceResponse} instance containing the same data
    */
   public UserPreferenceResponse mapToResponse(UserPreference userPreference) {
+    QuestionPreference questionPreference = userPreference.getQuestionPreference();
+
     return new UserPreferenceResponse(
         userPreference.getUserId(),
-        userPreference.getTopics(),
-        userPreference.getDifficulties(),
-        userPreference.getMinTime(),
-        userPreference.getMaxTime());
+        questionPreference.getTopics(),
+        questionPreference.getDifficulties(),
+        questionPreference.getMinTime(),
+        questionPreference.getMaxTime());
   }
 
 }

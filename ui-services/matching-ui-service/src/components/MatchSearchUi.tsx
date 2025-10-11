@@ -7,6 +7,8 @@ interface MatchSearchUiProps {
   statusMessage: string;
   timeLeft: number;
   onCancel: () => void;
+  onMatchError: () => void;
+  onMatchNotFound: () => void;
   view: "searching" | "matchNotFound" | "matchError";
 }
 
@@ -14,6 +16,8 @@ const MatchSearchUi: React.FC<MatchSearchUiProps> = ({
   statusMessage,
   timeLeft,
   onCancel,
+  onMatchError,
+  onMatchNotFound,
   view,
 }) => {
   return (
@@ -28,9 +32,11 @@ const MatchSearchUi: React.FC<MatchSearchUiProps> = ({
         Cancel
       </Button>
 
-      {view === "matchNotFound" && <MatchNotFoundDialog onClose={onCancel} />}
+      {view === "matchNotFound" && (
+        <MatchNotFoundDialog onClose={onMatchNotFound} />
+      )}
 
-      {view === "matchError" && <MatchErrorDialog onClose={onCancel} />}
+      {view === "matchError" && <MatchErrorDialog onClose={onMatchError} />}
     </div>
   );
 };

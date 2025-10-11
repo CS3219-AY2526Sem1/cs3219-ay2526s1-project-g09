@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.peerprep.microservices.matching.dto.MatchRedisResult;
-import com.peerprep.microservices.matching.dto.RemoveResult;
+import com.peerprep.microservices.matching.dto.MatchingRedisResult;
+import com.peerprep.microservices.matching.dto.RemoveMatchingResult;
 import com.peerprep.microservices.matching.exception.UserPreferenceDeserializationException;
 import com.peerprep.microservices.matching.exception.UserPreferenceMappingException;
 import com.peerprep.microservices.matching.exception.UserPreferenceSerializationException;
@@ -33,7 +33,7 @@ import java.util.Map;
  */
 @Service
 @Slf4j
-public class RedisMatchService {
+public class RedisMatchingService {
 
   private final StringRedisTemplate redisTemplate;
   private final DefaultRedisScript<String> matchScript;
@@ -50,7 +50,7 @@ public class RedisMatchService {
    * @throws IOException if the Lua script for atomic match operations cannot be
    *                     loaded
    */
-  public RedisMatchService(StringRedisTemplate redisTemplate) throws IOException {
+  public RedisMatchingService(StringRedisTemplate redisTemplate) throws IOException {
     this.redisTemplate = redisTemplate;
 
     // Load Lua script for atomic match & remove
@@ -83,7 +83,7 @@ public class RedisMatchService {
    * @param userId the ID of the user to remove
    * @return details about the removal including success flag and requestId
    */
-  public RemoveResult remove(String userId) {
+  public RemoveMatchingResult remove(String userId) {
 
     // Atomically finds a match and removes the match entry
     String resultJson = redisTemplate.execute(
@@ -93,7 +93,7 @@ public class RedisMatchService {
         USER_PREF_KEY_PREFIX);
 
     if (resultJson == null || resultJson.isEmpty()) {
-      return new RemoveResult(false, userId, null);
+      return new RemoveMatchingResult(false, userId, null);
     }
 
     Map<String, Object> resultMap;
@@ -110,7 +110,7 @@ public class RedisMatchService {
     String returnedUserId = (String) resultMap.get("userId");
     String requestId = (String) resultMap.get("requestId");
 
-    return new RemoveResult(removed, returnedUserId, requestId);
+    return new RemoveMatchingResult(removed, returnedUserId, requestId);
   }
 
   /**
@@ -133,11 +133,14 @@ public class RedisMatchService {
    * @throws UserPreferenceDeserializationException if the matched JSON cannot be
    *                                                deserialized
    */
-  public MatchRedisResult match(UserPreference request, String requestId) {
+  @SuppressWarnings("unchecked")
+  public MatchingRedisResult match(UserPreference userPreference, String requestId) {
 
     Map<String, Object> redisValue = new HashMap<>();
     redisValue.put("requestId", requestId);
-    redisValue.put("userPreference", request);
+    redisValue.put("userPreference", userPreference.toRedisMap());
+
+    log.info("Match input result: {}", redisValue.toString());
 
     String reqJson;
 
@@ -147,7 +150,8 @@ public class RedisMatchService {
       throw new UserPreferenceSerializationException("Failed to serialize UserPreference", e);
     }
 
-    // Atomically finds a match and removes the matched entry or puts the new request if no matched entry exists
+    // Atomically finds a match and removes the matched entry or puts the new
+    // request if no matched entry exists
     String resultJson = redisTemplate.execute(matchScript,
         Collections.singletonList(MATCH_POOL_KEY),
         reqJson, USER_PREF_KEY_PREFIX);
@@ -157,7 +161,8 @@ public class RedisMatchService {
 
     Map<String, Object> resultMap;
     try {
-      resultMap = objectMapper.readValue(resultJson, new TypeReference<>() {});
+      resultMap = objectMapper.readValue(resultJson, new TypeReference<>() {
+      });
     } catch (JsonMappingException e) {
       throw new UserPreferenceMappingException("Failed to map JSON to UserPreference", e);
     } catch (JsonProcessingException e) {
@@ -167,18 +172,16 @@ public class RedisMatchService {
     Boolean oldDeleted = (Boolean) resultMap.get("oldRequestDeleted");
     String oldRequestId = (String) resultMap.get("oldRequestId");
 
-    @SuppressWarnings("unchecked")
     Map<String, Object> matchedMap = (Map<String, Object>) resultMap.get("matched");
 
     if (matchedMap == null) {
-      return new MatchRedisResult(oldDeleted, oldRequestId, null, null);
+      return new MatchingRedisResult(oldDeleted, oldRequestId, null, null);
     }
 
     String matchedRequestId = (String) matchedMap.get("requestId");
-    UserPreference matchedPref = objectMapper.convertValue(
-        matchedMap.get("userPreference"),
-        UserPreference.class);
+    UserPreference matchedPref = UserPreference.fromFlatMap(
+        (Map<String, Object>) matchedMap.get("userPreference"));
 
-    return new MatchRedisResult(oldDeleted, oldRequestId, matchedPref, matchedRequestId);
+    return new MatchingRedisResult(oldDeleted, oldRequestId, matchedPref, matchedRequestId);
   }
 }

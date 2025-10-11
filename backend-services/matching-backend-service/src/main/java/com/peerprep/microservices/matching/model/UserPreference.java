@@ -1,6 +1,7 @@
 package com.peerprep.microservices.matching.model;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
@@ -8,7 +9,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -27,93 +27,93 @@ public class UserPreference {
   private final String userId;
 
   @NonNull
-  @JsonDeserialize(as = HashSet.class)
-  private final Set<String> topics;
-
-  @NonNull
-  @JsonDeserialize(as = HashSet.class)
-  private final Set<String> difficulties;
-
-  private final int minTime;
-  private final int maxTime;
+  private final QuestionPreference questionPreference;
 
   /**
    * Custom build method
    */
   public static class UserPreferenceBuilder {
     public UserPreference build() {
-      validate(userId, topics, difficulties, minTime, maxTime);
-      return new UserPreference(userId, topics, difficulties, minTime, maxTime);
+      validate(userId, questionPreference);
+      return new UserPreference(userId, questionPreference);
     }
   }
 
   /**
    * Constructor with validation
    * 
-   * @param userId
-   * @param topics
-   * @param difficulties
-   * @param minTime
-   * @param maxTime
+   * @param userId             the user that the preference belongs to
+   * @param questionPreference the user's preference for questions
    */
   @JsonCreator
   public UserPreference(
       @JsonProperty("userId") String userId,
-      @JsonProperty("topics") Set<String> topics,
-      @JsonProperty("difficulties") Set<String> difficulties,
-      @JsonProperty("minTime") int minTime,
-      @JsonProperty("maxTime") int maxTime) {
-    validate(userId, topics, difficulties, minTime, maxTime);
+      @JsonProperty("questionPreference") QuestionPreference questionPreference) {
+    validate(userId, questionPreference);
     this.userId = userId;
-    this.topics = topics;
-    this.difficulties = difficulties;
-    this.minTime = minTime;
-    this.maxTime = maxTime;
+    this.questionPreference = questionPreference;
+  }
+
+  /**
+   * Create UserPreference from a flat map that contains userId, topics,
+   * difficulties, minTime, maxTime
+   */
+  public static UserPreference fromFlatMap(Map<String, Object> flatMap) {
+    String userId = (String) flatMap.get("userId");
+    @SuppressWarnings("unchecked")
+    Set<String> topics = Set.copyOf((java.util.List<String>) flatMap.get("topics"));
+    @SuppressWarnings("unchecked")
+    Set<String> difficulties = Set.copyOf((java.util.List<String>) flatMap.get("difficulties"));
+    int minTime = (Integer) flatMap.get("minTime");
+    int maxTime = (Integer) flatMap.get("maxTime");
+
+    QuestionPreference qp = QuestionPreference.builder()
+        .topics(topics)
+        .difficulties(difficulties)
+        .minTime(minTime)
+        .maxTime(maxTime)
+        .build();
+
+    return UserPreference.builder()
+        .userId(userId)
+        .questionPreference(qp)
+        .build();
   }
 
   /**
    * Validation logic for constructor
    */
-  private static void validate(String userId, Set<String> topics, Set<String> difficulties, int minTime, int maxTime) {
+  private static void validate(String userId, QuestionPreference questionPreference) {
     if (userId == null || userId.isEmpty())
       throw new IllegalArgumentException("userId cannot be null or empty");
-    if (topics == null || topics.isEmpty())
-      throw new IllegalArgumentException("topics cannot be null or empty");
-    if (difficulties == null || difficulties.isEmpty())
-      throw new IllegalArgumentException("difficulties cannot be null or empty");
-    if (minTime <= 0)
-      throw new IllegalArgumentException("minTime must be > 0");
-    if (maxTime <= 0)
-      throw new IllegalArgumentException("maxTime must be > 0");
-    if (maxTime < minTime)
-      throw new IllegalArgumentException("maxTime must be >= minTime");
+    if (questionPreference == null)
+      throw new IllegalArgumentException("questionPreference cannot be null");
   }
 
   /**
-   * Returns a new UserPreference containing only the overlapping topics and
-   * difficulties between this user and another user.
+   * Returns a new UserPreference containing another user and the overlapping
+   * question preferences
+   * between this user and another user.
    */
   public UserPreference getOverlap(UserPreference other) {
-    Set<String> overlappingTopics = new HashSet<>(this.topics);
-    overlappingTopics.retainAll(other.topics);
-
-    Set<String> overlappingDifficulties = new HashSet<>(this.difficulties);
-    overlappingDifficulties.retainAll(other.difficulties);
-
-    // Calculate overlapping time range
-    int overlapMinTime = Math.max(this.minTime, other.minTime);
-    int overlapMaxTime = Math.min(this.maxTime, other.maxTime);
-
-    if (overlapMinTime > overlapMaxTime) {
-      overlapMinTime = overlapMaxTime;
-    }
-
+    QuestionPreference overlap = this.questionPreference.getOverlap(other.questionPreference);
     return UserPreference.builder()
         .userId(other.userId)
-        .topics(overlappingTopics)
-        .difficulties(overlappingDifficulties)
-        .minTime(overlapMinTime)
-        .maxTime(overlapMaxTime)
+        .questionPreference(overlap)
         .build();
+  }
+
+  /**
+   * Flatten UserPreference into a Map suitable for Redis Lua script.
+   * Includes userId, topics, difficulties, minTime, maxTime.
+   */
+  public Map<String, Object> toRedisMap() {
+    Map<String, Object> map = new HashMap<>();
+    map.put("userId", this.userId);
+    map.put("topics", this.questionPreference.getTopics());
+    map.put("difficulties", this.questionPreference.getDifficulties());
+    map.put("minTime", this.questionPreference.getMinTime());
+    map.put("maxTime", this.questionPreference.getMaxTime());
+    return map;
   }
 }

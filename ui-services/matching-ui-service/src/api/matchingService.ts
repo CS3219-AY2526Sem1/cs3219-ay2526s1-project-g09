@@ -6,12 +6,18 @@ export interface UserPreferences {
   maxTime: number;
 }
 
-export interface MatchingResponse {
+export interface MatchDetails {
   userId: string;
   topics: string[];
   difficulties: string[];
   minTime: number;
   maxTime: number;
+}
+
+export interface MatchingResponse {
+  status: "MATCHED" | "PENDING" | "REJECTED";
+  match: MatchDetails;
+  matchId: string;
 }
 
 export type MatchResult =
@@ -70,7 +76,7 @@ export async function requestMatch(
   preferences: UserPreferences,
 ): Promise<MatchResult> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
-  const uriLink = `${apiUri}matches`;
+  const uriLink = `${apiUri}match-requests`;
 
   try {
     const response = await fetch(uriLink, {
@@ -89,7 +95,7 @@ export async function cancelMatch(
   userId: string,
 ): Promise<null | { status: string; error: unknown }> {
   const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
-  const uriLink = `${apiUri}matches/${userId}`;
+  const uriLink = `${apiUri}match-requests/${userId}`;
 
   try {
     const response = await fetch(uriLink, {
@@ -143,5 +149,81 @@ export async function createPreference(
     return handlePreferenceResponse(response);
   } catch (err) {
     return { status: "error", error: err };
+  }
+}
+
+export interface MatchAcceptanceResponse {
+  status: "SUCCESS" | "REJECTED" | "PENDING";
+  match: {
+    matchId: string;
+    user1Id: string;
+    user2Id: string;
+    questionPreference: {
+      topics: string[];
+      difficulties: string[];
+      minTime: number;
+      maxTime: number;
+    };
+  };
+}
+
+/**
+ * Connect to matched
+ */
+export async function connectMatch(
+  userId: string,
+  matchId: string,
+): Promise<MatchAcceptanceResponse> {
+  const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
+  const response = await fetch(`${apiUri}match-requests/${userId}/connect`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ matchId }),
+  });
+
+  if (!response.ok && response.status !== 409) {
+    throw new Error(`HTTP error ${response.status}`);
+  }
+
+  return response.json() as Promise<MatchAcceptanceResponse>;
+}
+
+/**
+ * Accept a match
+ */
+export async function acceptMatch(
+  userId: string,
+  matchId: string,
+): Promise<MatchAcceptanceResponse> {
+  const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
+  const response = await fetch(`${apiUri}match-requests/${userId}/accept`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ matchId }),
+  });
+
+  if (!response.ok && response.status !== 409) {
+    throw new Error(`HTTP error ${response.status}`);
+  }
+
+  return response.json() as Promise<MatchAcceptanceResponse>;
+}
+
+/**
+ * Reject a match
+ */
+export async function rejectMatch(
+  userId: string,
+  matchId: string,
+): Promise<void> {
+  const apiUri = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
+  const response = await fetch(`${apiUri}match-requests/${userId}/reject`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ matchId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error ${response.status}`);
   }
 }

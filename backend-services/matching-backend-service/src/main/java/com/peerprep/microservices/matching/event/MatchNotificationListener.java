@@ -7,9 +7,12 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.peerprep.microservices.matching.dto.MatchNotification;
+import com.peerprep.microservices.matching.config.RedisChannels;
+import com.peerprep.microservices.matching.dto.AcceptanceNotification;
+import com.peerprep.microservices.matching.dto.MatchingNotification;
 import com.peerprep.microservices.matching.exception.NotificationDeserializationException;
 import com.peerprep.microservices.matching.exception.NotificationMappingException;
+import com.peerprep.microservices.matching.service.AcceptanceService;
 import com.peerprep.microservices.matching.service.MatchingService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 public class MatchNotificationListener implements MessageListener {
 
   private final MatchingService matchingService;
+  private final AcceptanceService acceptanceService;
   private final ObjectMapper objectMapper;
+  private final RedisChannels channels;
 
   /**
    * Called when a message is received from Redis.
@@ -40,13 +45,18 @@ public class MatchNotificationListener implements MessageListener {
     String body = new String(message.getBody());
     log.info("Received message on channel {}: {}", channel, body);
 
-    if (channel.equals("cancel-notifications")) {
+    if (channel.equals(channels.CANCEL_CHANNEL)) {
       processCancelNotification(body);
     }
 
-    if (channel.equals("match-notifications")) {
+    if (channel.equals(channels.MATCH_CHANNEL)) {
       processMatchNotification(body);
     }
+
+    if (channel.equals(channels.MATCH_ACCEPTANCE_CHANNEL)) {
+      processAcceptanceNotification(body);
+    }
+
   }
 
   /**
@@ -57,10 +67,10 @@ public class MatchNotificationListener implements MessageListener {
   private void processMatchNotification(String body) {
     log.debug("Received match notification: {}", body);
 
-    MatchNotification matchNotification = null;
+    MatchingNotification matchNotification = null;
     try {
       String unwrapped = objectMapper.readValue(body, String.class);
-      matchNotification = objectMapper.readValue(unwrapped, MatchNotification.class);
+      matchNotification = objectMapper.readValue(unwrapped, MatchingNotification.class);
     } catch (JsonMappingException e) {
       throw new NotificationMappingException("Failed to map JSON to MatchNotification", e);
     } catch (JsonProcessingException e) {
@@ -76,7 +86,7 @@ public class MatchNotificationListener implements MessageListener {
   /**
    * Processes a cancel notification message.
    *
-   * @param body the JSON payload of the cancel notification (request ID)
+   * @param body the JSON payload of the cancel notification
    */
   private void processCancelNotification(String body) {
     log.debug("Received cancel notification: {}", body);
@@ -91,6 +101,28 @@ public class MatchNotificationListener implements MessageListener {
 
     matchingService.handleCancelNotification(unwrappedRequestId);
     log.info("Processed cancel-notification for request {}", unwrappedRequestId);
+  }
+
+  /**
+   * Processes an acceptance notification message.
+   * 
+   * @param body the JSON payload of the acceptance notification
+   */
+  private void processAcceptanceNotification(String body) {
+    log.info("Received acceptance notification: {}", body);
+
+    AcceptanceNotification acceptanceNotification = null;
+    try {
+      acceptanceNotification = objectMapper.readValue(body, AcceptanceNotification.class);
+    } catch (JsonMappingException e) {
+      throw new NotificationMappingException("Failed to map JSON to MatchNotification", e);
+    } catch (JsonProcessingException e) {
+      throw new NotificationDeserializationException("Failed to deserialize JSON for MatchNotification", e);
+    }
+
+    log.info("Handling acceptance notification for users {} and {} with status {}", acceptanceNotification.getUser1Id(),
+        acceptanceNotification.getUser2Id(), acceptanceNotification.getStatus());
+    acceptanceService.handleAcceptanceNotification(acceptanceNotification);
   }
 
 }
