@@ -10,6 +10,7 @@ import { type QuestionDoc } from "./db/model/question.js";
 import { withDbLimit } from "./db/dbLimiter.js";
 import { Question } from "./db/model/question.js";
 import { z } from "zod";
+import crypto from "crypto";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
@@ -19,6 +20,13 @@ function getHeader(req: FastifyRequest, name: string): string | undefined {
   if (typeof value === "string") return value;
   if (Array.isArray(value) && typeof value[0] === "string") return value[0];
   return undefined;
+}
+
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
@@ -92,7 +100,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
    */
   app.post("/post-question", async (req, res) => {
     const token = getHeader(req, "x-admin-token");
-    if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+    if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
       return res.status(401).send({ error: "Unauthorized" });
     }
     const Body = z.object({

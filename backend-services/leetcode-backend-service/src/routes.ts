@@ -11,6 +11,7 @@ import type {
 import { seedLeetCodeBatch } from "./leetcode/seedBatch.js";
 import { SeedCursor } from "./db/model/question.js";
 import { withDbLimit } from "./db/dbLimiter.js";
+import crypto from "crypto";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 
@@ -22,9 +23,16 @@ function getHeader(req: FastifyRequest, name: string): string | undefined {
   return undefined;
 }
 
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 function assertAdmin(req: FastifyRequest) {
   const token = getHeader(req, "x-admin-token");
-  if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+  if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
     throw new Error("Unauthorized");
   }
 }
