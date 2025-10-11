@@ -53,7 +53,9 @@ export async function handleLogin(req, res) {
       });
     }
 
-    const accessToken = generateAccessToken(user, "1d");
+    const tokenLifetime = rememberMe ? "30d" : "1d";
+
+    const accessToken = generateAccessToken(user, tokenLifetime);
     const isProd = process.env.NODE_ENV === "production";
 
     res.cookie("authToken", accessToken, {
@@ -61,7 +63,7 @@ export async function handleLogin(req, res) {
       secure: isProd, // HTTPS in prod
       sameSite: isProd ? "None" : "Lax", // None in prod, Lax in dev
       path: "/",
-      ...(rememberMe ? { maxAge: 7 * 24 * 60 * 60 * 1000 } : {}), // 7 days
+      ...(rememberMe ? { maxAge: 24 * 60 * 60 * 1000 } : {}), // 7 days
     });
 
     return res.status(200).json({
@@ -151,7 +153,7 @@ export async function verifyOTP(req, res) {
     const updatedUser = await _updateVerificationById(user._id, true);
     await _updateUserExpirationById(user._id, null);
 
-    const accessToken = await generateAccessToken(user, "1d");
+    const accessToken = await generateAccessToken(user, "1d"); // token expiry 1 day by default
     const isProd = process.env.NODE_ENV === "production";
 
     // give user a cookie
