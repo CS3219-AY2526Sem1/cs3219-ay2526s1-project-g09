@@ -72,7 +72,6 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
     try {
       await UserService.resetPassword(token, password);
       setDone(true);
-      if (onResetSuccess) onResetSuccess();
     } catch (err) {
       if (err instanceof Error) {
         console.error(err);
@@ -112,10 +111,10 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
     );
   }
 
-  // Password reset Success
+  // Password reset success
   if (done) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-sm">
+      <div className="bg-white p-6 rounded-lg shadow-sm text-center">
         <h2 className="text-lg font-semibold mb-2">
           Password Reset Successful
         </h2>
