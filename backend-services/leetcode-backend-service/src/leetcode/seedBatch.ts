@@ -66,26 +66,30 @@ export async function seedLeetCodeBatch() {
   );
 
   const ops = questionInfos.map((q) => ({
-    insertOne: {
-      document: {
-        globalSlug: `leetcode:${q.titleSlug}`, // unique identifier
-        source: "leetcode",
-        titleSlug: q.titleSlug,
-        title: q.title,
+    updateOne: {
+      filter: { titleSlug: q.titleSlug },
+      update: {
+        // setOnInsert to avoid overwriting existing entries
+        $setOnInsert: {
+          globalSlug: `leetcode:${q.titleSlug}`,
+          source: "leetcode",
+          titleSlug: q.titleSlug,
+          title: q.title,
 
-        // metadata
-        difficulty: q.difficulty,
-        categoryTitle: q.categoryTitle ?? null,
-        timeLimit: DIFFICULTY_TIME_LIMITS[q.difficulty] ?? 60,
+          // metadata
+          difficulty: q.difficulty,
+          categoryTitle: q.categoryTitle ?? null,
+          timeLimit: DIFFICULTY_TIME_LIMITS[q.difficulty] ?? 60,
 
-        // content & extras
-        content: q.content ?? null,
-        codeSnippets: q.codeSnippets ?? [],
-        hints: q.hints ?? [],
-        exampleTestcases: q.exampleTestcases ?? null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+          // content & extras
+          content: q.content ?? null,
+          codeSnippets: q.codeSnippets ?? [],
+          hints: q.hints ?? [],
+          exampleTestcases: q.exampleTestcases ?? null,
+          createdAt: new Date(),
+        },
       },
+      upsert: true,
     },
   }));
 
