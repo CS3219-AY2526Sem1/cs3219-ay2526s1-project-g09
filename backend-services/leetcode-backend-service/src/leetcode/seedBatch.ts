@@ -191,7 +191,7 @@ export async function fetchNonPaidQuestionList(
   const { total, questions } = res.problemsetQuestionList;
   const initial_count = questions.length;
   const questionList = questions.filter((q) => !q.isPaidOnly);
-  return { questionList, total, initial_count };
+  return { questionList, total };
 }
 
 export async function getQuestionDetail(slug: string) {
