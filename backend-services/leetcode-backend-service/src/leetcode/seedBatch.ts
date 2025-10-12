@@ -48,10 +48,10 @@ export async function seedLeetCodeBatch() {
   );
 
   // Check if there are no more questions to fetch
-  if (questionList.length === 0) {
+  if (questionList.length === 0 || nextSkip >= total) {
     cursor.lastRunAt = new Date();
     cursor.total = total ?? cursor.total;
-    cursor.nextSkip = total + 1; // Prevent future refetching of previously fetched items
+    cursor.nextSkip = total; // Prevent future refetching of previously fetched items
     await cursor.save();
     return {
       ok: true,
@@ -98,7 +98,7 @@ export async function seedLeetCodeBatch() {
   // Advance cursor
   if (nextSkip + pageSize > total) {
     // Prevent future refetching of previously fetched items
-    cursor.nextSkip = total + 1;
+    cursor.nextSkip = total;
   } else {
     cursor.nextSkip = nextSkip + pageSize;
   }
