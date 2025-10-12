@@ -38,34 +38,25 @@ export async function seedLeetCodeBatch() {
   const id = "questions";
   const cursor =
     (await SeedCursor.findById(id)) ??
-    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 200, done: false });
-
-  if (cursor.done) {
-    return {
-      ok: true,
-      message: "Already completed.",
-      nextSkip: cursor.nextSkip,
-      done: true,
-    };
-  }
-
+    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 200 });
   const { pageSize, nextSkip } = cursor;
 
-  const { questionList, total, initial_count } = await fetchNonPaidQuestionList(
+  // Fetch question list using the cursor's nextSkip
+  const { questionList, total } = await fetchNonPaidQuestionList(
     pageSize,
     nextSkip,
   );
 
+  // Check if there are no more questions to fetch
   if (questionList.length === 0) {
-    cursor.done = true;
     cursor.lastRunAt = new Date();
     cursor.total = total ?? cursor.total;
+    cursor.nextSkip = total + 1; // Prevent future refetching of previously fetched items
     await cursor.save();
     return {
       ok: true,
-      message: "No more questions. Marked done.",
-      nextSkip,
-      done: true,
+      message: "No more questions.",
+      nextSkip: cursor.nextSkip,
     };
   }
 
@@ -75,47 +66,40 @@ export async function seedLeetCodeBatch() {
   );
 
   const ops = questionInfos.map((q) => ({
-    updateOne: {
-      filter: { titleSlug: q.titleSlug },
+    insertOne: {
+      document: {
+        globalSlug: `leetcode:${q.titleSlug}`, // unique identifier
+        source: "leetcode",
+        titleSlug: q.titleSlug,
+        title: q.title,
 
-      update: {
-        $set: {
-          globalSlug: `leetcode:${q.titleSlug}`, // unique identifier
-          source: "leetcode",
-          titleSlug: q.titleSlug,
-          title: q.title,
+        // metadata
+        difficulty: q.difficulty,
+        categoryTitle: q.categoryTitle ?? null,
+        timeLimit: DIFFICULTY_TIME_LIMITS[q.difficulty] ?? 60,
 
-          // metadata
-          difficulty: q.difficulty,
-          categoryTitle: q.categoryTitle ?? null,
-          timeLimit: DIFFICULTY_TIME_LIMITS[q.difficulty] ?? 60,
-
-          // content & extras
-          content: q.content ?? null,
-          codeSnippets: q.codeSnippets ?? [],
-          hints: q.hints ?? [],
-          exampleTestcases: q.exampleTestcases ?? null,
-          updatedAt: new Date(),
-        },
-
-        $setOnInsert: {
-          createdAt: new Date(),
-        },
+        // content & extras
+        content: q.content ?? null,
+        codeSnippets: q.codeSnippets ?? [],
+        hints: q.hints ?? [],
+        exampleTestcases: q.exampleTestcases ?? null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
-
-      upsert: true,
     },
   }));
 
   const result = await Question.bulkWrite(ops, { ordered: false });
 
   // Advance cursor
-  cursor.nextSkip = nextSkip + pageSize;
+  if (nextSkip + pageSize > total) {
+    // Prevent future refetching of previously fetched items
+    cursor.nextSkip = total + 1;
+  } else {
+    cursor.nextSkip = nextSkip + pageSize;
+  }
   cursor.lastRunAt = new Date();
   cursor.total = total;
-  if (initial_count < pageSize) {
-    cursor.done = true;
-  }
   await cursor.save();
 
   return {
@@ -127,7 +111,6 @@ export async function seedLeetCodeBatch() {
     pageSize,
     nextSkip: cursor.nextSkip,
     total: cursor.total,
-    done: cursor.done,
   };
 }
 
