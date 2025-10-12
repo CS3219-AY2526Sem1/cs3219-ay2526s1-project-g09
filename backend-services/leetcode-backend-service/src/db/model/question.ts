@@ -42,11 +42,13 @@ const QuestionSchema = new Schema<QuestionDoc>(
   { collection: "questions", timestamps: true },
 );
 
-// Ensure uniqueness based on titleSlug
-QuestionSchema.index({ titleSlug: 1 }, { unique: true });
-
 // Compound indexes for faster queries
-QuestionSchema.index({ categoryTitle: 1, difficulty: 1 });
+QuestionSchema.index({
+  source: 1,
+  titleSlug: 1,
+  categoryTitle: 1,
+  difficulty: 1,
+});
 
 const CursorSchema = new mongoose.Schema(
   {
