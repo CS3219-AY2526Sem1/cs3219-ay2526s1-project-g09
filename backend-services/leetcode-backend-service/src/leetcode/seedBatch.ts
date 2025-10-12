@@ -176,7 +176,6 @@ export async function fetchNonPaidQuestionList(
 ): Promise<{
   questionList: BasicInformation[];
   total: number;
-  initial_count: number;
 }> {
   const res = await gql<
     QuestionList,
@@ -189,7 +188,7 @@ export async function fetchNonPaidQuestionList(
   >(QUERY_LIST, { categorySlug: "", limit: limit, skip: skip, filters: {} });
 
   const { total, questions } = res.problemsetQuestionList;
-  const initial_count = questions.length;
+  // const initial_count = questions.length;
   const questionList = questions.filter((q) => !q.isPaidOnly);
   return { questionList, total };
 }
