@@ -55,7 +55,6 @@ const CursorSchema = new mongoose.Schema(
     _id: { type: String, required: true },
     nextSkip: { type: Number, default: 0, index: true },
     pageSize: { type: Number, default: 200 },
-    done: { type: Boolean, default: false },
     lastRunAt: { type: Date },
     total: { type: Number, default: 0 },
   },
