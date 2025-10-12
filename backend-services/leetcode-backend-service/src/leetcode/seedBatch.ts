@@ -69,7 +69,7 @@ export async function seedLeetCodeBatch() {
     updateOne: {
       filter: { titleSlug: q.titleSlug },
       update: {
-        // setOnInsert to avoid overwriting existing entries
+        // $setOnInsert to avoid overwriting existing entries
         $setOnInsert: {
           globalSlug: `leetcode:${q.titleSlug}`,
           source: "leetcode",
