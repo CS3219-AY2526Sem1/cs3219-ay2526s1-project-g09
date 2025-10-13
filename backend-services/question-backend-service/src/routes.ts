@@ -110,7 +110,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
 
     if (!categories || Object.keys(categories).length === 0) {
       return reply.status(400).send({
-        error: "Missing required parameter: categories",
+        error: "Missing required body: categories",
       });
     }
 
