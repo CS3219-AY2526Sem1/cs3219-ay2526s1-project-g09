@@ -116,9 +116,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     // Gather all questions based on the provided categories and difficulties
     for (const categoryTitle in categories) {
       const difficulties = categories[categoryTitle];
-      if (!difficulties) continue;
-
-      if (difficulties.length === 0) continue;
+      if (!difficulties || difficulties.length === 0) continue;
 
       // Retrieve all questions for each categoryTitle and difficulty combination
       for (const difficulty of difficulties) {
