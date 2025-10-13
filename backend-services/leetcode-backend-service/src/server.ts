@@ -17,7 +17,7 @@ export async function buildServer() {
   });
 
   // routes
-  await app.register(leetcodeRoutes, { prefix: "/api/v1/leetcode" });
+  await app.register(leetcodeRoutes, { prefix: "/api/v1/leetcode-service" });
 
   return app;
 }

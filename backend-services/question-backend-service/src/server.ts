@@ -17,7 +17,7 @@ export async function buildServer() {
   });
 
   // routes
-  await app.register(leetcodeRoutes, { prefix: "/api/v1/questions" });
+  await app.register(leetcodeRoutes, { prefix: "/api/v1/question-service" });
 
   return app;
 }
