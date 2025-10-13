@@ -52,28 +52,44 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * Check if a question exists based on categoryTitle and difficulty.
-   * Returns 400 if params are missing.
-   * Returns true or false.
+   * Check if questions exist based on categoryTitle and difficulty.
+   * Returns 400 if the body is malformed or missing data.
+   * Returns a list of true/false for each category and difficulty combination.
    */
-  app.get<{
-    Querystring: {
-      categoryTitle: string;
-      difficulty: "Easy" | "Medium" | "Hard";
+  app.post<{
+    Body: {
+      categories: {
+        [category: string]: ("Easy" | "Medium" | "Hard")[]; // category as key and difficulty levels as values
+      };
     };
-  }>("/exists", async (req, reply) => {
-    const { categoryTitle, difficulty } = req.query;
+  }>("/exists-categories-difficulties", async (req, reply) => {
+    const { categories } = req.body;
 
-    if (!categoryTitle || !difficulty) {
+    if (!categories || Object.keys(categories).length === 0) {
       return reply.status(400).send({
-        error: "Missing required parameters: categoryTitle, difficulty",
+        error: "Missing required body: categories",
       });
     }
 
-    const exists = await withDbLimit(() =>
-      Question.exists({ categoryTitle, difficulty }),
-    );
-    return !!exists; // returns just true or false
+    const result: {
+      [category: string]: {
+        [difficulty in "Easy" | "Medium" | "Hard"]?: boolean;
+      };
+    } = {};
+
+    // Iterate through the categories and check for each difficulty
+    for (const [categoryTitle, difficulties] of Object.entries(categories)) {
+      result[categoryTitle] = {};
+
+      for (const difficulty of difficulties) {
+        const exists = await withDbLimit(() =>
+          Question.exists({ categoryTitle, difficulty }),
+        );
+        result[categoryTitle][difficulty] = !!exists;
+      }
+    }
+
+    return reply.send(result);
   });
 
   /**
@@ -82,32 +98,52 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
    * Returns 404 if no question found.
    * Returns the question document if found.
    */
-  app.get<{
-    Querystring: {
-      categoryTitle: string;
-      difficulty: "Easy" | "Medium" | "Hard";
+  app.post<{
+    Body: {
+      categories: { [category: string]: ("Easy" | "Medium" | "Hard")[] }; // categoryTitle as key, array of difficulties as value
     };
   }>("/random", async (req, reply) => {
-    const { categoryTitle, difficulty } = req.query;
+    const { categories } = req.body;
 
-    if (!categoryTitle || !difficulty) {
+    if (!categories || Object.keys(categories).length === 0) {
       return reply.status(400).send({
-        error: "Missing required parameters: categoryTitle, difficulty",
+        error: "Missing required parameter: categories",
       });
     }
 
-    const [randomQuestion] = await withDbLimit(() =>
-      Question.aggregate<QuestionDoc>([
-        { $match: { categoryTitle, difficulty } },
-        { $sample: { size: 1 } }, // MongoDB picks 1 random document
-      ]),
-    );
+    const allQuestions = [];
 
-    if (!randomQuestion) {
-      return reply.status(404).send({ error: "No question found" });
+    // Gather all questions based on the provided categories and difficulties
+    for (const categoryTitle in categories) {
+      const difficulties = categories[categoryTitle];
+      if (!difficulties) continue;
+
+      if (difficulties.length === 0) continue;
+
+      // Retrieve all questions for each categoryTitle and difficulty combination
+      for (const difficulty of difficulties) {
+        const questions = await withDbLimit(() =>
+          Question.aggregate<QuestionDoc>([
+            { $match: { categoryTitle, difficulty } },
+          ]),
+        );
+
+        allQuestions.push(...questions);
+      }
     }
 
-    return randomQuestion;
+    if (allQuestions.length === 0) {
+      return reply.status(404).send({
+        error:
+          "No questions found for the provided categories and difficulties",
+      });
+    }
+
+    // Choose a random question from the gathered pool
+    const randomQuestion =
+      allQuestions[Math.floor(Math.random() * allQuestions.length)];
+
+    return reply.status(200).send(randomQuestion);
   });
 
   /**
