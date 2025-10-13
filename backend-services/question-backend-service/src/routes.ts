@@ -15,6 +15,9 @@ import crypto from "crypto";
 if (!process.env.ADMIN_TOKEN) {
   throw new Error("ADMIN_TOKEN environment variable must be set");
 }
+
+type Difficulty = "Easy" | "Medium" | "Hard";
+
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 const MAX_TIME_LIMIT_MINUTES = 240;
 
@@ -111,37 +114,46 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       });
     }
 
-    const allQuestions = [];
+    const pairs = Object.entries(categories).flatMap(
+      ([categoryTitle, diffs]) =>
+        Array.isArray(diffs) && diffs.length
+          ? diffs.map((difficulty) => ({ categoryTitle, difficulty }))
+          : [],
+    );
 
-    // Gather all questions based on the provided categories and difficulties
-    for (const categoryTitle in categories) {
-      const difficulties = categories[categoryTitle];
-      if (!difficulties || difficulties.length === 0) continue;
+    if (pairs.length === 0) {
+      return reply
+        .status(400)
+        .send({ error: "No (category, difficulty) pairs provided" });
+    }
 
-      // Retrieve all questions for each categoryTitle and difficulty combination
-      for (const difficulty of difficulties) {
-        const questions = await withDbLimit(() =>
-          Question.aggregate<QuestionDoc>([
-            { $match: { categoryTitle, difficulty } },
-          ]),
-        );
-
-        allQuestions.push(...questions);
+    const valid: Difficulty[] = ["Easy", "Medium", "Hard"];
+    for (const p of pairs) {
+      if (!valid.includes(p.difficulty as Difficulty)) {
+        return reply
+          .status(400)
+          .send({ error: `Invalid difficulty '${p.difficulty}'` });
       }
     }
 
-    if (allQuestions.length === 0) {
-      return reply.status(404).send({
-        error:
-          "No questions found for the provided categories and difficulties",
-      });
+    try {
+      // Single aggregation: pool all matches, then pick 1 at random
+      const [randomQuestion] = await withDbLimit(() =>
+        Question.aggregate<QuestionDoc>([
+          { $match: { $or: pairs } },
+          { $sample: { size: 1 } },
+        ]),
+      );
+
+      if (!randomQuestion) {
+        return reply.status(404).send({ error: "No question found" });
+      }
+
+      return reply.send(randomQuestion);
+    } catch (err) {
+      req.log?.error({ err }, "Failed to fetch random question");
+      return reply.status(500).send({ error: "Internal Server Error" });
     }
-
-    // Choose a random question from the gathered pool
-    const randomQuestion =
-      allQuestions[Math.floor(Math.random() * allQuestions.length)];
-
-    return reply.status(200).send(randomQuestion);
   });
 
   /**
