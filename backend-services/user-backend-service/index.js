@@ -54,12 +54,12 @@ app.use(
     },
   }),
 );
-app.get("/api/csrf-token", (req, res) => {
+app.get("/api/v1/user-service/csrf-token", (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-app.use("/api/user-service/users", userRoutes);
-app.use("/api/user-service/auth", authRoutes);
+app.use("/api/v1/user-service/users", userRoutes);
+app.use("/api/v1/user-service/auth", authRoutes);
 
 app.get("/", (req, res, next) => {
   console.log("Sending Greetings!");
