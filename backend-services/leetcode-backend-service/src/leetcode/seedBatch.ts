@@ -11,6 +11,7 @@ import { QUERY_LIST, QUERY_DETAIL } from "./queries.js";
 import type { BasicInformation, QuestionList, Details } from "./types.js";
 import pLimit from "p-limit";
 import { logger } from "../logger.js";
+import { checkQuestionServiceHealth } from "../health.js";
 
 /**
  * Maximum number of concurrent requests for fetching question details.
@@ -40,6 +41,18 @@ export async function seedLeetCodeBatch() {
     (await SeedCursor.findById(id)) ??
     new SeedCursor({ _id: id, nextSkip: 0, pageSize: 200 });
   const { pageSize, nextSkip } = cursor;
+
+  try {
+    await checkQuestionServiceHealth();
+  } catch (err) {
+    cursor.lastRunAt = new Date();
+    await cursor.save();
+    return {
+      ok: false as const,
+      message: `Aborted: question service not healthy — ${(err as Error).message}`,
+      nextSkip: cursor.nextSkip,
+    };
+  }
 
   // Fetch question list using the cursor's nextSkip
   const { questionList, total } = await fetchNonPaidQuestionList(
