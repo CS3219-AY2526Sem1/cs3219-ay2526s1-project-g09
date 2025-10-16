@@ -15,6 +15,10 @@ export default defineConfig({
       exposes: {
         "./QuestionDisplay": "./src/components/QuestionDisplay",
         "./AnswerButton": "./src/components/AnswerButton",
+        "./QuestionList": "./src/pages/QuestionListUi",
+        "./QuestionDetails": "./src/pages/QuestionDetailsUi",
+        "./QuestionEdit": "./src/pages/QuestionEditUi",
+        "./QuestionAdd": "./src/pages/QuestionAddUi",
       },
       remotes: {
         userUiService: "http://localhost:5177/assets/remoteEntry.js",

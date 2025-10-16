@@ -24,6 +24,11 @@ import PublicRoute from "@components/auth/PublicRoute";
 import { useEffect } from "react";
 import { useAuth } from "@/data/UserStore";
 import { UserService } from "./api/UserService";
+import AdminRoute from "./components/auth/AdminRoute";
+import QuestionPage from "./pages/question/QuestionsList";
+import QuestionDetailsPage from "./pages/question/QuestionDetails";
+import QuestionEditPageShell from "./pages/question/QuestionEdit";
+import QuestionAddPageShell from "./pages/question/QuestionAdd";
 
 export default function App() {
   const { setUser, setLoading } = useAuth();
@@ -58,6 +63,12 @@ export default function App() {
         <Route path="/questionAttempts" element={<QuestionAttemptsPage />} />
         <Route path="/attempt" element={<AttemptPage />} />
         <Route path="/settings" element={<UserProfilePage />} />
+      </Route>
+      <Route element={<AdminRoute />}>
+        <Route path="/questions" element={<QuestionPage />} />
+        <Route path="/questions/add" element={<QuestionAddPageShell />} />
+        <Route path="/questions/:id" element={<QuestionDetailsPage />} />
+        <Route path="/questions/:id/edit" element={<QuestionEditPageShell />} />
       </Route>
     </Routes>
   );

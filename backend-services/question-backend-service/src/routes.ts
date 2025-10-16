@@ -11,6 +11,8 @@ import { withDbLimit } from "./db/dbLimiter.js";
 import { Question } from "./db/model/question.js";
 import { z } from "zod";
 import crypto from "crypto";
+import { Types } from "mongoose";
+import type { QuestionQuery } from "./db/types/questionQuery.js";
 
 if (!process.env.ADMIN_TOKEN) {
   throw new Error("ADMIN_TOKEN environment variable must be set");
@@ -216,6 +218,402 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       id: saved.upsertedId?.toString(),
       message: "Question inserted successfully",
     });
+  });
+
+  /**
+   * GET /questions
+   * Supports filtering, pagination, and sorting.
+   */
+  app.get("/questions", async (req, reply) => {
+    // Define schema for validation
+    const QuerySchema = z.object({
+      category: z.string().optional(),
+      difficulty: z.enum(["Easy", "Medium", "Hard"]).optional(),
+      minTime: z.coerce.number().int().min(1).optional(),
+      maxTime: z.coerce.number().int().min(1).optional(),
+      size: z.coerce.number().int().min(1).max(100).default(10),
+      page: z.coerce.number().int().min(1).default(1),
+      sortBy: z
+        .enum(["newest", "oldest", "easiest", "hardest", "shortest", "longest"])
+        .default("newest"),
+    });
+
+    // Validate query
+    const parsed = QuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return reply
+        .status(400)
+        .send({ error: "Invalid query params", details: parsed.error.issues });
+    }
+
+    const { category, difficulty, minTime, maxTime, size, page, sortBy } =
+      parsed.data;
+
+    // Build MongoDB query
+    const query: QuestionQuery = {};
+
+    if (category) query.categoryTitle = category;
+    if (difficulty) query.difficulty = difficulty;
+    if (minTime || maxTime) {
+      const timeLimitQuery: { $gte?: number; $lte?: number } = {};
+      if (minTime) timeLimitQuery.$gte = minTime;
+      if (maxTime) timeLimitQuery.$lte = maxTime;
+      query.timeLimit = timeLimitQuery;
+    }
+
+    // Pagination
+    const skip = (page - 1) * size;
+
+    // Sorting
+    const sortOptions: Record<string, 1 | -1> = (() => {
+      switch (sortBy) {
+        case "oldest":
+          return { createdAt: 1 };
+        case "newest":
+          return { createdAt: -1 };
+        case "easiest":
+          return { difficulty: 1 };
+        case "hardest":
+          return { difficulty: -1 };
+        case "shortest":
+          return { timeLimit: 1 };
+        case "longest":
+          return { timeLimit: -1 };
+        default:
+          return { createdAt: -1 };
+      }
+    })();
+
+    try {
+      const [total, questions] = await withDbLimit(async () => {
+        const total = await Question.countDocuments(query);
+        const questions = await Question.find(query)
+          .sort(sortOptions)
+          .skip(skip)
+          .limit(size)
+          .select("title categoryTitle difficulty timeLimit _id")
+          .lean();
+        return [total, questions] as const;
+      });
+
+      const previews = questions.map((q) => ({
+        questionId: q._id.toString(),
+        questionName: q.title,
+        topic: q.categoryTitle ?? "Uncategorized",
+        difficulty: q.difficulty,
+        timeLimit: q.timeLimit?.toString() ?? "-",
+      }));
+
+      return reply.send({
+        page,
+        size,
+        total,
+        questions: previews,
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        req.log?.error({ err }, "Failed to fetch questions");
+        return reply.status(500).send({ error: err.message });
+      }
+      req.log?.error({ err }, "Failed to fetch questions");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+
+  /**
+   * GET /questions/categories
+   * Returns a list of distinct categories from questions.
+   */
+  app.get("/questions/categories", async (_req, reply) => {
+    try {
+      const categories = await withDbLimit(() =>
+        Question.distinct("categoryTitle"),
+      );
+      return reply.send({ categories });
+    } catch (err) {
+      _req.log?.error({ err }, "Failed to fetch categories");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+
+  /**
+   * GET /questions/difficulties
+   * Returns all distinct difficulties from questions.
+   */
+  app.get("/questions/difficulties", async (_req, reply) => {
+    try {
+      const difficulties = await withDbLimit(() =>
+        Question.distinct("difficulty"),
+      );
+      return reply.send({ difficulties });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        _req.log?.error({ err }, "Failed to fetch question difficulties");
+        return reply.status(500).send({ error: err.message });
+      }
+      _req.log?.error({ err }, "Failed to fetch question difficulties");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+
+  /**
+   * POST /add-question
+   * Add a new question to the database with minimal required fields from the PeerPrep app itself.
+   * Auto-generates slugs from title.
+   */
+  app.post("/add-question", async (req, res) => {
+    const token = getHeader(req, "x-admin-token");
+    if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
+      return res.status(401).send({ error: "Unauthorized" });
+    }
+
+    const Body = z.object({
+      title: z.string().min(1, "Title is required"),
+      categoryTitle: z.string().max(100, "Category title is required"),
+      difficulty: z.enum(["Easy", "Medium", "Hard"]),
+      timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES),
+      content: z.string().min(1, "Content is required"),
+      hints: z.array(z.string()).optional(),
+    });
+
+    const result = Body.safeParse(req.body);
+    if (!result.success) {
+      return res
+        .status(400)
+        .send({ error: "Invalid input", details: result.error.issues });
+    }
+
+    const data = result.data;
+
+    // Check for title uniqueness
+    const existing = await withDbLimit(() =>
+      Question.findOne({ title: data.title }).lean(),
+    );
+
+    if (existing) {
+      return res.status(409).send({
+        ok: false,
+        message: "A question with this title already exists",
+        existingId: existing._id.toString(),
+      });
+    }
+
+    // Auto-generate slug from title
+    const slug = data.title
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    const doc = {
+      source: "admin",
+      globalSlug: slug,
+      titleSlug: slug,
+      title: data.title,
+      categoryTitle: data.categoryTitle,
+      difficulty: data.difficulty,
+      timeLimit: data.timeLimit,
+      content: data.content,
+      hints: data.hints && data.hints.length > 0 ? data.hints : null,
+      exampleTestcases: null,
+      codeSnippets: null,
+    };
+
+    try {
+      const savedDoc = await withDbLimit(() => Question.create(doc));
+
+      return res.status(200).send({
+        ok: true,
+        id: savedDoc._id.toString(),
+        message: "Question created successfully",
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        req.log?.error({ err }, "Failed to add question");
+        return res.status(500).send({ error: err.message });
+      }
+      return res.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+
+  /**
+   * GET /questions/:id
+   * Returns full question details for a given ID.
+   */
+  app.get<{
+    Params: { id: string };
+  }>("/questions/:id", async (req, reply) => {
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!Types.ObjectId.isValid(id)) {
+      return reply.status(400).send({ error: "Invalid question ID" });
+    }
+
+    try {
+      const question = await withDbLimit(() => Question.findById(id).lean());
+
+      if (!question) {
+        return reply.status(404).send({ error: "Question not found" });
+      }
+
+      return reply.send({
+        questionId: question._id.toString(),
+        title: question.title,
+        categoryTitle: question.categoryTitle,
+        difficulty: question.difficulty,
+        timeLimit: question.timeLimit,
+        content: question.content,
+        hints: question.hints ?? [],
+        exampleTestcases: question.exampleTestcases ?? "",
+        codeSnippets: question.codeSnippets ?? [],
+        createdAt: question.createdAt,
+        updatedAt: question.updatedAt,
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        req.log?.error({ err }, "Failed to fetch question details");
+        return reply.status(500).send({ error: err.message });
+      }
+      req.log?.error({ err }, "Failed to fetch question details");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+
+  /**
+   * PUT /questions/:id
+   * Updates a question by ID.
+   * Requires admin token.
+   */
+  app.put<{
+    Params: { id: string };
+    Body: {
+      title?: string;
+      categoryTitle?: string;
+      difficulty?: Difficulty;
+      timeLimit?: number;
+      content?: string;
+      hints?: string[];
+    };
+  }>("/questions/:id", async (req, reply) => {
+    const token = getHeader(req, "x-admin-token");
+    if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!Types.ObjectId.isValid(id)) {
+      return reply.status(400).send({ error: "Invalid question ID" });
+    }
+
+    // Validate body using Zod
+    const BodySchema = z.object({
+      title: z.string().min(1).optional(),
+      categoryTitle: z.string().max(100).optional(),
+      difficulty: z.enum(["Easy", "Medium", "Hard"]).optional(),
+      timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES).optional(),
+      content: z.string().min(1).optional(),
+      hints: z.array(z.string()).optional(),
+    });
+
+    type UpdateData = z.infer<typeof BodySchema> & {
+      titleSlug?: string;
+      globalSlug?: string;
+    };
+
+    const parsed = BodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return reply
+        .status(400)
+        .send({ error: "Invalid input", details: parsed.error.issues });
+    }
+
+    const updateData: UpdateData = parsed.data;
+
+    if (updateData.title) {
+      const slug = updateData.title
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
+      updateData.titleSlug = slug;
+      updateData.globalSlug = slug;
+    }
+
+    try {
+      const updated = await withDbLimit(() =>
+        Question.findByIdAndUpdate(
+          id,
+          { $set: updateData },
+          { new: true, runValidators: true, lean: true },
+        ),
+      );
+
+      if (!updated) {
+        return reply.status(404).send({ error: "Question not found" });
+      }
+
+      return reply.send({
+        ok: true,
+        message: "Question updated successfully",
+        questionId: updated._id.toString(),
+        title: updated.title,
+        titleSlug: updated.titleSlug,
+        globalSlug: updated.globalSlug,
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        req.log?.error({ err }, "Failed to update question");
+        return reply.status(500).send({ error: err.message });
+      }
+      req.log?.error({ err }, "Failed to update question");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+
+  /**
+   * DELETE /questions/:id
+   * Deletes a question from the database by ID.
+   * Requires admin token.
+   */
+  app.delete<{
+    Params: { id: string };
+  }>("/questions/:id", async (req, reply) => {
+    const token = getHeader(req, "x-admin-token");
+    if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!Types.ObjectId.isValid(id)) {
+      return reply.status(400).send({ error: "Invalid question ID" });
+    }
+
+    try {
+      const deleted = await withDbLimit(() =>
+        Question.findByIdAndDelete(id).lean(),
+      );
+
+      if (!deleted) {
+        return reply.status(404).send({ error: "Question not found" });
+      }
+
+      return reply.send({
+        ok: true,
+        message: "Question deleted successfully",
+        deletedId: id,
+        title: deleted.title,
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        req.log?.error({ err }, "Failed to delete question");
+        return reply.status(500).send({ error: err.message });
+      }
+      req.log?.error({ err }, "Failed to delete question");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
   });
 };
 

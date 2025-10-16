@@ -8,7 +8,10 @@ export async function buildServer() {
   const app = Fastify({ logger: true });
 
   // plugins
-  await app.register(cors, { origin: "*" }); // will need to change this in production
+  await app.register(cors, {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  }); // will need to change this in production
   await app.register(db);
   await app.register(rateLimit, {
     global: false,

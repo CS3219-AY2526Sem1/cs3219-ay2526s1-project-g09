@@ -8,10 +8,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-import { mockQuestions } from "@/data/mock-data";
+interface AnswerButtonProps {
+  answer?: string;
+}
 
-const AnswerButton: React.FC = () => {
+const AnswerButton: React.FC<AnswerButtonProps> = ({ answer }) => {
   const [confirmed, setConfirmed] = useState(false);
+
+  const hasAnswer = Boolean(answer && answer.trim().length > 0);
 
   return (
     <Dialog onOpenChange={(open) => !open && setConfirmed(false)}>
@@ -20,7 +24,7 @@ const AnswerButton: React.FC = () => {
           variant="outline"
           className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
         >
-          Show Answer 0/2
+          Show Answer
         </Button>
       </DialogTrigger>
 
@@ -39,13 +43,16 @@ const AnswerButton: React.FC = () => {
               <Button
                 onClick={() => setConfirmed(true)}
                 className="bg-red-600 hover:bg-red-500"
+                disabled={!hasAnswer}
               >
-                Yes, show answer
+                {hasAnswer ? "Yes, show answer" : "No answer available"}
               </Button>
             </div>
           ) : (
             <p className="text-gray-400 whitespace-pre-wrap h-[30vh] overflow-y-auto">
-              {mockQuestions[0].answer}
+              {hasAnswer
+                ? answer
+                : "No answer has been provided for this question."}
             </p>
           )}
         </div>
