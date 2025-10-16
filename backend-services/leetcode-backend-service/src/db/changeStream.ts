@@ -91,18 +91,15 @@ export default fp((app: FastifyInstance) => {
           const doc = change.fullDocument as QuestionDoc;
           if (!doc) continue;
           await postDoc(doc);
-          app.log.info({ doc }, "Got changed document:");
+          logger.info("Got changed document:", { doc });
         } catch (err) {
-          app.log.error(
-            { err },
-            "[ChangeStream] Error processing change event",
-          );
+          logger.error("[ChangeStream] Error processing change event", { err });
         }
       }
       isProcessing = false;
     }
     changeStream.on("change", (change: ChangeStreamDocument) => {
-      app.log.info("[ChangeStream] Event");
+      logger.info("[ChangeStream] Event");
       changeQueue.push(change);
       void processQueue();
     });

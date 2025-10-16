@@ -60,6 +60,17 @@ export async function seedLeetCodeBatch() {
     nextSkip,
   );
 
+  // Check if total is valid, could be undefined if fail to connect to LeetCode
+  if (total === undefined || total === null) {
+    cursor.lastRunAt = new Date();
+    await cursor.save();
+    return {
+      ok: false as const,
+      message: "Failed to fetch total number of questions from leetcode.",
+      nextSkip: cursor.nextSkip,
+    };
+  }
+
   // Check if there are no more questions to fetch
   if (questionList.length === 0 || nextSkip >= total) {
     cursor.lastRunAt = new Date();
