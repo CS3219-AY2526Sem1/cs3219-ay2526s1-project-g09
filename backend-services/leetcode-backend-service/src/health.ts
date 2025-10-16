@@ -10,10 +10,20 @@ interface HealthResponse {
   ok?: boolean;
 }
 
+const BATCH_HEALTH_TIMEOUT_MS = 1500;
+const BATCH_HEALTH_RETRIES = 2;
+const BASE_DELAY_MS = 250;
+
+/** Check the health of the question service.
+ * Throws an error if the service is unhealthy or unreachable after retries.
+ * @param opts - Options for health check.
+ * @returns A promise that resolves to true if healthy, otherwise throws an error.
+ */
+
 export async function checkQuestionServiceHealth({
   url = `${process.env.QUESTION_API_URL}/health`,
-  timeoutMs = 1500,
-  retries = 2,
+  timeoutMs = BATCH_HEALTH_TIMEOUT_MS,
+  retries = BATCH_HEALTH_RETRIES,
 }: HealthOpts = {}) {
   if (!process.env.QUESTION_API_URL)
     throw new Error("QUESTION_API_URL is not set");
@@ -47,7 +57,7 @@ export async function checkQuestionServiceHealth({
     }
 
     if (attempt < retries) {
-      await delay(250 * 2 ** attempt);
+      await delay(BASE_DELAY_MS * 2 ** attempt);
     }
   }
 
