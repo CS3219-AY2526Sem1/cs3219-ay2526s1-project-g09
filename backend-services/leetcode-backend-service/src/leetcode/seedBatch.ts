@@ -151,6 +151,7 @@ type QuestionDetail = NonNullable<Details["question"]>;
  * content of paid questions will not be accessible without a premium account.
  * @param limit - The maximum number of questions to fetch.
  * @param skip - The number of questions to skip.
+ * @param questionList - The list of basic question information to fetch details for.
  * @returns An array of non-paid question details.
  */
 export async function fetchNonPaidQuestionInfo(
