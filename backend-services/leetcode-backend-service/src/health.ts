@@ -61,7 +61,5 @@ export async function checkQuestionServiceHealth({
     }
   }
 
-  throw new Error(
-    `Question service health check failed: ${(lastErr as Error)?.message ?? lastErr}`,
-  );
+  throw new Error(`Question service health check failed: ${String(lastErr)}`);
 }

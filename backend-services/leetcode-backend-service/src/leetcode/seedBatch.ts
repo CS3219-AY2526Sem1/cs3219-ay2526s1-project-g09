@@ -95,7 +95,7 @@ export async function seedLeetCodeBatch() {
     updateOne: {
       filter: { titleSlug: q.titleSlug },
       update: {
-        // $setOnInsert to avoid overwriting existing entries
+        // Use $setOnInsert for all fields to ensure insert-only behavior; existing entries are never updated.
         $setOnInsert: {
           globalSlug: `leetcode:${q.titleSlug}`,
           source: "leetcode",
