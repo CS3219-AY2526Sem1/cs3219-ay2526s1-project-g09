@@ -87,6 +87,7 @@ export async function seedLeetCodeBatch() {
   const questionInfos: QuestionDetail[] = await fetchNonPaidQuestionInfo(
     pageSize,
     nextSkip,
+    questionList,
   );
 
   const ops = questionInfos.map((q) => ({
@@ -155,35 +156,21 @@ type QuestionDetail = NonNullable<Details["question"]>;
 export async function fetchNonPaidQuestionInfo(
   limit: number,
   skip: number,
+  questionList: BasicInformation[],
 ): Promise<QuestionDetail[]> {
-  const res = await gql<
-    QuestionList,
-    {
-      categorySlug: string;
-      limit: number;
-      skip: number;
-      filters: Record<string, unknown>;
-    }
-  >(QUERY_LIST, { categorySlug: "", limit: limit, skip: skip, filters: {} });
-
-  const questionList = res.problemsetQuestionList;
-  const questions: BasicInformation[] = questionList.questions;
-
   const limitConcurrency = pLimit(DETAIL_CONCURRENCY);
 
-  const tasks = questions
-    .filter((q) => !q.isPaidOnly)
-    .map((q) =>
-      limitConcurrency(async () => {
-        try {
-          const detail = await getQuestionDetail(q.titleSlug);
-          return detail ?? null;
-        } catch {
-          logger.error(`Failed to fetch details for ${q.titleSlug}`);
-          return null;
-        }
-      }),
-    );
+  const tasks = questionList.map((q) =>
+    limitConcurrency(async () => {
+      try {
+        const detail = await getQuestionDetail(q.titleSlug);
+        return detail ?? null;
+      } catch {
+        logger.error(`Failed to fetch details for ${q.titleSlug}`);
+        return null;
+      }
+    }),
+  );
 
   const results = await Promise.all(tasks);
   return results.filter((d): d is QuestionDetail => d !== null);
