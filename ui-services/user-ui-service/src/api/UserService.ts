@@ -1,14 +1,17 @@
 import type { User } from "@/types/User";
 
-const BASE_URL = "http://localhost:5277/api/user-service";
+const BASE_URL = "http://localhost:5277/api/v1/user-service";
 
 let csrfToken: string | null = null;
 
 async function getCsrfToken(): Promise<string> {
   if (csrfToken) return csrfToken;
-  const res = await fetch("http://localhost:5277/api/csrf-token", {
-    credentials: "include",
-  });
+  const res = await fetch(
+    "http://localhost:5277/api/v1/user-service/csrf-token",
+    {
+      credentials: "include",
+    },
+  );
   const data = await res.json();
   csrfToken = data.csrfToken;
   if (!csrfToken) {
