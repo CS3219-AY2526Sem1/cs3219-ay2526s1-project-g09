@@ -66,7 +66,8 @@ export async function seedLeetCodeBatch() {
     await cursor.save();
     return {
       ok: false as const,
-      message: "Failed to fetch total number of questions from leetcode.",
+      message:
+        "Failed to fetch total number of questions from leetcode. Possible failed connection to LeetCode.",
       nextSkip: cursor.nextSkip,
     };
   }
