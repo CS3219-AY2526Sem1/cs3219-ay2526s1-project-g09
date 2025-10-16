@@ -47,7 +47,7 @@ OR
 ```bash
 docker network create peerprep_net # If not created yet
 docker build --tag question-service .
-docker run --rm --publish 5275:5275 --env-file .env -name question-backend --network peerprep_net question-service
+docker run --rm --publish 5275:5275 --env-file .env --name question-backend --network peerprep_net question-service
 ```
 
 You should see logs like:
