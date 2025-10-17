@@ -116,14 +116,14 @@ async function generateOTPforEmail(email) {
     lowerCaseAlphabets: false,
   });
 
+  // Save OTP in DB
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  await _createOTPForEmail(email, otp, expiresAt);
+
   // Send OTP
   const subject = "Verify Your PeerPrep Email Address";
   const body = "Your OTP is: " + otp;
   await _sendEmail(email, subject, body);
-
-  // Save OTP in DB
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-  await _createOTPForEmail(email, otp, expiresAt);
 }
 
 export async function verifyOTP(req, res) {
