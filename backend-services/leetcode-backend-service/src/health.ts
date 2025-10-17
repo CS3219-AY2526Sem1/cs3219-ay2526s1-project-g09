@@ -30,7 +30,7 @@ export async function checkQuestionServiceHealth({
 
   let lastErr: unknown;
 
-  for (let attempt = 0; attempt <= retries; attempt++) {
+  for (let attempt = 0; attempt < retries; attempt++) {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), timeoutMs);
 

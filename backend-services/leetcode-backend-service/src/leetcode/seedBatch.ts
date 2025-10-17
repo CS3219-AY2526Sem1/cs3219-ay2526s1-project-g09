@@ -97,7 +97,7 @@ export async function seedLeetCodeBatch() {
     updateOne: {
       filter: { titleSlug: q.titleSlug },
       update: {
-        // Use $setOnInsert for all fields to ensure insert-only behavior; existing entries are never updated.
+        // Use $setOnInsert for all fields to ensure insert-only behavior; existing entries' application fields are never updated (though MongoDB may update internal metadata fields).
         $setOnInsert: {
           globalSlug: `leetcode:${q.titleSlug}`,
           source: "leetcode",
