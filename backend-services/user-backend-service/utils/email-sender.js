@@ -17,7 +17,6 @@ export async function sendEmail(to, subject, text) {
       to,
       subject,
       text,
-      bcc: process.env.EMAIL_USER,
     });
   } catch (error) {
     console.error("Failed to send email: ", error);
