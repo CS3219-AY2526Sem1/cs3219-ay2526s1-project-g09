@@ -86,11 +86,11 @@ src/
 
 ## API
 
-Base URL: `http://localhost:5285/api/v1`
+Base URL: `http://localhost:5285/api/v1/leetcode-service`
 
 ### Seed 200 problems into Mongo
 
-**POST** `/leetcode/seed-batch`  
+**POST** `/seed-batch`  
 Fetches the next 200 problems and **upserts** to Mongo.
 
 Examples:
@@ -98,7 +98,7 @@ Examples:
 ```bash
 # Replace ADMIN_TOKEN with DB password
 # MUSt run the question-service before running the follow command
-curl.exe --request POST -H "X-Admin-Token: <>" --url "http://localhost:5285/api/v1/leetcode/seed-batch"
+curl.exe --request POST -H "X-Admin-Token: <ADMIN_TOKEN>" --url "http://localhost:5285/api/v1/leetcode-service/seed-batch"
 ```
 
 ## Data Model
