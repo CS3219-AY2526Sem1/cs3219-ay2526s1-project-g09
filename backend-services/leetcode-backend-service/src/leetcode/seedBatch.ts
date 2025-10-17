@@ -54,25 +54,29 @@ export async function seedLeetCodeBatch() {
     };
   }
 
-  // Fetch question list using the cursor's nextSkip
-  const { questionList, total } = await fetchNonPaidQuestionList(
-    pageSize,
-    nextSkip,
-  );
+  // Fetch question list
+  let questionList: BasicInformation[] = [];
+  let total = 0;
 
-  // Check if total is valid, could be undefined if fail to connect to LeetCode
-  if (total === undefined || total === null) {
+  try {
+    const { questionList: fetchedQuestionList, total: fetchedTotal } =
+      await fetchNonPaidQuestionList(pageSize, nextSkip);
+    questionList = fetchedQuestionList;
+    total = fetchedTotal;
+  } catch (err) {
+    logger.error(
+      `Failed to fetch question list from LeetCode: ${(err as Error).message}`,
+    );
     cursor.lastRunAt = new Date();
     await cursor.save();
     return {
-      ok: false as const,
-      message:
-        "Failed to fetch total number of questions from leetcode. Possible failed connection to LeetCode.",
+      ok: false,
+      message: `Failed to fetch question list from LeetCode: ${(err as Error).message}`,
       nextSkip: cursor.nextSkip,
     };
   }
 
-  // Check if there are no more questions to fetch
+  // Check if there are more questions to process
   if (questionList.length === 0 || nextSkip >= total) {
     cursor.lastRunAt = new Date();
     cursor.total = total ?? cursor.total;
@@ -199,6 +203,10 @@ export async function fetchNonPaidQuestionList(
       filters: Record<string, unknown>;
     }
   >(QUERY_LIST, { categorySlug: "", limit: limit, skip: skip, filters: {} });
+
+  if (!res.problemsetQuestionList) {
+    throw new Error("Failed to fetch question list from LeetCode");
+  }
 
   const { total, questions } = res.problemsetQuestionList;
   const questionList = questions.filter((q) => !q.isPaidOnly);
