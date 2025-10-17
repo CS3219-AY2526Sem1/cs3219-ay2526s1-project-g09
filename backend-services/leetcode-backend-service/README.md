@@ -49,13 +49,13 @@ Server listening on http://localhost:5285
 **Note**: Local development (e.g. `npm run dev`) is possible (though not recommended). To enable it, update the .env file by changing:
 
 ```bash
-QUESTION_API_URL=http://question-backend:5275/api/v1/questions
+QUESTION_API_URL=http://question-backend:5275/api/v1/question-service
 ```
 
 to:
 
 ```bash
-QUESTION_API_URL=http://localhost:5275/api/v1/questions
+QUESTION_API_URL=http://localhost:5275/api/v1/question-service
 ```
 
 Do change the `QUESTION_API_URL` back when using docker run.

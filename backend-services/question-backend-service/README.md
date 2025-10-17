@@ -75,69 +75,86 @@ src/
 
 ## API
 
-Base URL: `http://localhost:5275/api/v1`
+Base URL: `http://localhost:5275/api/v1/question-service`
 
-### Questions — existence check
+### Existence Check
 
-**GET** `/question/exists`  
+**POST** `/exists-categories-difficulties`  
 Checks whether a question with the given attributes exists.
 
-Query params
+Sample reply body:
 
-- categoryTitle (string)
-- difficulty (Easy|Medium|Hard)
-
-Example:
-
-```bash
-# For window users
-curl.exe  http://localhost:5275/api/questions/exists?categoryTitle=Algorithms&difficulty=Easy
-```
-
-### Questions — random fetch
-
-**GET** `/question/random`  
-Returns a single random question filtered by query.
-
-Query params
-
-- categoryTitle (string)
-- difficulty (Easy|Medium|Hard)
-
-Example:
-
-```bash
-# For window users
-curl.exe http://localhost:5275/api/questions/random?categoryTitle=Algorithms&difficulty=Easy
-```
-
-### Questions — insert
-
-**POST** `/questions/post-question`
-Upserts a question document.
-
-## Data Model
-
-`Question` (database: `question-service`)
-
-```ts
+```json
 {
-  titleSlug: String,
-  title: String,
-  difficulty: "Easy" | "Medium" | "Hard",
-  categoryTitle: String,
-  timeLimit: Number,
-  content: String,
-  codeSnippets: [{
-    lang: String,
-    langSlug: String,
-    code: String,
-  }],
-  hints: [String],
-  sampleTestCase: String,
-  createdAt: Date,
-  updatedAt: Date
+  "categories": {
+    "Algorithms": ["Easy", "Medium", "Hard"],
+    "CS": ["Easy"]
+  }
 }
 ```
+
+Sample response:
+
+```json
+{
+  "Algorithms": {
+    "Easy": true,
+    "Medium": true,
+    "Hard": true
+  },
+  "CS": {
+    "Easy": false
+  }
+}
+```
+
+### Fetch random question
+
+**POST** `/random`  
+Returns a single random question filtered by query.
+
+Sample reply body:
+
+```json
+{
+  "categories": {
+    "Algorithms": ["Easy", "Medium", "Hard"],
+    "Database": ["Easy"]
+  }
+}
+```
+
+Sample response:
+
+```json
+{
+  "_id": "68ebac53b63b10de074be992",
+  "globalSlug": "leetcode:rearrange-products-table",
+  "__v": 0,
+  "categoryTitle": "Database",
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+  ],
+  "content": "<p>Table: <code>Products</code></p>\n....",
+  "createdAt": "2025-10-12T13:25:40.139Z",
+  "difficulty": "Easy",
+  "exampleTestcases": "{\"headers\":{\"Products\":[\"product_id\",\"store1\",\"store2\",\"store3\"]},\"rows\":{\"Products\":[[0, 95, 100, 105], [1, 70, null, 80]]}}",
+  "hints": [],
+  "source": "leetcode",
+  "timeLimit": 30,
+  "title": "Rearrange Products Table",
+  "titleSlug": "rearrange-products-table",
+  "updatedAt": "2025-10-12T13:25:40.139Z"
+}
+```
+
+### Insert Question into Database
+
+**POST** `/question`
+Upserts a question document.
 
 ---
