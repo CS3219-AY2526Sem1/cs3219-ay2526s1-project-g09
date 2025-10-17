@@ -67,7 +67,7 @@ jobs:
           npx eslint --format json . > eslint-report.json
           cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
 
-  questions-ui-lint:
+  question-ui-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Set REVIEWDOG_GITHUB_API_TOKEN
@@ -100,7 +100,7 @@ jobs:
           eslint_exit_code=$exit_code
 
           if [ $eslint_exit_code -ne 0 ]; then
-            echo "ESLint failed for questions-ui"
+            echo "ESLint failed for question-ui"
             exit 1
           fi
 
@@ -180,7 +180,7 @@ jobs:
           eslint_exit_code=$exit_code
 
           if [ $eslint_exit_code -ne 0 ]; then
-            echo "ESLint failed for questions-ui"
+            echo "ESLint failed for question-ui"
             exit 1
           fi
 

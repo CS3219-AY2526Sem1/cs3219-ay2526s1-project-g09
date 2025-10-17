@@ -21,7 +21,7 @@ jobs:
           # Add one entry per microservice
           - name: matching-ui
             context: ./ui-services/matching-ui-service
-          - name: questions-ui
+          - name: question-ui
             context: ./ui-services/question-ui-service
           - name: collab-ui
             context: ./ui-services/collab-ui-service
