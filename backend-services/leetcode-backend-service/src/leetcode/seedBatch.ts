@@ -13,6 +13,7 @@ import pLimit from "p-limit";
 import { logger } from "../logger.js";
 import { checkQuestionServiceHealth } from "../health.js";
 
+const PAGE_SIZE = 200;
 /**
  * Maximum number of concurrent requests for fetching question details.
  * This can be configured via the LEETCODE_DETAIL_CONCURRENCY environment variable.
@@ -39,7 +40,7 @@ export async function seedLeetCodeBatch() {
   const id = "questions";
   const cursor =
     (await SeedCursor.findById(id)) ??
-    new SeedCursor({ _id: id, nextSkip: 0, pageSize: 200 });
+    new SeedCursor({ _id: id, nextSkip: 0, pageSize: PAGE_SIZE });
   const { pageSize, nextSkip } = cursor;
 
   try {

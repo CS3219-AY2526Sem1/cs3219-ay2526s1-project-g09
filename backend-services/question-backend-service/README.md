@@ -137,7 +137,7 @@ Sample response:
       "lang": "MySQL",
       "langSlug": "mysql",
       "code": "# Write your MySQL query statement below\n"
-    },
+    }
   ],
   "content": "<p>Table: <code>Products</code></p>\n....",
   "createdAt": "2025-10-12T13:25:40.139Z",
