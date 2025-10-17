@@ -90,11 +90,8 @@ export async function seedLeetCodeBatch() {
     };
   }
 
-  const questionInfos: QuestionDetail[] = await fetchNonPaidQuestionInfo(
-    pageSize,
-    nextSkip,
-    questionList,
-  );
+  const questionInfos: QuestionDetail[] =
+    await fetchNonPaidQuestionInfo(questionList);
 
   const ops = questionInfos.map((q) => ({
     updateOne: {
@@ -161,8 +158,6 @@ type QuestionDetail = NonNullable<Details["question"]>;
  * @returns An array of non-paid question details.
  */
 export async function fetchNonPaidQuestionInfo(
-  limit: number,
-  skip: number,
   questionList: BasicInformation[],
 ): Promise<QuestionDetail[]> {
   const limitConcurrency = pLimit(DETAIL_CONCURRENCY);
