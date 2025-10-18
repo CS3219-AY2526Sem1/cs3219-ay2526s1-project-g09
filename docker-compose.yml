@@ -1,0 +1,99 @@
+services:
+  ui-shell:
+    build:
+      context: ./ui-shell
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - matching-ui
+      - questions-ui
+      - collab-ui
+      - user-ui
+      - history-ui
+    container_name: peerprep-ui-shell
+
+  matching-ui:
+    build:
+      context: ./ui-services/matching-ui-service
+      dockerfile: Dockerfile
+    ports:
+      - "5174:5174"
+    container_name: peerprep-matching-ui
+
+  questions-ui:
+    build:
+      context: ./ui-services/question-ui-service
+      dockerfile: Dockerfile
+    ports:
+      - "5175:5175"
+    container_name: peerprep-question-ui
+
+  collab-ui:
+    build:
+      context: ./ui-services/collab-ui-service
+      dockerfile: Dockerfile
+    ports:
+      - "5176:5176"
+    container_name: peerprep-collab-ui
+
+  user-ui:
+    build:
+      context: ./ui-services/user-ui-service
+      dockerfile: Dockerfile
+    ports:
+      - "5177:5177"
+    container_name: peerprep-user-ui
+  history-ui:
+    build:
+      context: ./ui-services/history-ui-service
+      dockerfile: Dockerfile
+    ports:
+      - "5178:5178"
+    container_name: peerprep-history-ui
+  user-service:
+    build:
+      context: ./backend-services/user-backend-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend-services/user-backend-service/.env
+    ports:
+      - "5277:5277"
+    container_name: peerprep-user-backend
+
+  redis:
+    image: redis:8.2.1
+    ports:
+      - "6379:6379"
+
+  matching-service:
+    container_name: peerprep-matching-service
+    build:
+      context: ./backend-services/matching-backend-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend-services/matching-backend-service/.env
+    ports:
+      - "5274:5274"
+    depends_on:
+      - redis
+
+  leetcode-backend-service:
+    build:
+      context: ./backend-services/leetcode-backend-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend-services/leetcode-backend-service/.env
+    ports:
+      - "5285:5285"
+    container_name: peerprep-leetcode-backend
+
+  question-backend-service:
+    build:
+      context: ./backend-services/question-backend-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend-services/question-backend-service/.env
+    ports:
+      - "5275:5275"
+    container_name: peerprep-question-backend

@@ -1,0 +1,15 @@
+services:
+  redis:
+    image: redis:8.2.1
+    ports:
+      - "6379:6379"
+
+  matching-service:
+    build: .
+    container_name: peerprep-matching-service
+    env_file:
+      - .env
+    ports:
+      - "5274:5274"
+    depends_on:
+      - redis
