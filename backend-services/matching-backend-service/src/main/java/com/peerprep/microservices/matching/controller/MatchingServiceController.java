@@ -171,11 +171,13 @@ public class MatchingServiceController {
     return matchingAcceptanceService
         .connectMatch(userId, matchAcceptanceRequest.matchId())
         .thenApply(response -> {
-          MatchAcceptanceResponse body = new MatchAcceptanceResponse(response);
+          MatchAcceptanceResponse body = new MatchAcceptanceResponse(
+              response.getStatus(),
+              response.getSession());
 
-          if (response == MatchAcceptanceOutcome.Status.SUCCESS) {
+          if (response.getStatus() == MatchAcceptanceOutcome.Status.SUCCESS) {
             return ResponseEntity.ok(body);
-          } else if (response == MatchAcceptanceOutcome.Status.REJECTED) {
+          } else if (response.getStatus() == MatchAcceptanceOutcome.Status.REJECTED) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
           } else {
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(body);

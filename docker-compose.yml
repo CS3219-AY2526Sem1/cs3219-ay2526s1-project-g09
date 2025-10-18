@@ -78,6 +78,15 @@ services:
     depends_on:
       - redis
 
+  collab-service:
+    build:
+      context: ./backend-services/collab-backend-service
+      dockerfile: Dockerfile
+    container_name: collab-service
+    ports:
+      - "5276:5276"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
   leetcode-backend-service:
     build:
       context: ./backend-services/leetcode-backend-service

@@ -1,20 +1,68 @@
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import Editor from "@monaco-editor/react";
 import { Tldraw } from "tldraw";
 import "tldraw/tldraw.css";
+import CollabEditor from "./collab/CollabEditor";
+import { useCollabSession } from "../context/CollabSessionHook";
 
-const WorkingWindow: React.FC = () => {
-  // State to hold the code content
-  const [code, setCode] = useState<string>(
-    "// Start coding here!\nfunction twoSum(nums, target) {\n    \n}",
-  );
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  isVerified: boolean;
+  createdAt: string;
+}
 
-  const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      setCode(value);
-    }
-  };
+interface CollabPageProps {
+  user?: User | null;
+}
+
+const WorkingWindow: React.FC<CollabPageProps> = ({ user }) => {
+  const { session, loading, error, isHydrated } = useCollabSession();
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-white/70">
+          Collaboration session unavailable in this view.
+        </p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Please log in to access collab</p>
+      </div>
+    );
+  }
+
+  const username = user.username;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-white/70">Loading collaboration session…</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-400">
+          {error ?? "No active collaboration session found."}
+        </p>
+      </div>
+    );
+  }
+
+  const participants =
+    session.users ??
+    session.participants?.map((participant) => participant.userId) ??
+    [];
 
   return (
     <div className="flex flex-1 bg-gray-800 rounded-lg shadow-md overflow-hidden relative">
@@ -24,7 +72,7 @@ const WorkingWindow: React.FC = () => {
             value="code"
             className="data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
           >
-            Code
+            Code {username}
           </TabsTrigger>
           <TabsTrigger
             value="whiteboard"
@@ -34,16 +82,11 @@ const WorkingWindow: React.FC = () => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="code" className="flex-1 p-4 overflow-hidden">
-          {/* The Monaco Editor component */}
-          <Editor
-            height="100%"
-            defaultLanguage="javascript"
-            defaultValue={code}
-            theme="vs-dark"
-            onChange={handleEditorChange}
-            options={{
-              minimap: { enabled: false },
-            }}
+          <CollabEditor
+            questionId={session.questionId}
+            users={participants}
+            sessionId={session.sessionId}
+            currentUserId={username}
           />
         </TabsContent>
         <TabsContent value="whiteboard" className="flex-1 p-4 overflow-hidden">
