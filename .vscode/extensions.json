@@ -2,6 +2,7 @@
   "recommendations": [
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
-    "GraphQL.vscode-graphql"
+    "GraphQL.vscode-graphql", 
+    "vitest.explorer"
   ]
 }
