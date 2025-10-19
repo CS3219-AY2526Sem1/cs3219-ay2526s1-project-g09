@@ -12,5 +12,8 @@ export default defineConfig({
       reporter: ["text", "html", "lcov"],
       exclude: ["**/tests/**", "**/dist/**"],
     },
+    typecheck: {
+      tsconfig: "tsconfig.test.json",
+    },
   },
 });
