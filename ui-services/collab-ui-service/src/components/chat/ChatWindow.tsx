@@ -1,30 +1,76 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import ChatHeader from "./ChatHeader"; // Import the new header component
-import ChatMessage from "./ChatMessage"; // Import the new message component
+import ChatHeader from "./ChatHeader";
+import ChatMessage from "./ChatMessage";
+import { io, Socket } from "socket.io-client";
+import type { User } from "@/types/User";
+import { useCollabSession } from "@/context/CollabSessionHook";
 
-const ChatWindow: React.FC = () => {
+interface ChatWindowProps {
+  user?: User | null;
+}
+
+interface MessagePayload {
+  senderId?: string;
+  text: string;
+}
+
+const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const [chatInput, setChatInput] = useState<string>("");
   const [messages, setMessages] = useState<
     { sender: string; text: string; isUser: boolean }[]
-  >([
-    { sender: "CoconutTea", text: "Hello There", isUser: false },
-    { sender: "You", text: "General Kenobi.", isUser: true },
-    { sender: "You", text: "General Kenobi.", isUser: true },
-    { sender: "You", text: "General Kenobi.", isUser: true },
-    { sender: "You", text: "General Kenobi.", isUser: true },
-    { sender: "You", text: "General Kenobi.", isUser: true },
-  ]);
+  >([]);
+  const { session } = useCollabSession();
 
-  const handleSendMessage = () => {
-    if (chatInput.trim()) {
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    if (!session?.sessionId) return;
+
+    const socket = io("http://localhost:5286", {
+      auth: { userId: user?.id },
+    });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("join_room", { roomId: session.sessionId });
+    });
+
+    // Listen for messages from server
+    socket.on("receive_message", (message: MessagePayload) => {
       setMessages((prev) => [
         ...prev,
-        { sender: "You", text: chatInput, isUser: true },
+        {
+          sender: message.senderId || "Unknown user",
+          text: message.text,
+          isUser: false,
+        },
       ]);
-      setChatInput("");
-    }
+    });
+
+    return () => {
+      socket.off("receive_message");
+      socket.disconnect();
+    };
+  }, [session?.sessionId, user?.id]);
+
+  const handleSendMessage = () => {
+    if (!chatInput.trim() || !socketRef.current) return;
+
+    const newMessage = {
+      senderId: user?.id,
+      text: chatInput,
+    };
+
+    setMessages((prev) => [
+      ...prev,
+      { sender: "You", text: chatInput, isUser: true },
+    ]);
+
+    socketRef.current.emit("send_message", { message: newMessage });
+
+    setChatInput("");
   };
 
   return (

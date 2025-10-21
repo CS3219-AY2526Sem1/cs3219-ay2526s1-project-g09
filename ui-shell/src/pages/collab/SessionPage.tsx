@@ -89,6 +89,7 @@ const SessionContent: React.FC<SessionContentProps> = ({ user }) => {
           <RemoteWrapper
             remote={() => import("collabUiService/ChatWindow")}
             remoteName="ChatWindow"
+            remoteProps={{ user }}
             loadingMessage="Loading Chat..."
             errorMessage="Chat service unavailable"
           />
