@@ -5,7 +5,7 @@ import {
   requestPreference,
   createPreference,
   type UserPreferences,
-} from "@/api/matchingService";
+} from "@/api/routes/matchingService";
 
 interface QuestionPreferencesProps {
   userId: string;

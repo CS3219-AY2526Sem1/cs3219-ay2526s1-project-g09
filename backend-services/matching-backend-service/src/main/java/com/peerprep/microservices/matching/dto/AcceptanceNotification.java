@@ -20,4 +20,6 @@ public class AcceptanceNotification {
     String user2Id;
     @JsonProperty
     MatchAcceptanceOutcome.Status status;
+    String matchId;
+    CollabSession session;
 }

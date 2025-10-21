@@ -1,3 +1,4 @@
+# This docker-compose.yml is mostly used for cloud deployment.
 services:
   redis:
     image: redis:8.2.1
@@ -10,6 +11,6 @@ services:
     env_file:
       - .env
     ports:
-      - "5274:5274"
+      - "80:5274" # Use 80:5274 for deployment. 5274:5274 for local testing.
     depends_on:
       - redis

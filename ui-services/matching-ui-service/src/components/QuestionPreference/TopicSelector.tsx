@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { getCategoriesWithDifficulties } from "@/api/routes/questionService";
+import { useEffect, useState } from "react";
 
 interface TopicSelectorProps {
   selectedTopics: Record<string, string[]>; // e.g. { "OOP": ["Easy"], "Python": ["Hard"] }
@@ -7,83 +9,92 @@ interface TopicSelectorProps {
   >;
 }
 
-// Dummy topics in map/hash format
-const topics: Record<string, string[]> = {
-  OOP: ["Easy", "Medium"],
-  Database: ["Medium", "Hard"],
-  Algorithm: ["Easy", "Hard"],
-  AI: ["Medium", "Hard"],
-  Python: ["Easy", "Medium", "Hard"],
-  Java: ["Easy", "Medium"],
-  Ruby: ["Easy"],
-  Perl: ["Easy"],
-  Redis: ["Easy"],
-  SQL: ["Easy"],
-  JavaScript: ["Easy", "Medium"],
-  CSS: ["Easy", "Medium"],
-};
-
-// All possible difficulties (for alignment)
-const allDifficulties: string[] = ["Easy", "Medium", "Hard"];
-
 const TopicSelector: React.FC<TopicSelectorProps> = ({
   selectedTopics,
   setSelectedTopics,
 }) => {
+  const [topics, setTopics] = useState<Record<string, string[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  /** Fetch topics with difficulties */
+  useEffect(() => {
+    const fetchTopics = async () => {
+      try {
+        setLoading(true);
+        const data = await getCategoriesWithDifficulties();
+        setTopics(data);
+      } catch (err: unknown) {
+        console.error("Failed to load topics:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch topics");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTopics();
+  }, []);
+
+  /** All unique difficulties across topics (for consistent button layout) */
+  const allDifficulties = Array.from(
+    new Set(Object.values(topics).flat()),
+  ).sort(
+    (a, b) =>
+      ["Easy", "Medium", "Hard"].indexOf(a) -
+      ["Easy", "Medium", "Hard"].indexOf(b),
+  );
+
+  /** Toggles one difficulty for a topic */
   const handleDifficultyToggle = (topic: string, difficulty: string) => {
     setSelectedTopics((prev) => {
       const newMap = { ...prev };
-      const currentDiffs = newMap[topic] || [];
+      const current = newMap[topic] || [];
 
-      if (currentDiffs.includes(difficulty)) {
-        const updated = currentDiffs.filter((d) => d !== difficulty);
-        if (updated.length === 0) delete newMap[topic];
-        else newMap[topic] = updated;
-      } else {
-        newMap[topic] = [...currentDiffs, difficulty];
-      }
+      newMap[topic] = current.includes(difficulty)
+        ? current.filter((d) => d !== difficulty)
+        : [...current, difficulty];
+
+      if (newMap[topic].length === 0) delete newMap[topic];
       return newMap;
     });
   };
 
-  const handleTopicToggle = (topic: string, available: string[]) => {
+  /** Toggles entire topic (select all / deselect all) */
+  const handleTopicToggle = (topic: string, diffs: string[]) => {
     setSelectedTopics((prev) => {
       const newMap = { ...prev };
-      const currentDiffs = newMap[topic] || [];
-
-      if (currentDiffs.length === available.length) {
-        // all selected → deselect all
-        delete newMap[topic];
-      } else {
-        // select all available difficulties
-        newMap[topic] = [...available];
-      }
+      if (newMap[topic]?.length === diffs.length) delete newMap[topic];
+      else newMap[topic] = [...diffs];
       return newMap;
     });
   };
 
-  const handleSelectAll = () => {
-    const fullSelection = Object.fromEntries(
-      Object.entries(topics).map(([topic, diffs]) => [topic, [...diffs]]),
-    );
-    setSelectedTopics(fullSelection);
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedTopics({});
-  };
+  /** Select / Deselect all topics */
+  const handleSelectAll = () =>
+    setSelectedTopics(Object.fromEntries(Object.entries(topics)));
+  const handleDeselectAll = () => setSelectedTopics({});
 
   const isAllSelected =
     Object.keys(selectedTopics).length === Object.keys(topics).length;
 
+  /** --- Render --- */
+  if (loading)
+    return (
+      <div className="p-4 text-center text-white text-lg">
+        Loading topics...
+      </div>
+    );
+
+  if (error)
+    return <div className="p-4 text-center text-red-400 text-lg">{error}</div>;
+
   return (
     <div className="rounded-lg shadow-lg p-4">
-      {/* Header row: title + select all button */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-4xl font-semibold text-white">
           Question Preferences
         </h1>
-
         <Button
           onClick={isAllSelected ? handleDeselectAll : handleSelectAll}
           variant="outline"
@@ -93,10 +104,11 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
         </Button>
       </div>
 
-      {/* Topics list */}
+      {/* Topics */}
       <div className="space-y-4 overflow-y-auto h-[50vh] p-3">
-        {Object.entries(topics).map(([topic, difficulties]) => {
-          const selectedDiffs = selectedTopics[topic] || [];
+        {Object.entries(topics).map(([topic, topicDiffs]) => {
+          const selected = selectedTopics[topic] || [];
+          const allSelected = selected.length === topicDiffs.length;
 
           return (
             <div
@@ -105,16 +117,10 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
             >
               {/* Topic button */}
               <Button
-                onClick={() => handleTopicToggle(topic, difficulties)}
-                variant={
-                  selectedDiffs.length === difficulties.length
-                    ? "default"
-                    : "outline"
-                }
+                onClick={() => handleTopicToggle(topic, topicDiffs)}
+                variant={allSelected ? "default" : "outline"}
                 className={`w-1/3 text-left ${
-                  selectedDiffs.length === difficulties.length
-                    ? "bg-orange-500 text-white"
-                    : "text-black"
+                  allSelected ? "bg-orange-500 text-white" : "text-black"
                 } px-3 py-1`}
               >
                 {topic}
@@ -123,24 +129,24 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
               {/* Difficulty buttons */}
               <div className="w-2/3 flex flex-wrap gap-2 justify-between">
                 {allDifficulties.map((diff) => {
-                  const isAvailable = difficulties.includes(diff);
-                  const isSelected = selectedDiffs.includes(diff);
+                  const available = topicDiffs.includes(diff);
+                  const selectedDiff = selected.includes(diff);
 
                   return (
                     <Button
                       key={diff}
                       size="sm"
-                      variant={isSelected ? "default" : "outline"}
-                      disabled={!isAvailable}
+                      variant={selectedDiff ? "default" : "outline"}
+                      disabled={!available}
                       className={`w-30 text-center px-3 py-1 ${
-                        isSelected
+                        selectedDiff
                           ? "bg-orange-500 text-white"
-                          : !isAvailable
+                          : !available
                             ? "opacity-50 cursor-not-allowed"
                             : "text-black border-white"
                       }`}
                       onClick={() =>
-                        isAvailable && handleDifficultyToggle(topic, diff)
+                        available && handleDifficultyToggle(topic, diff)
                       }
                     >
                       {diff}

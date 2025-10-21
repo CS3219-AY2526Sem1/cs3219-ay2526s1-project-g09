@@ -44,19 +44,32 @@ app.use(
 ); // config cors so that front-end can use
 
 app.use(cookieParser());
+
+// CSRF handling - disabled for development
+const enableCsrf = process.env.ENABLE_CSRF === "true";
+
 // CSRF handling
-app.use(
-  csurf({
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Lax",
-    },
-  }),
-);
-app.get("/api/v1/user-service/csrf-token", (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
+if (enableCsrf) {
+  app.use(
+    csurf({
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
+      },
+    }),
+  );
+
+  app.get("/api/v1/user-service/csrf-token", (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+  });
+} else {
+  // Mock CSRF endpoint when disabled
+  // This is for Elastic Beanstalk since we need HTTPS and a Domain to properly do secure routing.
+  app.get("/api/v1/user-service/csrf-token", (req, res) => {
+    res.json({ csrfToken: "dev-mock-token" });
+  });
+}
 
 app.use("/api/v1/user-service/users", userRoutes);
 app.use("/api/v1/user-service/auth", authRoutes);

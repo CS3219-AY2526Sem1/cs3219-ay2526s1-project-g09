@@ -35,4 +35,5 @@ public class MatchAcceptanceOutcome {
 
   private Status status;
   private MatchDetails match;
+  private CollabSession session;
 }

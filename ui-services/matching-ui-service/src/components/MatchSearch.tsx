@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import MatchStatusUI from "./MatchSearchUi";
-import type { MatchResult, MatchingResponse } from "@/api/matchingService";
+import type {
+  MatchResult,
+  MatchingResponse,
+} from "@/api/routes/matchingService";
 
 interface MatchSearchProps {
   matchRequestPromise: Promise<MatchResult>;

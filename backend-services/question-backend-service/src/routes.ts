@@ -372,6 +372,78 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
+   * GET /questions/categories-with-difficulties
+   * Returns a map of category -> distinct difficulties available (sorted Easy → Medium → Hard)
+   * Example output:
+   * {
+   *   "OOP": ["Easy", "Medium"],
+   *   "Database": ["Medium", "Hard"],
+   *   "Algorithm": ["Easy", "Hard"]
+   * }
+   */
+  app.get("/questions/categories-with-difficulties", async (_req, reply) => {
+    try {
+      // Explicitly type aggregation result
+      interface CategoryDifficultyGroup {
+        _id: {
+          categoryTitle: string;
+          difficulty: string;
+        };
+      }
+
+      const results = await withDbLimit(() =>
+        Question.aggregate<CategoryDifficultyGroup>([
+          {
+            $group: {
+              _id: {
+                categoryTitle: "$categoryTitle",
+                difficulty: "$difficulty",
+              },
+            },
+          },
+        ]),
+      );
+
+      const categoriesMap: Record<string, string[]> = {};
+      const difficultyOrder = ["Easy", "Medium", "Hard"] as const;
+
+      for (const entry of results) {
+        const { categoryTitle, difficulty } = entry._id;
+        if (!categoryTitle || !difficulty) continue;
+
+        const key = String(categoryTitle);
+        const value = String(difficulty);
+
+        if (!categoriesMap[key]) {
+          categoriesMap[key] = [];
+        }
+
+        if (!categoriesMap[key].includes(value)) {
+          categoriesMap[key].push(value);
+        }
+      }
+
+      // Sort difficulties in canonical order
+      for (const key of Object.keys(categoriesMap)) {
+        const diffs = categoriesMap[key];
+        if (!diffs) {
+          continue;
+        }
+        diffs.sort(
+          (a, b) =>
+            difficultyOrder.indexOf(a as (typeof difficultyOrder)[number]) -
+            difficultyOrder.indexOf(b as (typeof difficultyOrder)[number]),
+        );
+      }
+
+      return reply.send(categoriesMap);
+    } catch (err: unknown) {
+      _req.log?.error({ err }, "Failed to fetch categories with difficulties");
+      return reply.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+
+  /**
    * POST /add-question
    * Add a new question to the database with minimal required fields from the PeerPrep app itself.
    * Auto-generates slugs from title.
