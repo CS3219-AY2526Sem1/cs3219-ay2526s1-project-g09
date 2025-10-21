@@ -1,4 +1,14 @@
 import { defineConfig } from "vitest/config";
+import type { AliasOptions } from "vite";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const alias = [
+  { find: "@src", replacement: resolve(__dirname, "./src") },
+] satisfies AliasOptions;
 
 export default defineConfig({
   test: {
@@ -15,5 +25,8 @@ export default defineConfig({
     typecheck: {
       tsconfig: "tsconfig.test.json",
     },
+  },
+  resolve: {
+    alias: [...alias],
   },
 });
