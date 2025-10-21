@@ -76,7 +76,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   return (
     <div className="flex flex-col flex-1 bg-gray-800 p-4 rounded-lg shadow-md overflow-hidden">
       {/* Chat header */}
-      <ChatHeader />
+      <ChatHeader currentUser={user} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-3 px-2 mt-2">
