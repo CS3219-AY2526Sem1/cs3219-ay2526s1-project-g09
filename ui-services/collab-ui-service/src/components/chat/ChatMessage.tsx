@@ -3,9 +3,23 @@ import React from "react";
 interface ChatMessageProps {
   text: string;
   isUser: boolean;
+  isSystem?: boolean;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ text, isUser }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({
+  text,
+  isUser,
+  isSystem,
+}) => {
+  if (isSystem) {
+    return (
+      <div className="flex justify-center my-2">
+        <div className="bg-gray-600 text-gray-200 text-xs italic px-3 py-1 rounded-full">
+          {text}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div

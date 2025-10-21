@@ -4,9 +4,13 @@ import { useCollabSession } from "@/context/CollabSessionHook";
 
 interface ChatHeaderProps {
   currentUser?: User | null;
+  isOtherUserOnline?: boolean;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ currentUser }) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({
+  currentUser,
+  isOtherUserOnline = true,
+}) => {
   const { session } = useCollabSession();
   let otherUser = "Unknown User";
   if (currentUser && session?.users) {
@@ -16,7 +20,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ currentUser }) => {
   return (
     <div className="flex items-center justify-center p-4 space-x-2">
       <span className="text-sm font-semibold text-white">{otherUser}</span>
-      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+      <div
+        className={`w-2 h-2 rounded-full ${
+          isOtherUserOnline
+            ? "bg-green-500 animate-pulse"
+            : "bg-red-500 animate-pulse"
+        }`}
+      ></div>{" "}
     </div>
   );
 };

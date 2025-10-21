@@ -19,17 +19,17 @@ interface MessagePayload {
 const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const [chatInput, setChatInput] = useState<string>("");
   const [messages, setMessages] = useState<
-    { sender: string; text: string; isUser: boolean }[]
+    { sender: string; text: string; isUser: boolean; isSystem?: boolean }[]
   >([]);
+  const [isOtherUserOnline, setIsOtherUserOnline] = useState<boolean>(true);
   const { session } = useCollabSession();
-
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     if (!session?.sessionId) return;
 
     const socket = io("http://localhost:5286", {
-      auth: { userId: user?.id },
+      auth: { userId: user?.id, username: user?.username },
     });
     socketRef.current = socket;
 
@@ -49,11 +49,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
       ]);
     });
 
+    socket.on("user_left", (message: MessagePayload) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "System",
+          text: message.text,
+          isUser: false,
+          isSystem: true,
+        },
+      ]);
+      setIsOtherUserOnline(false);
+    });
+
     return () => {
       socket.off("receive_message");
       socket.disconnect();
     };
-  }, [session?.sessionId, user?.id]);
+  }, [session?.sessionId, user?.id, user?.username]);
 
   const handleSendMessage = () => {
     if (!chatInput.trim() || !socketRef.current) return;
@@ -76,12 +89,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   return (
     <div className="flex flex-col flex-1 bg-gray-800 p-4 rounded-lg shadow-md overflow-hidden">
       {/* Chat header */}
-      <ChatHeader currentUser={user} />
+      <ChatHeader currentUser={user} isOtherUserOnline={isOtherUserOnline} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-3 px-2 mt-2">
         {messages.map((msg, index) => (
-          <ChatMessage key={index} text={msg.text} isUser={msg.isUser} />
+          <ChatMessage
+            key={index}
+            text={msg.text}
+            isUser={msg.isUser}
+            isSystem={msg.isSystem}
+          />
         ))}
       </div>
 

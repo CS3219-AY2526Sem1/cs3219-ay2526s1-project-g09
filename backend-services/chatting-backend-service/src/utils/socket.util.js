@@ -10,8 +10,12 @@ export const initSocket = (server) => {
 
   io.on("connection", (socket) => {
     console.log("New user connected:", socket.id);
-    const { userId } = socket.handshake?.auth || {};
+    const auth = socket.handshake?.auth || {};
+    const userId = auth.userId;
+    const username = auth.username;
+
     if (userId) socket.data.userId = userId;
+    if (username) socket.data.username = username;
 
     socket.on("join_room", ({ roomId }) => {
       if (!roomId) return;
@@ -23,10 +27,16 @@ export const initSocket = (server) => {
     socket.on("send_message", (payload) => {
       const roomId = socket.data.roomId;
       if (!roomId) return;
-      socket.broadcast.to(roomId).emit("receive_message", payload.message);
+      socket.to(roomId).emit("receive_message", payload.message);
     });
 
     socket.on("disconnect", () => {
+      const roomId = socket.data.roomId;
+      if (roomId) {
+        socket.to(roomId).emit("user_left", {
+          text: `${socket.data.username || socket.id} has left the chat.`,
+        });
+      }
       console.log("User disconnected:", socket.id);
     });
   });
