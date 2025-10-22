@@ -47,7 +47,6 @@ export async function seedLeetCodeBatch() {
     if (!process.env.QUESTION_API_URL) {
       throw new Error("QUESTION_API_URL is not set");
     }
-    console.log("Checking question service health...");
     await checkQuestionServiceHealth();
   } catch (err) {
     cursor.lastRunAt = new Date();
