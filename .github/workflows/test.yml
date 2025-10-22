@@ -40,7 +40,7 @@ jobs:
         working-directory: ${{ matrix.service.context }}
         run: |
           mkdir -p test-results
-          npx vitest run --coverage --reporter=junit --outputFile=./test-results/junit.xml
+          npm vitest run --coverage --reporter=junit --outputFile=./test-results/junit.xml
 
       # Step 2: Upload test results (JUnit) to Codecov
       - name: Upload test results to Codecov
