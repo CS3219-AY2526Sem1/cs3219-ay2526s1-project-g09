@@ -43,9 +43,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ${{ matrix.service.context }}
 
       - name: Run tests
         run: npx vitest run --coverage
+        working-directory: ${{ matrix.service.context }}
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
