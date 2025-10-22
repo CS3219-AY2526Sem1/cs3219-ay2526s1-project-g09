@@ -17,18 +17,6 @@ jobs:
       matrix:
         service:
           # Add one entry per microservice
-          - name: matching-ui
-            context: ./ui-services/matching-ui-service
-          - name: question-ui
-            context: ./ui-services/question-ui-service
-          - name: collab-ui
-            context: ./ui-services/collab-ui-service
-          - name: user-ui
-            context: ./ui-services/user-ui-service
-          - name: history-ui
-            context: ./ui-services/history-ui-service
-          - name: question-backend
-            context: ./backend-services/question-backend-service
           - name: leetcode-backend
             context: ./backend-services/leetcode-backend-service
 
