@@ -1,4 +1,5 @@
 import { setTimeout as delay } from "node:timers/promises";
+import { logger } from "./logger";
 
 type HealthOpts = {
   url?: string; // health check URL
@@ -55,10 +56,15 @@ export async function checkQuestionServiceHealth({
       }
     } catch (err) {
       lastErr = err;
-    }
-
-    if (attempt < retries) {
-      await delay(BASE_DELAY_MS * 2 ** attempt);
+      if (attempt >= retries) {
+        logger.error("Final health check attempt failed:", lastErr);
+        throw new Error(`Health check failed: ${String(lastErr)}`);
+      } else {
+        logger.warn(`Health check attempt ${attempt + 1} failed:`, lastErr);
+        await delay(BASE_DELAY_MS * 2 ** attempt);
+      }
+    } finally {
+      clearTimeout(t);
     }
   }
 
