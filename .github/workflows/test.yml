@@ -1,0 +1,53 @@
+name: Run tests and upload coverage
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Run tests and collect coverage
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          # Add one entry per microservice
+          - name: matching-ui
+            context: ./ui-services/matching-ui-service
+          - name: question-ui
+            context: ./ui-services/question-ui-service
+          - name: collab-ui
+            context: ./ui-services/collab-ui-service
+          - name: user-ui
+            context: ./ui-services/user-ui-service
+          - name: history-ui
+            context: ./ui-services/history-ui-service
+          - name: question-backend
+            context: ./backend-services/question-backend-service
+          - name: leetcode-backend
+            context: ./backend-services/leetcode-backend-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npx vitest run --coverage
+
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
