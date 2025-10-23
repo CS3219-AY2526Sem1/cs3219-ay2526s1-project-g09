@@ -25,7 +25,7 @@ vi.mock("../../../src/logger.js", () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
-vi.mock("../../../src/model/question.js", () => ({
+vi.mock("../../../src/db/model/question.js", () => ({
   Question: {
     watch: vi.fn(() => {
       const listeners: any = {};
