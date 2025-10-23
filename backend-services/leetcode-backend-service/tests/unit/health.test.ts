@@ -39,21 +39,20 @@ function makeFetchThatAbortsThen(
   });
 }
 
-// If you already have this in a helper file, import it instead.
-const makeAbortingFetchMock = () =>
-  vi.fn((_url: string, init: any) => {
-    const signal: AbortSignal = init?.signal;
-    return new Promise((_resolve, reject) => {
-      const rejectDeferred = () =>
-        queueMicrotask(() => reject(new DOMException("Aborted", "AbortError")));
+// const makeAbortingFetchMock = () =>
+//   vi.fn((_url: string, init: any) => {
+//     const signal: AbortSignal = init?.signal;
+//     return new Promise((_resolve, reject) => {
+//       const rejectDeferred = () =>
+//         queueMicrotask(() => reject(new DOMException("Aborted", "AbortError")));
 
-      if (signal?.aborted) {
-        rejectDeferred();
-        return;
-      }
-      signal?.addEventListener("abort", rejectDeferred, { once: true });
-    });
-  });
+//       if (signal?.aborted) {
+//         rejectDeferred();
+//         return;
+//       }
+//       signal?.addEventListener("abort", rejectDeferred, { once: true });
+//     });
+//   });
 
 describe("checkQuestionServiceHealth (unit)", () => {
   beforeEach(() => {
