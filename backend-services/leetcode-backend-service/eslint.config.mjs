@@ -1,5 +1,3 @@
-// @ts-check
-
 import eslint from "@eslint/js";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
@@ -24,8 +22,9 @@ export default defineConfig(
 
   {
     files: ["**/*.test.{ts,tsx,js,jsx}", "tests/**/*.{ts,tsx,js,jsx}"],
+    plugins: { vitest },
     rules: {
-      ...vitest.configs.all.rules,
+      ...vitest.configs.recommended.rules,
     },
     settings: {
       vitest: {
