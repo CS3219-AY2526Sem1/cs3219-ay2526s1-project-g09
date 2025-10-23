@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: question-service
+    image: peerprep-question-service
     ports:
-      - "5275:5275"
+      - "80:5275"
     env_file:
       - .env
