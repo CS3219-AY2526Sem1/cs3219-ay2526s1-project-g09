@@ -1,4 +1,4 @@
-import { after, afterEach } from "node:test";
+import { afterEach } from "node:test";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("mongoose", () => {
