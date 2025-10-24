@@ -9,7 +9,7 @@ import type { AnyBulkWriteOperation } from "mongodb";
  *   - fetchNonPaidQuestionInfo
  *   - getQuestionDetail
  */
-const SUT_PATH = "../../../src/leetcode/seedBatch.js";
+const SUT_PATH = "../../../src/leetcode/seedBatch.ts";
 
 // --- Test doubles (module-level state we can tweak per test) ---
 const memCursor: Record<string, unknown> = {};
