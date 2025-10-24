@@ -1,5 +1,4 @@
 import { setTimeout as delay } from "node:timers/promises";
-import { logger } from "./logger";
 
 type HealthOpts = {
   url?: string; // health check URL
@@ -42,7 +41,6 @@ export async function checkQuestionServiceHealth({
         headers: { accept: "application/json" },
         signal: controller.signal,
       });
-      clearTimeout(t);
 
       if (!res.ok) {
         lastErr = new Error(`Health endpoint returned ${res.status}`);
@@ -56,8 +54,9 @@ export async function checkQuestionServiceHealth({
       }
     } catch (err) {
       lastErr = err;
-      logger.warn(`Health check attempt ${attempt + 1} failed:`, lastErr);
-      await delay(BASE_DELAY_MS * 2 ** attempt);
+      if (attempt < retries) {
+        await delay(BASE_DELAY_MS * 2 ** attempt);
+      }
     } finally {
       clearTimeout(t);
     }
