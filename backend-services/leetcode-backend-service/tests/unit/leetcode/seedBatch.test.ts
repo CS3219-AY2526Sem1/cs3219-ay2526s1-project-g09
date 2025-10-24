@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { Details } from "../../../src/leetcode/types.js";
 import type { AnyBulkWriteOperation } from "mongodb";
+import type { QuestionDoc } from "../../../src/db/types/question.js";
 
 /**
  * IMPORTANT: set this to the actual relative path of the module that exports:
@@ -69,7 +69,7 @@ type SeedCursorDoc = {
 vi.mock("../../../src/db/model/question", () => {
   return {
     Question: {
-      bulkWrite: vi.fn((ops: AnyBulkWriteOperation<Details["question"]>[]) => {
+      bulkWrite: vi.fn((ops: AnyBulkWriteOperation<QuestionDoc>[]) => {
         // Naive “DB”: record the upserts to validate
         memQuestions.push(...ops);
         // Return a mongoose-like BulkWriteResult subset
