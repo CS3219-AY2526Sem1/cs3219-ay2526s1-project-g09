@@ -12,7 +12,14 @@ interface ChatWindowProps {
 }
 
 interface MessagePayload {
-  senderId?: string;
+  senderId: string;
+  text: string;
+}
+
+interface SystemMessagePayload {
+  event: string;
+  userId: string;
+  username: string;
   text: string;
 }
 
@@ -25,19 +32,50 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const { session } = useCollabSession();
   const socketRef = useRef<Socket | null>(null);
 
-  useEffect(() => {
-    if (!session?.sessionId) return;
+  function handleSystemMessage(event: string) {
+    switch (event) {
+      case "disconnect": {
+        setIsOtherUserOnline(false);
+        break;
+      }
+      case "connect":
+      case "reconnect": {
+        setIsOtherUserOnline(true);
+        break;
+      }
+      default: {
+        console.log("Unknown event: ", event);
+        break;
+      }
+    }
+  }
 
-    const socket = io("http://localhost:5286", {
-      auth: { userId: user?.id, username: user?.username },
-    });
+  useEffect(() => {
+    if (socketRef.current) {
+      console.log("Socket already initialized, skipping re-init");
+      return;
+    }
+    if (!session?.sessionId || !user?.id || !user?.username) return;
+
+    const socket = io("http://localhost:5286", { reconnection: true });
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      socket.emit("join_room", { roomId: session.sessionId });
+      socket.emit("join_room", {
+        userId: user?.id,
+        username: user?.username,
+        roomId: session.sessionId,
+      });
     });
 
-    // Listen for messages from server
+    socket.io.on("reconnect", () => {
+      socket.emit("reconnect_notice", {
+        userId: user.id,
+        username: user.username,
+        roomId: session.sessionId,
+      });
+    });
+
     socket.on("receive_message", (message: MessagePayload) => {
       setMessages((prev) => [
         ...prev,
@@ -49,7 +87,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
       ]);
     });
 
-    socket.on("user_left", (message: MessagePayload) => {
+    socket.on("system_message", (message: SystemMessagePayload) => {
+      if (message.userId === user?.id) return;
+
       setMessages((prev) => [
         ...prev,
         {
@@ -59,17 +99,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
           isSystem: true,
         },
       ]);
-      setIsOtherUserOnline(false);
+      handleSystemMessage(message.event);
     });
 
     return () => {
       socket.off("receive_message");
+      socket.off("system_message");
+      socket.io.off("reconnect");
       socket.disconnect();
+      socketRef.current = null;
     };
   }, [session?.sessionId, user?.id, user?.username]);
 
   const handleSendMessage = () => {
     if (!chatInput.trim() || !socketRef.current) return;
+
+    const socket = socketRef.current;
 
     const newMessage = {
       senderId: user?.id,
@@ -81,7 +126,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
       { sender: "You", text: chatInput, isUser: true },
     ]);
 
-    socketRef.current.emit("send_message", { message: newMessage });
+    socket.emit("send_message", { message: newMessage });
 
     setChatInput("");
   };

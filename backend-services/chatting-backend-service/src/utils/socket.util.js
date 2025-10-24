@@ -1,5 +1,9 @@
 import { Server } from "socket.io";
 
+const socketData = new Map();
+const userSockets = new Map();
+const userStatus = new Map();
+
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
@@ -9,35 +13,95 @@ export const initSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log("New user connected:", socket.id);
-    const auth = socket.handshake?.auth || {};
-    const userId = auth.userId;
-    const username = auth.username;
+    socketData.set(socket.id, {
+      userId: null,
+      username: null,
+      roomId: null,
+    });
+    console.log("New user connected to chat service at socket ", socket.id);
 
-    if (userId) socket.data.userId = userId;
-    if (username) socket.data.username = username;
+    socket.on("join_room", (payload) => {
+      const { userId, username, roomId } = payload;
 
-    socket.on("join_room", ({ roomId }) => {
-      if (!roomId) return;
+      if (!roomId || !userId || !username) return;
+
       socket.join(roomId);
-      socket.data.roomId = roomId;
-      console.log(`User ${socket.id} joined room ${roomId}`);
+      console.log(`User ${socket.id} joining chat room ${roomId}`);
+      socket.data = { userId, username, roomId };
+
+      socketData.set(socket.id, {
+        userId,
+        username,
+        roomId,
+      });
+
+      userSockets.set(userId, socket.id);
+      userStatus.set(userId, { lastDisconnect: null, online: true });
+
+      socket.to(roomId).emit("system_message", {
+        event: "connect",
+        userId,
+        username,
+        text: `${username} has entered the chat.`,
+      });
+
+      console.log(`User ${socket.id} joined chat room ${roomId}`);
+    });
+
+    socket.on("reconnect_notice", ({ userId, username, roomId }) => {
+      if (!roomId || !userId || !username) return;
+
+      userSockets.set(userId, socket.id);
+      userStatus.set(userId, { lastDisconnect: null, online: true });
+
+      console.log(`${username} reconnected to room ${roomId}`);
+
+      socket.to(roomId).emit("system_message", {
+        event: "reconnect",
+        userId,
+        username,
+        text: `${username} has reconnected.`,
+      });
     });
 
     socket.on("send_message", (payload) => {
-      const roomId = socket.data.roomId;
+      console.log("Message received at socket ", socket.id, ": ", payload);
+      const { roomId } = socket.data;
+      console.log("Emitting message to room ", roomId);
       if (!roomId) return;
       socket.to(roomId).emit("receive_message", payload.message);
     });
 
     socket.on("disconnect", () => {
-      const roomId = socket.data.roomId;
-      if (roomId) {
-        socket.to(roomId).emit("user_left", {
-          text: `${socket.data.username || socket.id} has left the chat.`,
-        });
-      }
+      const { userId, username, roomId } = socket.data;
       console.log("User disconnected:", socket.id);
+      socketData.delete(socket.id);
+
+      const lastKnown = userStatus.get(userId) || {};
+      userStatus.set(userId, {
+        ...lastKnown,
+        online: false,
+        lastDisconnect: Date.now(),
+      });
+
+      setTimeout(() => {
+        const status = userStatus.get(userId);
+        const currentSocket = userSockets.get(userId);
+        if (status && !status.online && currentSocket === socket.id) {
+          io.to(roomId).emit("system_message", {
+            event: "disconnect",
+            userId,
+            username,
+            text: `${username} has left the chat.`,
+          });
+          userSockets.delete(userId);
+          console.log(`${username} confirmed as disconnected`);
+        } else {
+          console.log(
+            `${username} reconnected in time — skipping disconnect message`,
+          );
+        }
+      }, 1000);
     });
   });
 
