@@ -6,12 +6,21 @@ import vitest from "@vitest/eslint-plugin";
 
 export default defineConfig(
   {
-    ignores: ["dist", "coverage", "node_modules"],
+    ignores: ["dist", "coverage", "node_modules", "*.config.mjs"],
   },
-  eslint.configs.recommended,
+
+  {
+    files: ["**/*.{js,cjs,mjs}"],
+    ...eslint.configs.recommended, // normal JS rules
+    languageOptions: {
+      sourceType: "module",
+    },
+  },
+
   ...tseslint.configs.recommendedTypeChecked,
 
   {
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
         project: ["./tsconfig.json", "./tsconfig.test.json"],
@@ -25,11 +34,6 @@ export default defineConfig(
     plugins: { vitest },
     rules: {
       ...vitest.configs.recommended.rules,
-    },
-    settings: {
-      vitest: {
-        typecheck: true,
-      },
     },
     languageOptions: {
       globals: {
