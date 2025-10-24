@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { Details } from "./types.js";
+import type { Details } from "../../../src/leetcode/types.js";
 import type { AnyBulkWriteOperation } from "mongodb";
 
 /**
