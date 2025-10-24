@@ -32,19 +32,32 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const { session } = useCollabSession();
   const socketRef = useRef<Socket | null>(null);
 
-  function handleSystemMessage(event: string) {
+  const lastOnlineEvent = useRef<number>(0);
+
+  function handleSystemMessage(message: SystemMessagePayload) {
+    const now = Date.now();
+    const { event } = message;
+
     switch (event) {
-      case "disconnect": {
-        setIsOtherUserOnline(false);
-        break;
-      }
       case "connect":
       case "reconnect": {
+        lastOnlineEvent.current = now;
         setIsOtherUserOnline(true);
         break;
       }
+
+      case "disconnect": {
+        // Ignore disconnects that occur too soon after a reconnect
+        if (now - lastOnlineEvent.current < 2000) {
+          console.log("🟡 Ignoring stale disconnect event");
+          return;
+        }
+        setIsOtherUserOnline(false);
+        break;
+      }
+
       default: {
-        console.log("Unknown event: ", event);
+        console.log("Unknown system event:", event);
         break;
       }
     }
@@ -64,14 +77,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
       socket.emit("join_room", {
         userId: user?.id,
         username: user?.username,
-        roomId: session.sessionId,
-      });
-    });
-
-    socket.io.on("reconnect", () => {
-      socket.emit("reconnect_notice", {
-        userId: user.id,
-        username: user.username,
         roomId: session.sessionId,
       });
     });
@@ -99,7 +104,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
           isSystem: true,
         },
       ]);
-      handleSystemMessage(message.event);
+      handleSystemMessage(message);
     });
 
     return () => {

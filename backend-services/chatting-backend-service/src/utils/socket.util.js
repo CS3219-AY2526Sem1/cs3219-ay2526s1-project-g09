@@ -1,8 +1,7 @@
 import { Server } from "socket.io";
 
-const socketData = new Map();
 const userSockets = new Map();
-const userStatus = new Map();
+const roomUsers = new Map();
 
 export const initSocket = (server) => {
   const io = new Server(server, {
@@ -13,91 +12,107 @@ export const initSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    socketData.set(socket.id, {
-      userId: null,
-      username: null,
-      roomId: null,
-    });
-    console.log("New user connected to chat service at socket ", socket.id);
+    console.log("New user connected to chat service at socket", socket.id);
 
-    socket.on("join_room", (payload) => {
-      const { userId, username, roomId } = payload;
-
+    socket.on("join_room", ({ userId, username, roomId }) => {
       if (!roomId || !userId || !username) return;
 
       socket.join(roomId);
-      console.log(`User ${socket.id} joining chat room ${roomId}`);
       socket.data = { userId, username, roomId };
-
-      socketData.set(socket.id, {
-        userId,
-        username,
-        roomId,
-      });
-
       userSockets.set(userId, socket.id);
-      userStatus.set(userId, { lastDisconnect: null, online: true });
 
-      console.log(`User ${socket.id} joined chat room ${roomId}`);
-    });
+      // Ensure room exists
+      if (!roomUsers.has(roomId)) {
+        roomUsers.set(roomId, { users: {} });
+      }
 
-    socket.on("reconnect_notice", ({ userId, username, roomId }) => {
-      if (!roomId || !userId || !username) return;
+      const roomInfo = roomUsers.get(roomId);
 
-      userSockets.set(userId, socket.id);
-      userStatus.set(userId, { lastDisconnect: null, online: true });
+      const existingUser = roomInfo.users[userId];
+      const wasOffline = existingUser && !existingUser.online;
 
-      console.log(`${username} reconnected to room ${roomId}`);
+      roomInfo.users[userId] = { username, online: true };
 
-      socket.to(roomId).emit("system_message", {
-        event: "reconnect",
-        userId,
-        username,
-        text: `${username} has reconnected.`,
-      });
+      const otherUserEntry = Object.entries(roomInfo.users).find(
+        ([id]) => id !== userId,
+      );
+
+      if (wasOffline) {
+        socket.to(roomId).emit("system_message", {
+          event: "reconnect",
+          userId,
+          username,
+          text: `${username} has reconnected.`,
+        });
+        console.log(`${username} reconnected in room ${roomId}`);
+      } else if (otherUserEntry) {
+        const [otherUserId, { username: otherUsername, online: otherOnline }] =
+          otherUserEntry;
+
+        if (otherOnline) {
+          socket.emit("system_message", {
+            event: "existing_users",
+            userId: otherUserId,
+            username: otherUsername,
+            text: `${otherUsername} is already in the chat.`,
+          });
+        }
+
+        io.to(roomId).emit("system_message", {
+          event: "connect",
+          userId,
+          username,
+          text: `${username} has entered the chat.`,
+        });
+        console.log(`${username} joined room ${roomId}`);
+      } else {
+        console.log(`${username} created room ${roomId}`);
+      }
     });
 
     socket.on("send_message", (payload) => {
-      console.log("Message received at socket ", socket.id, ": ", payload);
       const { roomId } = socket.data;
-      console.log("Emitting message to room ", roomId);
       if (!roomId) return;
       socket.to(roomId).emit("receive_message", payload.message);
     });
 
     socket.on("disconnect", () => {
       const { userId, username, roomId } = socket.data;
-      console.log("User disconnected:", socket.id);
-      socketData.delete(socket.id);
+      console.log(`User disconnected: ${username} (${socket.id})`);
 
-      const lastKnown = userStatus.get(userId) || {};
-      userStatus.set(userId, {
-        ...lastKnown,
-        online: false,
-        lastDisconnect: Date.now(),
-      });
+      if (!roomId || !userId) return;
+      const roomInfo = roomUsers.get(roomId);
+      if (!roomInfo) return;
+
+      if (roomInfo.users[userId]) {
+        roomInfo.users[userId].online = false;
+      }
 
       setTimeout(() => {
-        const status = userStatus.get(userId);
-        const currentSocket = userSockets.get(userId);
-        if (status && !status.online && currentSocket === socket.id) {
+        const stillOffline = !roomInfo.users[userId]?.online;
+        if (stillOffline) {
           io.to(roomId).emit("system_message", {
             event: "disconnect",
             userId,
             username,
             text: `${username} has left the chat.`,
           });
-          userSockets.delete(userId);
           console.log(`${username} confirmed as disconnected`);
-        } else {
-          console.log(
-            `${username} reconnected in time — skipping disconnect message`,
+
+          const allOffline = Object.values(roomInfo.users).every(
+            (u) => !u.online,
           );
+          if (allOffline) {
+            roomUsers.delete(roomId);
+            console.log(`Room ${roomId} cleaned up (both users left).`);
+          }
+        } else {
+          console.log(`${username} reconnected in time — skipping disconnect.`);
         }
-      }, 1000);
+      }, 3000);
     });
   });
 
-  console.log("Socket.io initialized");
+  console.log("Socket.io initialized (no socketData)");
   return io;
 };
