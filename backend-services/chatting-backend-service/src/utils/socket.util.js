@@ -38,13 +38,6 @@ export const initSocket = (server) => {
       userSockets.set(userId, socket.id);
       userStatus.set(userId, { lastDisconnect: null, online: true });
 
-      socket.to(roomId).emit("system_message", {
-        event: "connect",
-        userId,
-        username,
-        text: `${username} has entered the chat.`,
-      });
-
       console.log(`User ${socket.id} joined chat room ${roomId}`);
     });
 
