@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { Details } from "./types.js";
+import type { AnyBulkWriteOperation } from "mongodb";
 
 /**
  * IMPORTANT: set this to the actual relative path of the module that exports:
@@ -10,14 +12,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const SUT_PATH = "../../../src/leetcode/seedBatch.js";
 
 // --- Test doubles (module-level state we can tweak per test) ---
-const memCursor: Record<string, any> = {};
-const memQuestions: any[] = [];
+const memCursor: Record<string, unknown> = {};
+const memQuestions: unknown[] = [];
 
-type ListPayload = { total: number; questions: any[] };
+type ListPayload = { total: number; questions: unknown[] };
 type GqlBehavior = {
   listOk: boolean;
   listPayload?: ListPayload;
-  detailBySlug: Record<string, any>;
+  detailBySlug: Record<string, unknown>;
 };
 
 let gqlBehavior: GqlBehavior;
@@ -29,22 +31,17 @@ function resetGqlBehavior() {
   };
 }
 
-function makeQuestion(
-  slug: string,
-  isPaidOnly = false,
-  extra: Partial<any> = {},
-) {
+function makeQuestion(slug: string, isPaidOnly = false) {
   return {
     isPaidOnly,
     titleSlug: slug,
     title: slug.replace(/-/g, " "),
     difficulty: "Easy",
     categoryTitle: "Array",
-    ...extra,
   };
 }
 
-function makeDetail(slug: string, extra: Partial<any> = {}) {
+function makeDetail(slug: string) {
   return {
     question: {
       titleSlug: slug,
@@ -60,11 +57,19 @@ function makeDetail(slug: string, extra: Partial<any> = {}) {
   };
 }
 
+type SeedCursorDoc = {
+  _id: string;
+  nextSkip?: number;
+  pageSize?: number;
+  lastRunAt?: Date;
+  total?: number;
+};
+
 // --- Mocks ---
 vi.mock("../../../src/db/model/question", () => {
   return {
     Question: {
-      bulkWrite: vi.fn(async (ops: any[]) => {
+      bulkWrite: vi.fn((ops: AnyBulkWriteOperation<Details["question"]>[]) => {
         // Naive “DB”: record the upserts to validate
         memQuestions.push(...ops);
         // Return a mongoose-like BulkWriteResult subset
@@ -76,7 +81,7 @@ vi.mock("../../../src/db/model/question", () => {
       }),
     },
     SeedCursor: class {
-      static async findById(id: string) {
+      static findById(id: string) {
         return memCursor[id] || null;
       }
       _id: string;
@@ -85,13 +90,13 @@ vi.mock("../../../src/db/model/question", () => {
       lastRunAt: Date | undefined;
       total: number | undefined;
 
-      constructor(doc: any) {
+      constructor(doc: SeedCursorDoc) {
         this._id = doc._id;
         this.nextSkip = doc.nextSkip ?? 0;
         this.pageSize = doc.pageSize ?? 200;
         this.total = doc.total;
       }
-      async save() {
+      save() {
         memCursor[this._id] = this;
       }
     },
@@ -101,7 +106,7 @@ vi.mock("../../../src/db/model/question", () => {
 vi.mock("../../../src/leetcode/client", () => {
   // We dispatch based on the “query” identity that the SUT passes in.
   return {
-    gql: vi.fn(async (query: any, vars: any) => {
+    gql: vi.fn(async (query: string, vars: { titleSlug: string }) => {
       // The SUT imports QUERY_LIST and QUERY_DETAIL from queries.js.
       // We'll compare the identity of `query` with the mocked exports below.
       const { QUERY_LIST, QUERY_DETAIL } = await vi.importMock(
@@ -119,7 +124,7 @@ vi.mock("../../../src/leetcode/client", () => {
               total: 0,
               questions: [],
             },
-          } as any);
+          } as unknown as ListPayload);
 
         // The SUT expects `{ problemsetQuestionList: { total, questions } }`
         return { problemsetQuestionList: payload };
@@ -157,7 +162,7 @@ vi.mock("../../../src/logger", () => {
 
 vi.mock("../../../src/health", () => {
   return {
-    checkQuestionServiceHealth: vi.fn(async () => true),
+    checkQuestionServiceHealth: vi.fn(() => true),
   };
 });
 
@@ -165,7 +170,7 @@ vi.mock("../../../src/health", () => {
 vi.mock("p-limit", () => {
   return {
     default: (/* concurrency: number */) => {
-      return (fn: any) => fn();
+      return <T extends (...args: unknown[]) => unknown>(fn: T) => fn();
     },
   };
 });
@@ -202,14 +207,30 @@ afterEach(() => {
   vi.resetModules();
 });
 
+type responseSummary = {
+  ok: boolean;
+  message?: string;
+  fetched?: number;
+  inserted?: number;
+  modified?: number;
+  matched?: number;
+  pageSize?: number;
+  nextSkip?: number;
+  total?: number;
+};
+
 describe("seedLeetCodeBatch", () => {
   it("aborts early if health check fails", async () => {
     const { checkQuestionServiceHealth } = await import("../../../src/health");
-    (checkQuestionServiceHealth as any).mockRejectedValueOnce(
+
+    // vi.mocked gives you a typed mocked function
+    vi.mocked(checkQuestionServiceHealth).mockRejectedValueOnce(
       new Error("Service down"),
     );
 
-    const { seedLeetCodeBatch } = await import(SUT_PATH);
+    const { seedLeetCodeBatch } = (await import(SUT_PATH)) as {
+      seedLeetCodeBatch: () => Promise<responseSummary>;
+    };
 
     const res = await seedLeetCodeBatch();
     expect(res.ok).toBe(false);
@@ -234,15 +255,17 @@ describe("seedLeetCodeBatch", () => {
     };
 
     const { SeedCursor } = await import("../../../src/db/model/question");
-    const cursor = new (SeedCursor as any)({
+    const cursor = new SeedCursor({
       _id: "questions",
       nextSkip: 0,
       pageSize: 200,
     });
     await cursor.save();
 
-    const { seedLeetCodeBatch } = await import(SUT_PATH);
-    const res = await seedLeetCodeBatch();
+    const { seedLeetCodeBatch } = (await import(SUT_PATH)) as {
+      seedLeetCodeBatch: () => Promise<responseSummary>;
+    };
+    const res: responseSummary = await seedLeetCodeBatch();
 
     expect(res.ok).toBe(true);
     expect(res.fetched).toBe(2);
@@ -255,9 +278,25 @@ describe("seedLeetCodeBatch", () => {
     expect(res.total).toBe(5);
 
     const { Question } = await import("../../../src/db/model/question");
-    expect(Question.bulkWrite).toHaveBeenCalledTimes(1);
-    const [ops] = (Question.bulkWrite as any).mock.calls[0];
-    const slugs = ops.map((o: any) => o.updateOne.filter.titleSlug).sort();
+
+    const bulkWriteSpy = vi.spyOn(Question, "bulkWrite");
+
+    expect(bulkWriteSpy).toHaveBeenCalledTimes(1);
+    type Ops = Parameters<typeof Question.bulkWrite>[0];
+    const [firstCallArgs] = bulkWriteSpy.mock.calls[0] ?? [];
+    const ops = firstCallArgs as Ops;
+
+    type UpdateOneOp = Extract<Ops[number], { updateOne: unknown }>;
+    const updateOnes = ops.filter((op): op is UpdateOneOp => "updateOne" in op);
+
+    const slugs = updateOnes
+      .map(
+        (op) =>
+          (op.updateOne as unknown as { filter: { titleSlug: string } }).filter
+            .titleSlug,
+      )
+      .sort();
+
     expect(slugs).toEqual(["two-sum", "valid-parentheses"]);
   });
 
@@ -267,7 +306,9 @@ describe("seedLeetCodeBatch", () => {
       questions: [],
     };
 
-    const { seedLeetCodeBatch } = await import(SUT_PATH);
+    const { seedLeetCodeBatch } = (await import(SUT_PATH)) as {
+      seedLeetCodeBatch: () => Promise<responseSummary>;
+    };
     const res = await seedLeetCodeBatch();
 
     expect(res.ok).toBe(true);
@@ -276,11 +317,13 @@ describe("seedLeetCodeBatch", () => {
   });
 
   it("returns an error result when fetching the list fails", async () => {
-    const { gql } = await import("../../../src/leetcode/client");
+    await import("../../../src/leetcode/client");
     resetGqlBehavior();
     gqlBehavior.listOk = false;
 
-    const { seedLeetCodeBatch } = await import(SUT_PATH);
+    const { seedLeetCodeBatch } = (await import(SUT_PATH)) as {
+      seedLeetCodeBatch: () => Promise<responseSummary>;
+    };
     const res = await seedLeetCodeBatch();
 
     expect(res.ok).toBe(false);
