@@ -56,13 +56,8 @@ export async function checkQuestionServiceHealth({
       }
     } catch (err) {
       lastErr = err;
-      if (attempt >= retries) {
-        logger.error("Final health check attempt failed:", lastErr);
-        throw new Error(`Health check failed: ${String(lastErr)}`);
-      } else {
-        logger.warn(`Health check attempt ${attempt + 1} failed:`, lastErr);
-        await delay(BASE_DELAY_MS * 2 ** attempt);
-      }
+      logger.warn(`Health check attempt ${attempt + 1} failed:`, lastErr);
+      await delay(BASE_DELAY_MS * 2 ** attempt);
     } finally {
       clearTimeout(t);
     }
