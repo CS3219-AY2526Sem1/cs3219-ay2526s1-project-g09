@@ -2,6 +2,9 @@ import { Server } from "socket.io";
 
 const userSockets = new Map();
 const roomUsers = new Map();
+const disconnectTimers = new Map();
+
+const DISCONNECT_TIMEOUT_MS = 3_000;
 
 export const initSocket = (server) => {
   const io = new Server(server, {
@@ -29,15 +32,17 @@ export const initSocket = (server) => {
       const roomInfo = roomUsers.get(roomId);
 
       const existingUser = roomInfo.users[userId];
-      const wasOffline = existingUser && !existingUser.online;
+      const shouldAnnounceReconnect =
+        existingUser?.disconnectAnnounced === true;
 
-      roomInfo.users[userId] = { username, online: true };
+      const timerKey = `${roomId}:${userId}`;
+      const existingTimer = disconnectTimers.get(timerKey);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+        disconnectTimers.delete(timerKey);
+      }
 
-      const otherUserEntry = Object.entries(roomInfo.users).find(
-        ([id]) => id !== userId,
-      );
-
-      if (wasOffline) {
+      if (shouldAnnounceReconnect) {
         socket.to(roomId).emit("system_message", {
           event: "reconnect",
           userId,
@@ -45,17 +50,25 @@ export const initSocket = (server) => {
           text: `${username} has reconnected.`,
         });
         console.log(`${username} reconnected in room ${roomId}`);
-      } else if (otherUserEntry) {
-        const [otherUserId, { username: otherUsername, online: otherOnline }] =
-          otherUserEntry;
+      } else if (!existingUser) {
+        const otherUserEntry = Object.entries(roomInfo.users).find(
+          ([id]) => id !== userId,
+        );
 
-        if (otherOnline) {
-          socket.emit("system_message", {
-            event: "existing_users",
-            userId: otherUserId,
-            username: otherUsername,
-            text: `${otherUsername} is already in the chat.`,
-          });
+        if (otherUserEntry) {
+          const [
+            otherUserId,
+            { username: otherUsername, online: otherOnline },
+          ] = otherUserEntry;
+
+          if (otherOnline) {
+            socket.emit("system_message", {
+              event: "existing_users",
+              userId: otherUserId,
+              username: otherUsername,
+              text: `${otherUsername} is already in the chat.`,
+            });
+          }
         }
 
         io.to(roomId).emit("system_message", {
@@ -68,6 +81,11 @@ export const initSocket = (server) => {
       } else {
         console.log(`${username} created room ${roomId}`);
       }
+      roomInfo.users[userId] = {
+        username,
+        online: true,
+        disconnectAnnounced: false,
+      };
     });
 
     socket.on("send_message", (payload) => {
@@ -78,38 +96,41 @@ export const initSocket = (server) => {
 
     socket.on("disconnect", () => {
       const { userId, username, roomId } = socket.data;
+      if (!roomId || !userId) return;
       console.log(`User disconnected: ${username} (${socket.id})`);
 
-      if (!roomId || !userId) return;
       const roomInfo = roomUsers.get(roomId);
-      if (!roomInfo) return;
+      if (!roomInfo || !roomInfo.users[userId]) return;
 
-      if (roomInfo.users[userId]) {
-        roomInfo.users[userId].online = false;
-      }
+      roomInfo.users[userId].online = false;
 
-      setTimeout(() => {
-        const stillOffline = !roomInfo.users[userId]?.online;
-        if (stillOffline) {
+      const timerKey = `${roomId}:${userId}`;
+      const timer = setTimeout(() => {
+        const userRecord = roomInfo.users[userId];
+        if (userRecord && !userRecord.online) {
           io.to(roomId).emit("system_message", {
             event: "disconnect",
             userId,
             username,
             text: `${username} has left the chat.`,
           });
-          console.log(`${username} confirmed as disconnected`);
+          userRecord.disconnectAnnounced = true;
+          console.log(`${username} confirmed as disconnected.`);
 
           const allOffline = Object.values(roomInfo.users).every(
             (u) => !u.online,
           );
           if (allOffline) {
             roomUsers.delete(roomId);
-            console.log(`Room ${roomId} cleaned up (both users left).`);
+            console.log(`Room ${roomId} cleaned up (all users offline).`);
           }
         } else {
           console.log(`${username} reconnected in time — skipping disconnect.`);
         }
-      }, 3000);
+        disconnectTimers.delete(timerKey);
+      }, DISCONNECT_TIMEOUT_MS);
+
+      disconnectTimers.set(timerKey, timer);
     });
   });
 
