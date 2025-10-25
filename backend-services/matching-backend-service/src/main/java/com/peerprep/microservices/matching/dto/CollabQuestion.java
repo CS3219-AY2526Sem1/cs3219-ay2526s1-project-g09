@@ -9,11 +9,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CollabQuestion(
-    String questionId,
-    String title,
-    String body,
-    List<String> topics,
-    List<String> hints,
-    String answer,
-    Integer timeLimit) {
+  String questionId,
+  String title,
+  String body,
+  List<String> topics,
+  List<String> hints,
+  String answer,
+  Integer timeLimit) {
 }

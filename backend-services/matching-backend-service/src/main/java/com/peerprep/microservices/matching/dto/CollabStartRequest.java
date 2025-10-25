@@ -10,6 +10,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record CollabStartRequest(
-    List<String> users,
-    Map<String, List<String>> questionPreferences) {
+  List<String> users,
+  Map<String, List<String>> questionPreferences) {
 }

@@ -42,13 +42,13 @@ public class UserPreference {
   /**
    * Constructor with validation
    * 
-   * @param userId             the user that the preference belongs to
+   * @param userId the user that the preference belongs to
    * @param questionPreference the user's preference for questions
    */
   @JsonCreator
   public UserPreference(
-      @JsonProperty("userId") String userId,
-      @JsonProperty("questionPreference") QuestionPreference questionPreference) {
+    @JsonProperty("userId") String userId,
+    @JsonProperty("questionPreference") QuestionPreference questionPreference) {
     validate(userId, questionPreference);
     this.userId = userId;
     this.questionPreference = questionPreference;
@@ -64,19 +64,19 @@ public class UserPreference {
     Map<String, java.util.Set<String>> topics = new HashMap<>();
 
     rawTopics.forEach((topic, diffsObj) -> {
-      if (diffsObj instanceof java.util.List<?> list) {
+      if (diffsObj instanceof java.util.List<?>list) {
         topics.put(topic, Set.copyOf((java.util.List<String>) list));
       }
     });
 
     QuestionPreference qp = QuestionPreference.builder()
-        .topics(topics)
-        .build();
+      .topics(topics)
+      .build();
 
     return UserPreference.builder()
-        .userId(userId)
-        .questionPreference(qp)
-        .build();
+      .userId(userId)
+      .questionPreference(qp)
+      .build();
   }
 
   /**
@@ -90,20 +90,18 @@ public class UserPreference {
   }
 
   /**
-   * Returns a new UserPreference containing overlapping question preferences with
-   * another user.
+   * Returns a new UserPreference containing overlapping question preferences with another user.
    */
   public UserPreference getOverlap(UserPreference other) {
     QuestionPreference overlap = this.questionPreference.getOverlap(other.questionPreference);
     return UserPreference.builder()
-        .userId(other.userId)
-        .questionPreference(overlap)
-        .build();
+      .userId(other.userId)
+      .questionPreference(overlap)
+      .build();
   }
 
   /**
-   * Flatten UserPreference into a Map suitable for Redis or JSON storage.
-   * Includes userId and topics map.
+   * Flatten UserPreference into a Map suitable for Redis or JSON storage. Includes userId and topics map.
    */
   public Map<String, Object> toRedisMap() {
     Map<String, Object> map = new HashMap<>();
@@ -113,18 +111,8 @@ public class UserPreference {
   }
 
   /**
-   * Constructs a UserPreference from a nested map representation (e.g., from
-   * Redis JSON).
-   * Expected format:
-   * {
-   * "userId": "user123",
-   * "questionPreference": {
-   * "topics": {
-   * "OOP": ["Easy", "Medium"],
-   * "Python": ["Hard"]
-   * }
-   * }
-   * }
+   * Constructs a UserPreference from a nested map representation (e.g., from Redis JSON). Expected format: { "userId":
+   * "user123", "questionPreference": { "topics": { "OOP": ["Easy", "Medium"], "Python": ["Hard"] } } }
    */
   @SuppressWarnings("unchecked")
   public static UserPreference fromNestedMap(Map<String, Object> nestedMap) {
@@ -151,12 +139,12 @@ public class UserPreference {
     }
 
     QuestionPreference qp = QuestionPreference.builder()
-        .topics(topicsMap)
-        .build();
+      .topics(topicsMap)
+      .build();
 
     return UserPreference.builder()
-        .userId(userId)
-        .questionPreference(qp)
-        .build();
+      .userId(userId)
+      .questionPreference(qp)
+      .build();
   }
 }

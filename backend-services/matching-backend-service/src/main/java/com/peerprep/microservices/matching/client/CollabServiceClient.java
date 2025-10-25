@@ -32,8 +32,8 @@ public class CollabServiceClient {
   public CollabSession createSession(List<String> users, Map<String, List<String>> questionPreferences) {
     log.info("Creating collaboration session for users: {}", users);
     String base = collabServiceBaseUrl.endsWith("/")
-        ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
-        : collabServiceBaseUrl;
+      ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
+      : collabServiceBaseUrl;
     String url = base + "/start";
 
     CollabStartRequest request = new CollabStartRequest(users, questionPreferences);
@@ -45,9 +45,9 @@ public class CollabServiceClient {
       log.info("Request payload: {}", request);
       log.info("Request headers: {}", headers);
       ResponseEntity<CollabStartResponse> response = restTemplate.postForEntity(
-          url,
-          new HttpEntity<>(request, headers),
-          CollabStartResponse.class);
+        url,
+        new HttpEntity<>(request, headers),
+        CollabStartResponse.class);
 
       CollabStartResponse body = response.getBody();
 
@@ -58,7 +58,7 @@ public class CollabServiceClient {
       if (!body.success()) {
         String errorMessage = body.error() != null ? body.error() : body.message();
         throw new IllegalStateException(
-            String.format("Collaboration service failed to create session: %s", errorMessage));
+          String.format("Collaboration service failed to create session: %s", errorMessage));
       }
 
       if (body.session() == null) {

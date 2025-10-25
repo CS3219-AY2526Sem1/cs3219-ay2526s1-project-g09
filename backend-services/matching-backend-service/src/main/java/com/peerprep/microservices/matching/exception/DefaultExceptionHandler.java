@@ -10,17 +10,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Global exception handler for the Matching Service.
- * Handles various custom exceptions and maps them to appropriate HTTP
- * responses.
+ * Global exception handler for the Matching Service. Handles various custom exceptions and maps them to appropriate
+ * HTTP responses.
  */
 @ControllerAdvice
 @Slf4j
 public class DefaultExceptionHandler {
 
   /**
-   * Handles UserPreferenceNotFoundException.
-   * Returns a 404 Not Found response.
+   * Handles UserPreferenceNotFoundException. Returns a 404 Not Found response.
    */
   @ExceptionHandler(UserPreferenceNotFoundException.class)
   public ResponseEntity<String> handleUserPreferenceNotFound(UserPreferenceNotFoundException ex) {
@@ -29,8 +27,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles NoPendingMatchRequestException.
-   * Returns a 404 Not Found response.
+   * Handles NoPendingMatchRequestException. Returns a 404 Not Found response.
    */
   @ExceptionHandler(NoPendingMatchRequestException.class)
   public ResponseEntity<String> handleNoPendingMatchRequest(NoPendingMatchRequestException ex) {
@@ -39,8 +36,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles UserPreferenceSerializationException.
-   * Returns a 500 Internal Server Error response.
+   * Handles UserPreferenceSerializationException. Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(UserPreferenceSerializationException.class)
   public ResponseEntity<String> handleUserPreferenceSerialization(UserPreferenceSerializationException ex) {
@@ -49,8 +45,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles NotificationMappingException.
-   * Returns a 500 Internal Server Error response.
+   * Handles NotificationMappingException. Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(NotificationMappingException.class)
   public ResponseEntity<String> handleNotificationMappingException(NotificationMappingException ex) {
@@ -59,8 +54,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles NotificationDeserializationException.
-   * Returns a 500 Internal Server Error response.
+   * Handles NotificationDeserializationException. Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(NotificationDeserializationException.class)
   public ResponseEntity<String> handleNotificationDeserializationException(NotificationDeserializationException ex) {
@@ -69,8 +63,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles AcceptanceMappingException.
-   * Returns a 500 Internal Server Error response.
+   * Handles AcceptanceMappingException. Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(AcceptanceMappingException.class)
   public ResponseEntity<String> handleAcceptanceMappingException(AcceptanceMappingException ex) {
@@ -79,8 +72,7 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles AcceptanceDeserializationException.
-   * Returns a 500 Internal Server Error response.
+   * Handles AcceptanceDeserializationException. Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(AcceptanceDeserializationException.class)
   public ResponseEntity<String> handleAcceptanceDeserializationException(AcceptanceDeserializationException ex) {
@@ -89,35 +81,32 @@ public class DefaultExceptionHandler {
   }
 
   /**
-   * Handles UserPreferenceDeserializationException.
-   * Returns a 500 Internal Server Error response.
+   * Handles UserPreferenceDeserializationException. Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(UserPreferenceDeserializationException.class)
   public ResponseEntity<String> handleUserPreferenceDeserializationException(
-      UserPreferenceDeserializationException ex) {
+    UserPreferenceDeserializationException ex) {
     log.error("UserPreferenceDeserializationException occurred", ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
   }
 
   /**
-   * Handles IOExceptions.
-   * Returns a 500 Internal Server Error response.
+   * Handles IOExceptions. Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(IOException.class)
   public ResponseEntity<String> handleIoException(IOException ex) {
     log.error("IOException occurred", ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body("An unexpected error occurred");
+      .body("An unexpected error occurred");
   }
 
   /**
-   * Handles all other exceptions.
-   * Returns a 500 Internal Server Error response.
+   * Handles all other exceptions. Returns a 500 Internal Server Error response.
    */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<String> handleGeneralException(Exception ex) {
     log.error("Unexpected exception occurred", ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body("An unexpected error occurred");
+      .body("An unexpected error occurred");
   }
 }
