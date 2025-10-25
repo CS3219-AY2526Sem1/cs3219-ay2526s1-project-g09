@@ -2,11 +2,9 @@ name: Run tests and upload coverage
 
 on:
   push:
-    branches:
-      - master
+    branches: ["master"]
   pull_request:
-    branches:
-      - master
+    branches: ["master"]
 
 jobs:
   test:
@@ -35,29 +33,24 @@ jobs:
         run: npm install
         working-directory: ${{ matrix.service.context }}
 
-        # Step 1: Run Vitest with coverage + JUnit reporter
-      - name: Run tests (coverage + JUnit)
+      - name: Run tests with coverage
         working-directory: ${{ matrix.service.context }}
         run: |
           mkdir -p test-results
-          npm run test --coverage --reporter=junit --outputFile=./test-results/junit.xml
+          npm run test -- --coverage --reporter=junit --outputFile=./test-results/junit.xml
 
-      # Step 2: Upload test results (JUnit) to Codecov
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          # Point this to where we just wrote the XML (relative to repo root)
           files: ${{ matrix.service.context }}/test-results/junit.xml
           flags: ${{ matrix.service.name }}
 
-      # Step 3: Upload coverage to Codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          # Vitest (c8) writes lcov.info under coverage/ by default
           files: |
             ${{ matrix.service.context }}/coverage/lcov.info
           flags: ${{ matrix.service.name }}
