@@ -7,8 +7,8 @@
   <module name="TreeWalker">
     <!-- Enforce standard Java conventions -->
     <module name="Indentation">
-      <property name="basicOffset" value="4"/>
-      <property name="braceAdjustment" value="0"/>
+        <property name="basicOffset" value="4"/>
+        <property name="braceAdjustment" value="0"/>
     </module>
 
     <!-- Require braces for control statements -->
@@ -19,14 +19,14 @@
 
     <!-- Import order (standard Java > javax > org > com) -->
     <module name="ImportOrder">
-      <property name="ordered" value="true"/>
-      <property name="separated" value="true"/>
-      <property name="importOrder" value="java,javax,org,com"/>
+        <property name="ordered" value="true"/>
+        <property name="separated" value="true"/>
+        <property name="sortImportsInGroupAlphabetically" value="true"/>
     </module>
    
     <!-- Optional: public classes should have Javadoc -->
     <module name="JavadocType">
-      <property name="scope" value="public"/>
+        <property name="scope" value="public"/>
     </module>
   </module>
 </module>
