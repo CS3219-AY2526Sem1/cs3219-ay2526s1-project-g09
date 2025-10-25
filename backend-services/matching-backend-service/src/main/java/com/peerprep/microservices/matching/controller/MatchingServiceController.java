@@ -27,6 +27,7 @@ import com.peerprep.microservices.matching.dto.UserPreferenceRequest;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.exception.UserPreferenceNotFoundException;
 import com.peerprep.microservices.matching.service.AcceptanceService;
+import com.peerprep.microservices.matching.service.HealthService;
 import com.peerprep.microservices.matching.service.MatchingService;
 import com.peerprep.microservices.matching.service.UserPreferenceService;
 
@@ -44,7 +45,18 @@ public class MatchingServiceController {
   private final MatchingService matchingService;
   private final UserPreferenceService userPreferenceService;
   private final AcceptanceService matchingAcceptanceService;
+  private final HealthService healthService;
   private final MatchingTimeoutConfig timeoutConfig;
+
+  @GetMapping("/health")
+  public ResponseEntity<Map<String, Object>> health() {
+    return healthService.getLiveness();
+  }
+
+  @GetMapping("/health/ready")
+  public ResponseEntity<Map<String, Object>> readiness() {
+    return healthService.getReadiness();
+  }
 
   @GetMapping("config")
   @ResponseStatus(HttpStatus.OK)

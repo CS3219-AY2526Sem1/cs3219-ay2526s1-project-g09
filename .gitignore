@@ -12,6 +12,7 @@ node_modules/
 bower_components/
 .env
 
+
 # Build output
 dist/
 dist-ssr/
@@ -79,3 +80,5 @@ build/
 .vscode/
 
 .zip
+### Coverage ###
+coverage/

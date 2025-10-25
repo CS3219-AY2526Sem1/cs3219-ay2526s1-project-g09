@@ -16,3 +16,4 @@ jobs:
       name: collab-ui-service
       path: ui-services/collab-ui-service
       bucket: peerprep-collab-ui-service
+    secrets: inherit

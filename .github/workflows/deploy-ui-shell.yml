@@ -16,3 +16,4 @@ jobs:
       name: ui-shell
       path: ui-shell
       bucket: peerprep-ui-shell
+    secrets: inherit

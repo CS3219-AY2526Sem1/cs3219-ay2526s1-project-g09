@@ -16,3 +16,4 @@ jobs:
       name: matching-ui-service
       path: ui-services/matching-ui-service
       bucket: peerprep-matching-ui-service
+    secrets: inherit

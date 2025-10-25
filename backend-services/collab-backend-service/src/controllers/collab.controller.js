@@ -88,6 +88,51 @@ const fetchRandomQuestion = async (categories) => {
   return await response.json();
 };
 
+export const healthCheck = async (req, res) => {
+  try {
+    res.status(200).json({
+      status: "ok",
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+};
+
+export const readinessCheck = async (_req, res) => {
+  const questionServiceUrl = process.env.QUESTION_SERVICE_URL;
+  const result = {
+    service: "collab-service",
+    status: "ok",
+    dependencies: {},
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    // try calling the Question Service health endpoint
+    const healthUrl = `${questionServiceUrl}/health`;
+    const response = await fetch(healthUrl, { method: "GET", timeout: 3000 });
+
+    if (response.ok) {
+      result.dependencies.questionService = "UP";
+    } else {
+      result.dependencies.questionService = `UNHEALTHY (status ${response.status})`;
+      result.status = "degraded";
+    }
+  } catch (err) {
+    result.dependencies.questionService = `DOWN (${err.message})`;
+    result.status = "degraded";
+  }
+
+  const httpStatus = result.status === "ok" ? 200 : 503;
+  res.status(httpStatus).json(result);
+};
+
 export const startSession = async (req, res) => {
   try {
     const {
