@@ -1,0 +1,11 @@
+# This docker-compose.yml is mostly used for cloud deployment.
+services:
+  chat-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: peerprep-chat-service
+    ports:
+      - "80:5286"
+    env_file:
+      - .env

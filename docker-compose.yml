@@ -88,6 +88,16 @@ services:
     ports:
       - "5276:5276"
 
+  chat-service:
+    build:
+      context: ./backend-services/chatting-backend-service
+      dockerfile: Dockerfile
+    container_name: peerprep-chat-service
+    ports:
+      - "5286:5286"
+    env_file:
+      - ./backend-services/chatting-backend-service/.env
+
   leetcode-backend-service:
     build:
       context: ./backend-services/leetcode-backend-service
