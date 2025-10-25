@@ -27,11 +27,10 @@
     <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_method_declaration" value="insert"/>
     <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_constructor_declaration" value="insert"/>
     <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_block" value="insert"/>
-    <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_type_declaration" value="insert"/>
 
     <!-- Javadoc comments -->
     <setting id="org.eclipse.jdt.core.formatter.comment.format_javadoc_comments" value="true"/>
-    <setting id="org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_javadoc_comment" value="false"/>   
+    <setting id="org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_javadoc_comment" value="false"/>
     <setting id="org.eclipse.jdt.core.formatter.comment.indent_root_tags" value="true"/>
     <setting id="org.eclipse.jdt.core.formatter.comment.line_length" value="120"/>
 
