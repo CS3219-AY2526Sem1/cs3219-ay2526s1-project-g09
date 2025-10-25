@@ -466,3 +466,48 @@ jobs:
 
           npx eslint --format json . > eslint-report.json
           cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  matching-backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Spotless check
+        run: |
+          cd ./backend-services/matching-backend-service
+          mvn -B -DskipTests spotless:check
+
+      - name: Generate Checkstyle report
+        run: |
+          cd ./backend-services/matching-backend-service
+          mvn -B -DskipTests checkstyle:checkstyle
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run Checkstyle and Reviewdog
+        run: |
+          cd ./backend-services/matching-backend-service
+          REPORT=target/checkstyle-result.xml
+          if [ ! -f "$REPORT" ]; then
+            echo "Checkstyle report not found at $REPORT"
+            exit 1
+          fi
+          cat "$REPORT" | reviewdog -f=checkstyle -name="checkstyle" -reporter=github-pr-review -level=error
+      - name: Enforce Checkstyle (fail on violations)
+        run: |
+          cd ./backend-services/matching-backend-service
+          mvn -B -DskipTests checkstyle:check
