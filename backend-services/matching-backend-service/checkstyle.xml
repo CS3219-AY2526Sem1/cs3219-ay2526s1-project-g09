@@ -10,7 +10,7 @@
   </module>
 
   <!-- ===== IMPORTANT: DO NOT add ImportOrder / Indentation / whitespace checks ===== -->
-  <!-- Spotless handles all formatting (GJF), import order, and unused imports. -->
+  <!-- Spotless handles all formatting (Eclipse), import order, and unused imports. -->
 
   <module name="TreeWalker">
 
