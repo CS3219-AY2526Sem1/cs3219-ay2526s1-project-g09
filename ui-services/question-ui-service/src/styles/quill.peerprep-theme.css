@@ -1,0 +1,46 @@
+.ql-peerprep-container {
+  border: 1px solid #4b5563;
+  border-radius: 0.5rem;
+  background-color: #1f2937;
+  transition: border-color 0.2s ease;
+}
+
+.ql-peerprep-container:focus-within {
+  border-color: #3b82f6;
+}
+
+.ql-peerprep-toolbar {
+  background-color: #0c1016;
+  border-bottom: 1px solid #6b7280;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  padding: 0.25rem;
+}
+
+.ql-peerprep-editor {
+  background-color: #1f2937;
+  color: #f9fafb;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+.ql-peerprep-editor:focus {
+  outline: none;
+}
+
+.ql-peerprep-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ql-peerprep-editor::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+  border-radius: 4px;
+}
+
+.ql-peerprep-editor.ql-blank::before {
+  color: #9c9c9c;
+  opacity: 1;
+}

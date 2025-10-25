@@ -1,0 +1,10 @@
+services:
+  question-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: peerprep-question-service
+    ports:
+      - "80:5275"
+    env_file:
+      - .env
