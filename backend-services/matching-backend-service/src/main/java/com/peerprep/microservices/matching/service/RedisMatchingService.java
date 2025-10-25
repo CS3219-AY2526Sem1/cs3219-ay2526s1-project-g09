@@ -28,8 +28,7 @@ import java.util.Map;
 /**
  * Service that manages the matchmaking pool in Redis.
  * 
- * This service stores user preferences in a Redis sorted set and supports
- * atomic operation.
+ * This service stores user preferences in a Redis sorted set and supports atomic operation.
  */
 @Service
 @Slf4j
@@ -47,8 +46,7 @@ public class RedisMatchingService {
    * Constructs a RedisMatchService.
    *
    * @param redisTemplate the Redis template for performing Redis operations
-   * @throws IOException if the Lua script for atomic match operations cannot be
-   *                     loaded
+   * @throws IOException if the Lua script for atomic match operations cannot be loaded
    */
   public RedisMatchingService(StringRedisTemplate redisTemplate) throws IOException {
     this.redisTemplate = redisTemplate;
@@ -87,10 +85,10 @@ public class RedisMatchingService {
 
     // Atomically finds a match and removes the match entry
     String resultJson = redisTemplate.execute(
-        removeScript,
-        Collections.singletonList(MATCH_POOL_KEY),
-        userId,
-        USER_PREF_KEY_PREFIX);
+      removeScript,
+      Collections.singletonList(MATCH_POOL_KEY),
+      userId,
+      USER_PREF_KEY_PREFIX);
 
     if (resultJson == null || resultJson.isEmpty()) {
       return new RemoveMatchingResult(false, userId, null);
@@ -114,26 +112,19 @@ public class RedisMatchingService {
   }
 
   /**
-   * Atomically finds a match for the given user preference and removes the
-   * matched entry, if no match found, put the request into the pool instead.
+   * Atomically finds a match for the given user preference and removes the matched entry, if no match found, put the
+   * request into the pool instead.
    *
-   * Executes a Lua script to ensure that matching, removal, and putting happen
-   * atomically.
-   * If a compatible match is found, it is returned as a {@link UserPreference};
-   * otherwise, {@code null} is returned.
+   * Executes a Lua script to ensure that matching, removal, and putting happen atomically. If a compatible match is
+   * found, it is returned as a {@link UserPreference}; otherwise, {@code null} is returned.
    *
    * @param userPreference the {@link UserPreference} for which to find a match
-   * @param requestId      unique request ID for this matching request
-   * @return the {@link MatchingRedisResult} containing the matched preference
-   *         (or null if no match), the matched requestId, and any info about old
-   *         request removal
-   * @throws UserPreferenceSerializationException   if serialization of the
-   *                                                request fails
-   * @throws UserPreferenceMappingException         if the matched JSON cannot be
-   *                                                mapped to
-   *                                                {@link UserPreference}
-   * @throws UserPreferenceDeserializationException if the matched JSON cannot be
-   *                                                deserialized
+   * @param requestId unique request ID for this matching request
+   * @return the {@link MatchingRedisResult} containing the matched preference (or null if no match), the matched
+   *         requestId, and any info about old request removal
+   * @throws UserPreferenceSerializationException if serialization of the request fails
+   * @throws UserPreferenceMappingException if the matched JSON cannot be mapped to {@link UserPreference}
+   * @throws UserPreferenceDeserializationException if the matched JSON cannot be deserialized
    */
   @SuppressWarnings("unchecked")
   public MatchingRedisResult match(UserPreference userPreference, String requestId) {
@@ -153,10 +144,10 @@ public class RedisMatchingService {
 
     // Execute Lua script atomically
     String resultJson = redisTemplate.execute(
-        matchScript,
-        Collections.singletonList(MATCH_POOL_KEY),
-        reqJson,
-        USER_PREF_KEY_PREFIX);
+      matchScript,
+      Collections.singletonList(MATCH_POOL_KEY),
+      reqJson,
+      USER_PREF_KEY_PREFIX);
 
     Assert.notNull(resultJson, "Redis script returned null, indicating a failure in execution");
     log.info("Match script result: {}", resultJson);

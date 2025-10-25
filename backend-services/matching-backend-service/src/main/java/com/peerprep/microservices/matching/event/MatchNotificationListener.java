@@ -19,8 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Redis message listener for Redis Pub/Sub channels to handle matching-related
- * notifications.
+ * Redis message listener for Redis Pub/Sub channels to handle matching-related notifications.
  */
 @Component
 @RequiredArgsConstructor
@@ -35,9 +34,8 @@ public class MatchNotificationListener implements MessageListener {
   /**
    * Called when a message is received from Redis.
    * 
-   * @param message  the Redis message must not be {@literal null}.
-   * @param _pattern pattern matching the channel (if specified) - can be
-   *                 {@literal null}.
+   * @param message the Redis message must not be {@literal null}.
+   * @param _pattern pattern matching the channel (if specified) - can be {@literal null}.
    */
   @Override
   public void onMessage(Message message, byte[] _pattern) {
@@ -79,8 +77,8 @@ public class MatchNotificationListener implements MessageListener {
 
     matchingService.handleMatchNotification(matchNotification);
     log.info("Processed match notification for {} & {}",
-        matchNotification.getUser1Preference().getUserId(),
-        matchNotification.getUser2Preference().getUserId());
+      matchNotification.getUser1Preference().getUserId(),
+      matchNotification.getUser2Preference().getUserId());
   }
 
   /**
@@ -121,7 +119,7 @@ public class MatchNotificationListener implements MessageListener {
     }
 
     log.info("Handling acceptance notification for users {} and {} with status {}", acceptanceNotification.getUser1Id(),
-        acceptanceNotification.getUser2Id(), acceptanceNotification.getStatus());
+      acceptanceNotification.getUser2Id(), acceptanceNotification.getStatus());
     acceptanceService.handleAcceptanceNotification(acceptanceNotification);
   }
 

@@ -62,8 +62,8 @@ public class MatchingServiceController {
   @ResponseStatus(HttpStatus.OK)
   public TimeoutConfig updateUserPreference() {
     TimeoutConfig timeoutConfigResponse = new TimeoutConfig(
-        timeoutConfig.getMatchRequest(),
-        timeoutConfig.getMatchAcceptance());
+      timeoutConfig.getMatchRequest(),
+      timeoutConfig.getMatchAcceptance());
     return timeoutConfigResponse;
   }
 
@@ -71,17 +71,15 @@ public class MatchingServiceController {
   /**
    * Updates or creates the user preference for the given user ID.
    *
-   * @param userId                the ID of the user whose preference is being
-   *                              updated
-   * @param userPreferenceRequest the request payload containing the new or
-   *                              updated preference data
+   * @param userId the ID of the user whose preference is being updated
+   * @param userPreferenceRequest the request payload containing the new or updated preference data
    * @return the updated or newly created {@link UserPreferenceResponse}
    */
   @PutMapping("preferences/{userId}")
   @ResponseStatus(HttpStatus.OK)
   public UserPreferenceResponse updateUserPreference(
-      @PathVariable String userId,
-      @RequestBody UserPreferenceRequest userPreferenceRequest) {
+    @PathVariable String userId,
+    @RequestBody UserPreferenceRequest userPreferenceRequest) {
     return userPreferenceService.upsertUserPreference(userPreferenceRequest);
   }
 
@@ -113,21 +111,16 @@ public class MatchingServiceController {
   /**
    * Attempts to find a match for a user asynchronously.
    * 
-   * If a compatible match exists in the matching pool, the future completes
-   * immediately with a {@link ResponseEntity} containing the matched user.
-   * Otherwise, the user is added to the pool and waits asynchronously until
-   * a match is found or the timeout expires.
+   * If a compatible match exists in the matching pool, the future completes immediately with a {@link ResponseEntity}
+   * containing the matched user. Otherwise, the user is added to the pool and waits asynchronously until a match is
+   * found or the timeout expires.
    * 
-   * If no match is found within the timeout, the future completes with a
-   * {@link ResponseEntity} with HTTP status 202 (Accepted) indicating that the
-   * match request was valid.
+   * If no match is found within the timeout, the future completes with a {@link ResponseEntity} with HTTP status 202
+   * (Accepted) indicating that the match request was valid.
    *
-   * @param userPreferenceRequest the {@link UserPreferenceRequest} containing the
-   *                              user's matching preferences
-   * @return a {@link CompletableFuture} that will complete with a
-   *         {@link ResponseEntity} containing
-   *         the matched user if found, or a 202 Accepted response if no match is
-   *         found within the timeout
+   * @param userPreferenceRequest the {@link UserPreferenceRequest} containing the user's matching preferences
+   * @return a {@link CompletableFuture} that will complete with a {@link ResponseEntity} containing the matched user if
+   *         found, or a 202 Accepted response if no match is found within the timeout
    */
   @PutMapping("/match-requests")
   public CompletableFuture<ResponseEntity<?>> requestMatch(@RequestBody UserPreferenceRequest userPreferenceRequest) {
@@ -136,29 +129,27 @@ public class MatchingServiceController {
 
     // Request a match asynchronously
     return matchingService.requestMatchAsync(userPreferenceRequest, timeoutMs)
-        .thenApply(outcome -> {
-          switch (outcome.getStatus()) {
-            case MATCHED:
-              return ResponseEntity.ok(outcome);
-            case TIMEOUT:
-              return ResponseEntity.status(HttpStatus.ACCEPTED).body("No match found (timeout)");
-            case CANCELLED:
-              return ResponseEntity.status(HttpStatus.GONE).body("Match request was cancelled");
-            default:
-              return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unknown status");
-          }
-        });
+      .thenApply(outcome -> {
+        switch (outcome.getStatus()) {
+          case MATCHED :
+            return ResponseEntity.ok(outcome);
+          case TIMEOUT :
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body("No match found (timeout)");
+          case CANCELLED :
+            return ResponseEntity.status(HttpStatus.GONE).body("Match request was cancelled");
+          default :
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unknown status");
+        }
+      });
   }
 
   /**
    * Cancels a pending match request for the specified user.
    * 
-   * If the user has a pending match request in the matching pool, it will be
-   * removed and any associated {@link CompletableFuture} will be completed
-   * with {@code null} to indicate cancellation.
+   * If the user has a pending match request in the matching pool, it will be removed and any associated
+   * {@link CompletableFuture} will be completed with {@code null} to indicate cancellation.
    *
-   * @param userId the ID of the user whose pending match request should be
-   *               cancelled
+   * @param userId the ID of the user whose pending match request should be cancelled
    */
   @DeleteMapping("/match-requests/{userId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -170,44 +161,43 @@ public class MatchingServiceController {
   /**
    * Connects a specified user to a match request.
    * 
-   * @param userId                 the ID of the user connecting to the match
-   *                               request
+   * @param userId the ID of the user connecting to the match request
    * @param matchAcceptanceRequest the request body containing the match ID
    * @return
    */
   @PostMapping("/match-requests/{userId}/connect")
   public CompletableFuture<ResponseEntity<MatchAcceptanceResponse>> connectMatch(
-      @PathVariable String userId,
-      @RequestBody MatchAcceptanceRequest matchAcceptanceRequest) {
+    @PathVariable String userId,
+    @RequestBody MatchAcceptanceRequest matchAcceptanceRequest) {
 
     return matchingAcceptanceService
-        .connectMatch(userId, matchAcceptanceRequest.matchId())
-        .thenApply(response -> {
-          MatchAcceptanceResponse body = new MatchAcceptanceResponse(
-              response.getStatus(),
-              response.getSession());
+      .connectMatch(userId, matchAcceptanceRequest.matchId())
+      .thenApply(response -> {
+        MatchAcceptanceResponse body = new MatchAcceptanceResponse(
+          response.getStatus(),
+          response.getSession());
 
-          if (response.getStatus() == MatchAcceptanceOutcome.Status.SUCCESS) {
-            return ResponseEntity.ok(body);
-          } else if (response.getStatus() == MatchAcceptanceOutcome.Status.REJECTED) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-          } else {
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(body);
-          }
-        });
+        if (response.getStatus() == MatchAcceptanceOutcome.Status.SUCCESS) {
+          return ResponseEntity.ok(body);
+        } else if (response.getStatus() == MatchAcceptanceOutcome.Status.REJECTED) {
+          return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        } else {
+          return ResponseEntity.status(HttpStatus.ACCEPTED).body(body);
+        }
+      });
   }
 
   /**
    * Accepts a match request for the specified user.
    * 
-   * @param userId                 the ID of the user accepting the match request
+   * @param userId the ID of the user accepting the match request
    * @param matchAcceptanceRequest the request body containing the match ID
    * @return
    */
   @PutMapping("/match-requests/{userId}/accept")
   public MatchAcceptanceStatus acceptMatch(
-      @PathVariable String userId,
-      @RequestBody MatchAcceptanceRequest matchAcceptanceRequest) {
+    @PathVariable String userId,
+    @RequestBody MatchAcceptanceRequest matchAcceptanceRequest) {
 
     return matchingAcceptanceService.acceptMatch(userId, matchAcceptanceRequest.matchId());
   }
@@ -215,13 +205,13 @@ public class MatchingServiceController {
   /**
    * Rejects a match request for the specified user.
    * 
-   * @param userId                 the ID of the user rejecting the match request
+   * @param userId the ID of the user rejecting the match request
    * @param matchAcceptanceRequest the request body containing the match ID
    */
   @PutMapping("/match-requests/{userId}/reject")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public MatchAcceptanceStatus rejectMatch(@PathVariable String userId,
-      @RequestBody MatchAcceptanceRequest matchAcceptanceRequest) {
+    @RequestBody MatchAcceptanceRequest matchAcceptanceRequest) {
 
     return matchingAcceptanceService.rejectMatch(userId, matchAcceptanceRequest.matchId());
   }

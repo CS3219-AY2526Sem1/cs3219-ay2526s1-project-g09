@@ -35,9 +35,7 @@ public class HealthService {
   }
 
   /**
-   * Readiness check. Verifies that dependent services (e.g. Collaboration
-   * Service)
-   * are reachable and responding.
+   * Readiness check. Verifies that dependent services (e.g. Collaboration Service) are reachable and responding.
    */
   public ResponseEntity<Map<String, Object>> getReadiness() {
     Map<String, Object> result = new HashMap<>();
@@ -48,8 +46,8 @@ public class HealthService {
 
     try {
       String base = collabServiceBaseUrl.endsWith("/")
-          ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
-          : collabServiceBaseUrl;
+        ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
+        : collabServiceBaseUrl;
 
       String collabHealthUrl = base + "/health";
       ResponseEntity<Map> collabResponse = restTemplate.getForEntity(collabHealthUrl, Map.class);

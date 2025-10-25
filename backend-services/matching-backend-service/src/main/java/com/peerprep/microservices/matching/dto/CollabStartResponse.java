@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CollabStartResponse(
-    boolean success,
-    CollabSession session,
-    String error,
-    String message) {
+  boolean success,
+  CollabSession session,
+  String error,
+  String message) {
 }
