@@ -5,7 +5,7 @@ comment:
   layout: "header, coverage, diff, flags, files"
   require_changes: false
   require_base: false
-  require_head: true
+  after_n_builds: 1
 
 coverage:
   status:
