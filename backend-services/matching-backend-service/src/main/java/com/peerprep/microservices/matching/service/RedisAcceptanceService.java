@@ -73,6 +73,11 @@ public class RedisAcceptanceService {
 
   /**
    * Atomically saves both the match details and user to matchId mappings.
+   * 
+   * @param status  the {@link MatchAcceptanceStatus} containing match details
+   * @param user1Id the ID of the first user in the match
+   * @param user2Id the ID of the second user in the match
+   * @throws AcceptanceMappingException if serialization of {@code status} fails
    */
   public void saveMatchAcceptanceDetails(
       MatchAcceptanceStatus status,
@@ -142,8 +147,9 @@ public class RedisAcceptanceService {
     );
 
     log.info("Updated match acceptance details for matchId {}: {}", matchId, updatedJson);
-    if (updatedJson == null)
+    if (updatedJson == null) {
       return null;
+    }
 
     try {
       return objectMapper.readValue(updatedJson, MatchAcceptanceStatus.class);

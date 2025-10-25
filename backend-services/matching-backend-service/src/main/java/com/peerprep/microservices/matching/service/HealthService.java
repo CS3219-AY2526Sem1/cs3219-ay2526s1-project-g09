@@ -24,6 +24,9 @@ public class HealthService {
 
   /**
    * Simple liveness check — confirms that the service itself is running.
+   * 
+   * @return a {@link ResponseEntity} containing a {@link Map} with information of
+   *         status, service, timestamp and uptime
    */
   public ResponseEntity<Map<String, Object>> getLiveness() {
     Map<String, Object> health = new HashMap<>();
@@ -36,8 +39,13 @@ public class HealthService {
 
   /**
    * Readiness check. Verifies that dependent services (e.g. Collaboration
-   * Service)
-   * are reachable and responding.
+   * Service) are reachable and responding.
+   * 
+   * @return a {@link ResponseEntity} containing a {@link Map} with the current
+   *         service, collab service message, status of collab and
+   *         {@link HttpStatus#OK} if the dependent services
+   *         are healthy, or {@link HttpStatus#SERVICE_UNAVAILABLE} if any
+   *         critical dependency is down.
    */
   public ResponseEntity<Map<String, Object>> getReadiness() {
     Map<String, Object> result = new HashMap<>();

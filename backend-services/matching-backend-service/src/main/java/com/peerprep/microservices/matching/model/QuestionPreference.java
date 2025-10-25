@@ -51,6 +51,8 @@ public class QuestionPreference {
 
   /**
    * Validation logic for constructor
+   * 
+   * @param topics the map of topics to selected difficulties.
    */
   private static void validate(Map<String, Set<String>> topics) {
     if (topics == null || topics.isEmpty()) {
@@ -68,6 +70,12 @@ public class QuestionPreference {
   /**
    * Returns a new QuestionPreference containing only the overlapping topics and
    * difficulties between this user and another user.
+   * 
+   * @param other the {@link QuestionPreference} of another user to compare
+   *              against
+   * @return a new {@link QuestionPreference} containing only topics and
+   *         difficulties
+   *         present in both this and the other user's preferences
    */
   public QuestionPreference getOverlap(QuestionPreference other) {
     Map<String, Set<String>> overlappingTopics = new HashMap<>();

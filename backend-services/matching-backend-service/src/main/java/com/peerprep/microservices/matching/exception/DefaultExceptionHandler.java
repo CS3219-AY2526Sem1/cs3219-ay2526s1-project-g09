@@ -20,7 +20,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles UserPreferenceNotFoundException.
-   * Returns a 404 Not Found response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         404 status
    */
   @ExceptionHandler(UserPreferenceNotFoundException.class)
   public ResponseEntity<String> handleUserPreferenceNotFound(UserPreferenceNotFoundException ex) {
@@ -30,7 +33,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles NoPendingMatchRequestException.
-   * Returns a 404 Not Found response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         404 status
    */
   @ExceptionHandler(NoPendingMatchRequestException.class)
   public ResponseEntity<String> handleNoPendingMatchRequest(NoPendingMatchRequestException ex) {
@@ -40,7 +46,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles UserPreferenceSerializationException.
-   * Returns a 500 Internal Server Error response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         500 status
    */
   @ExceptionHandler(UserPreferenceSerializationException.class)
   public ResponseEntity<String> handleUserPreferenceSerialization(UserPreferenceSerializationException ex) {
@@ -50,7 +59,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles NotificationMappingException.
-   * Returns a 500 Internal Server Error response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         500 status
    */
   @ExceptionHandler(NotificationMappingException.class)
   public ResponseEntity<String> handleNotificationMappingException(NotificationMappingException ex) {
@@ -60,7 +72,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles NotificationDeserializationException.
-   * Returns a 500 Internal Server Error response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         500 status
    */
   @ExceptionHandler(NotificationDeserializationException.class)
   public ResponseEntity<String> handleNotificationDeserializationException(NotificationDeserializationException ex) {
@@ -70,7 +85,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles AcceptanceMappingException.
-   * Returns a 500 Internal Server Error response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         500 status
    */
   @ExceptionHandler(AcceptanceMappingException.class)
   public ResponseEntity<String> handleAcceptanceMappingException(AcceptanceMappingException ex) {
@@ -80,7 +98,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles AcceptanceDeserializationException.
-   * Returns a 500 Internal Server Error response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         500 status
    */
   @ExceptionHandler(AcceptanceDeserializationException.class)
   public ResponseEntity<String> handleAcceptanceDeserializationException(AcceptanceDeserializationException ex) {
@@ -90,7 +111,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles UserPreferenceDeserializationException.
-   * Returns a 500 Internal Server Error response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         500 status
    */
   @ExceptionHandler(UserPreferenceDeserializationException.class)
   public ResponseEntity<String> handleUserPreferenceDeserializationException(
@@ -101,7 +125,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles IOExceptions.
-   * Returns a 500 Internal Server Error response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         500 status
    */
   @ExceptionHandler(IOException.class)
   public ResponseEntity<String> handleIoException(IOException ex) {
@@ -112,7 +139,10 @@ public class DefaultExceptionHandler {
 
   /**
    * Handles all other exceptions.
-   * Returns a 500 Internal Server Error response.
+   * 
+   * @param ex the exception that was thrown
+   * @return a {@link ResponseEntity} containing the exception message and HTTP
+   *         500 status
    */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<String> handleGeneralException(Exception ex) {

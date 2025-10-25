@@ -16,10 +16,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AcceptanceNotification {
-    String user1Id;
-    String user2Id;
+    private String user1Id;
+    private String user2Id;
+
     @JsonProperty
-    MatchAcceptanceOutcome.Status status;
-    String matchId;
-    CollabSession session;
+    private MatchAcceptanceOutcome.Status status;
+    private String matchId;
+    private CollabSession session;
 }

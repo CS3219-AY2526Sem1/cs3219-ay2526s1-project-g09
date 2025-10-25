@@ -56,6 +56,10 @@ public class UserPreference {
 
   /**
    * Create UserPreference from a flat map that contains userId and topics map.
+   * 
+   * @param flatMap a {@link Map} containing "userId" and "topics" entries, each
+   *                topic also contains the corresponding difficulties selected
+   * @return a {@link UserPreference} constructed from the provided map
    */
   @SuppressWarnings("unchecked")
   public static UserPreference fromFlatMap(Map<String, Object> flatMap) {
@@ -81,17 +85,32 @@ public class UserPreference {
 
   /**
    * Validation logic for constructor
+   * 
+   * @param userId             the unique identifier of the user; must not be null
+   *                           or empty
+   * @param questionPreference the {@link QuestionPreference} object; must not be
+   *                           null
+   * @throws IllegalArgumentException if userId is null/empty or
+   *                                  questionPreference is null
    */
   private static void validate(String userId, QuestionPreference questionPreference) {
-    if (userId == null || userId.isEmpty())
+    if (userId == null || userId.isEmpty()) {
       throw new IllegalArgumentException("userId cannot be null or empty");
-    if (questionPreference == null)
+    }
+
+    if (questionPreference == null) {
       throw new IllegalArgumentException("questionPreference cannot be null");
+    }
+
   }
 
   /**
    * Returns a new UserPreference containing overlapping question preferences with
    * another user.
+   * 
+   * @param other the {@link UserPreference} of another user to compare against
+   * @return a new {@link UserPreference} containing the intersection of question
+   *         preferences between this user and the other user
    */
   public UserPreference getOverlap(UserPreference other) {
     QuestionPreference overlap = this.questionPreference.getOverlap(other.questionPreference);
@@ -103,7 +122,8 @@ public class UserPreference {
 
   /**
    * Flatten UserPreference into a Map suitable for Redis or JSON storage.
-   * Includes userId and topics map.
+   * 
+   * @return a {@link Map} containing the "userId" and "topics" entries
    */
   public Map<String, Object> toRedisMap() {
     Map<String, Object> map = new HashMap<>();
@@ -115,16 +135,12 @@ public class UserPreference {
   /**
    * Constructs a UserPreference from a nested map representation (e.g., from
    * Redis JSON).
-   * Expected format:
-   * {
-   * "userId": "user123",
-   * "questionPreference": {
-   * "topics": {
-   * "OOP": ["Easy", "Medium"],
-   * "Python": ["Hard"]
-   * }
-   * }
-   * }
+   * 
+   * @param nestedMap the {@link Map} containing the nested user preference data
+   * @return a {@link UserPreference} built from the provided map
+   * @throws IllegalArgumentException if the nestedMap is null, or if required
+   *                                  fields like userId or topics are missing or
+   *                                  empty
    */
   @SuppressWarnings("unchecked")
   public static UserPreference fromNestedMap(Map<String, Object> nestedMap) {

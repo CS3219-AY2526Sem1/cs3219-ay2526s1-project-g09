@@ -88,6 +88,7 @@ public class RedisConfig {
    *
    * @param connectionFactory the Redis connection factory
    * @param messageListener   the listener to handle incoming Redis messages
+   * @param channels          the channels to listen on
    * @return the configured message listener container
    */
   @Bean
@@ -98,9 +99,9 @@ public class RedisConfig {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
 
-    container.addMessageListener(messageListener, new PatternTopic(channels.MATCH_CHANNEL));
-    container.addMessageListener(messageListener, new PatternTopic(channels.CANCEL_CHANNEL));
-    container.addMessageListener(messageListener, new PatternTopic(channels.MATCH_ACCEPTANCE_CHANNEL));
+    container.addMessageListener(messageListener, new PatternTopic(RedisChannels.MATCH_CHANNEL));
+    container.addMessageListener(messageListener, new PatternTopic(RedisChannels.CANCEL_CHANNEL));
+    container.addMessageListener(messageListener, new PatternTopic(RedisChannels.MATCH_ACCEPTANCE_CHANNEL));
 
     return container;
   }
