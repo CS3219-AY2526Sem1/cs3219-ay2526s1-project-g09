@@ -16,8 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service for managing user preferences, including creation, retrieval,
- * updating, and deletion of preferences.
+ * Service for managing user preferences, including creation, retrieval, updating, and deletion of preferences.
  */
 @Service
 @RequiredArgsConstructor
@@ -32,8 +31,7 @@ public class UserPreferenceService {
    * Update an existing user preference, or create a new one if it does not exist.
    *
    * @param request The {@link UserPreferenceRequest} containing preference data.
-   * @return {@link UserPreferenceResponse} representing the saved or updated
-   *         preference.
+   * @return {@link UserPreferenceResponse} representing the saved or updated preference.
    */
   public UserPreferenceResponse upsertUserPreference(UserPreferenceRequest request) {
 
@@ -70,35 +68,32 @@ public class UserPreferenceService {
    */
   public UserPreferenceResponse getUserPreference(String userId) {
     return userPreferenceRepository.findById(userId)
-        .map(this::mapToResponse)
-        .orElseThrow(() -> new UserPreferenceNotFoundException(userId));
+      .map(this::mapToResponse)
+      .orElseThrow(() -> new UserPreferenceNotFoundException(userId));
   }
 
   // ---------- [Utility] ----------
 
   /**
-   * Converts a {@link UserPreferenceRequest} DTO into a {@link UserPreference}
-   * model.
+   * Converts a {@link UserPreferenceRequest} DTO into a {@link UserPreference} model.
    *
-   * @param userPref the {@link UserPreferenceRequest} containing user preference
-   *                 data
+   * @param userPref the {@link UserPreferenceRequest} containing user preference data
    * @return a {@link UserPreference} instance with the same data as the request
    */
   public UserPreference mapToUserPreference(UserPreferenceRequest userPref) {
 
     QuestionPreference questionPreference = QuestionPreference.builder()
-        .topics(Map.copyOf(userPref.topics()))
-        .build();
+      .topics(Map.copyOf(userPref.topics()))
+      .build();
 
     return UserPreference.builder()
-        .userId(userPref.userId())
-        .questionPreference(questionPreference)
-        .build();
+      .userId(userPref.userId())
+      .questionPreference(questionPreference)
+      .build();
   }
 
   /**
-   * Converts a {@link UserPreference} model into a {@link UserPreferenceResponse}
-   * DTO.
+   * Converts a {@link UserPreference} model into a {@link UserPreferenceResponse} DTO.
    *
    * @param userPreference the {@link UserPreference} to convert
    * @return a {@link UserPreferenceResponse} instance containing the same data
@@ -107,8 +102,8 @@ public class UserPreferenceService {
     QuestionPreference questionPreference = userPreference.getQuestionPreference();
 
     return new UserPreferenceResponse(
-        userPreference.getUserId(),
-        questionPreference.getTopics());
+      userPreference.getUserId(),
+      questionPreference.getTopics());
   }
 
 }

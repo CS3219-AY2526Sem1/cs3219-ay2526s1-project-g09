@@ -48,7 +48,7 @@ public class AcceptanceService {
   /**
    * Connects a user to a match acceptance.
    *
-   * @param userId  the ID of the user to connect
+   * @param userId the ID of the user to connect
    * @param matchId the ID of the match to connect to
    * @return the match acceptance outcome
    */
@@ -59,10 +59,10 @@ public class AcceptanceService {
     CompletableFuture<MatchAcceptanceOutcome> connectFuture = new CompletableFuture<>();
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.CONNECTED,
-        channels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.CONNECTED,
+      channels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -75,7 +75,7 @@ public class AcceptanceService {
       log.info("Match {} was rejected. Completing future.", matchId);
       connectFuture.complete(outcome);
     } else {
-    // Add future if no outcome yet.
+      // Add future if no outcome yet.
       matchedWaitingFutures.put(userId, connectFuture);
       connectFuture.whenComplete((res, err) -> matchedWaitingFutures.remove(userId));
       log.info("Connected User {} to match {}", userId, matchId);
@@ -99,7 +99,7 @@ public class AcceptanceService {
   /**
    * Accepts a match for a specified user.
    *
-   * @param userId  the ID of the accepting user
+   * @param userId the ID of the accepting user
    * @param matchId the ID of the match the user is accepting
    * @return the updated match acceptance status
    */
@@ -107,10 +107,10 @@ public class AcceptanceService {
     log.info("User {} accepted match {}", userId, matchId);
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.ACCEPTED,
-        channels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.ACCEPTED,
+      channels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -131,7 +131,7 @@ public class AcceptanceService {
   /**
    * Rejects a match for a specified user.
    *
-   * @param userId  the ID of the user rejecting the match
+   * @param userId the ID of the user rejecting the match
    * @param matchId the ID of the match to reject
    * @return the updated match acceptance status
    */
@@ -139,10 +139,10 @@ public class AcceptanceService {
     log.info("User {} rejecting match {}", userId, matchId);
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.REJECTED,
-        channels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.REJECTED,
+      channels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -170,14 +170,15 @@ public class AcceptanceService {
    * @param outcome the outcome of the match acceptance
    */
   private void publishAcceptanceNotification(String user1Id, String user2Id, String matchId,
-      MatchAcceptanceOutcome outcome) {
-    log.info("Publishing acceptance notification for match status {} to users {} and {}", outcome.getStatus(), user1Id, user2Id);
+    MatchAcceptanceOutcome outcome) {
+    log.info("Publishing acceptance notification for match status {} to users {} and {}", outcome.getStatus(), user1Id,
+      user2Id);
     AcceptanceNotification acceptanceNotification = new AcceptanceNotification(
-        user1Id,
-        user2Id,
-        outcome.getStatus(),
-        matchId,
-        outcome.getSession());
+      user1Id,
+      user2Id,
+      outcome.getStatus(),
+      matchId,
+      outcome.getSession());
 
     redisTemplate.convertAndSend(channels.MATCH_ACCEPTANCE_CHANNEL, acceptanceNotification);
   }
@@ -222,7 +223,7 @@ public class AcceptanceService {
     }
 
     if (matchStatus != MatchAcceptanceOutcome.Status.PENDING
-        && acceptanceNotification.getMatchId() != null) {
+      && acceptanceNotification.getMatchId() != null) {
       collabSessionsByMatchId.remove(acceptanceNotification.getMatchId());
     }
   }
@@ -235,10 +236,10 @@ public class AcceptanceService {
       log.info("Both users accepted match {}. Creating collaboration session.", status.getMatchDetails().getMatchId());
       log.debug("Match details: {}", status.getMatchDetails());
       collabSession = collabSessionsByMatchId.computeIfAbsent(
-          status.getMatchDetails().getMatchId(),
-          key -> collabServiceClient.createSession(
-              buildParticipantList(status),
-              toPreferenceMap(status)));
+        status.getMatchDetails().getMatchId(),
+        key -> collabServiceClient.createSession(
+          buildParticipantList(status),
+          toPreferenceMap(status)));
     }
     log.info("Created collaboration session for match {}: {}", status.getMatchDetails().getMatchId(), collabSession);
 
@@ -257,8 +258,8 @@ public class AcceptanceService {
 
     if (preference == null || preference.getTopics() == null || preference.getTopics().isEmpty()) {
       throw new IllegalStateException(
-          "Question preferences are required to create a collaboration session for match "
-              + status.getMatchDetails().getMatchId());
+        "Question preferences are required to create a collaboration session for match "
+          + status.getMatchDetails().getMatchId());
     }
 
     Map<String, List<String>> mapped = new HashMap<>();
@@ -270,8 +271,8 @@ public class AcceptanceService {
 
     if (mapped.isEmpty()) {
       throw new IllegalStateException(
-          "No overlapping question preferences available for match "
-              + status.getMatchDetails().getMatchId());
+        "No overlapping question preferences available for match "
+          + status.getMatchDetails().getMatchId());
     }
 
     return mapped;
@@ -281,8 +282,7 @@ public class AcceptanceService {
    * Helper to determine the overall match acceptance result.
    *
    * @param status the MatchAcceptanceStatus to check
-   * @return "SUCCESS" if both accepted, "REJECTED" if one rejected, or "PENDING"
-   *         otherwise
+   * @return "SUCCESS" if both accepted, "REJECTED" if one rejected, or "PENDING" otherwise
    */
   private MatchAcceptanceOutcome.Status evaluateMatchOutcome(MatchAcceptanceStatus status) {
     if (status == null) {
