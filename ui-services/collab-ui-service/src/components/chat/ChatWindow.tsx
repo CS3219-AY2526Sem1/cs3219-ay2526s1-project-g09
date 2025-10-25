@@ -7,6 +7,10 @@ import { io, Socket } from "socket.io-client";
 import type { User } from "@/types/User";
 import { useCollabSession } from "@/context/CollabSessionHook";
 
+const CHAT_URL =
+  import.meta.env.VITE_MODE == "dev"
+    ? "http://localhost:5286"
+    : "http://peerprep-chat-service.ap-southeast-1.elasticbeanstalk.com";
 interface ChatWindowProps {
   user?: User | null;
 }
@@ -61,7 +65,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
     }
     if (!session?.sessionId || !user?.id || !user?.username) return;
 
-    const socket = io("http://localhost:5286", { reconnection: true });
+    const socket = io(CHAT_URL, { reconnection: true });
     socketRef.current = socket;
 
     socket.on("connect", () => {
