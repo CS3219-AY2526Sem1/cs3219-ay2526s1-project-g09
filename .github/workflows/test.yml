@@ -46,6 +46,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ matrix.service.context }}/test-results/junit.xml
           flags: ${{ matrix.service.name }}
+          name: ${{ matrix.service.name }} tests
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
