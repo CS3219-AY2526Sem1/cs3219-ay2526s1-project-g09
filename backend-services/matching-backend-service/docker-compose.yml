@@ -1,10 +1,5 @@
 # This docker-compose.yml is mostly used for cloud deployment.
 services:
-  redis:
-    image: redis:8.2.1
-    ports:
-      - "6379:6379"
-
   matching-service:
     build: .
     container_name: peerprep-matching-service
@@ -12,5 +7,3 @@ services:
       - .env
     ports:
       - "80:5274" # Use 80:5274 for deployment. 5274:5274 for local testing.
-    depends_on:
-      - redis

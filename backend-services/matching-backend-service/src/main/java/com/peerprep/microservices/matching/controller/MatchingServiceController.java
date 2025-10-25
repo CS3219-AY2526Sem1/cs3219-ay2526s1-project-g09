@@ -38,7 +38,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/matching-service")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = { "http://localhost:5173", "http://peerprep-ui-shell.s3-website-ap-southeast-1.amazonaws.com" })
 public class MatchingServiceController {
 
   private final MatchingService matchingService;

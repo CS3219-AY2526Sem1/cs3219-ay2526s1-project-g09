@@ -44,6 +44,9 @@ export async function seedLeetCodeBatch() {
   const { pageSize, nextSkip } = cursor;
 
   try {
+    if (!process.env.QUESTION_API_URL) {
+      throw new Error("QUESTION_API_URL is not set");
+    }
     await checkQuestionServiceHealth();
   } catch (err) {
     cursor.lastRunAt = new Date();

@@ -62,7 +62,7 @@ public class RedisConfig {
     template.setConnectionFactory(connectionFactory);
 
     ObjectMapper mapper = new ObjectMapper();
-    mapper.deactivateDefaultTyping(); 
+    mapper.deactivateDefaultTyping();
     mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 

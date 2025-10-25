@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { COLLAB_API_URL } from "@/api/collabService";
 
 interface SessionTimerProps {
   initialTimeInSeconds?: number;
@@ -22,17 +23,10 @@ interface SessionPayload {
   timeTaken?: number;
 }
 
-const rawCollabApiBase =
-  import.meta.env.VITE_COLLAB_SERVICE_API_LINK ??
-  "http://localhost:5276/api/v1/collab-service/";
-const collabApiBase = rawCollabApiBase.endsWith("/")
-  ? rawCollabApiBase
-  : `${rawCollabApiBase}/`;
-
 const retrieveStartTime = async (
   sessionId: string,
 ): Promise<SessionPayload> => {
-  const res = await fetch(`${collabApiBase}${sessionId}`, {
+  const res = await fetch(`${COLLAB_API_URL}${sessionId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
@@ -75,7 +69,7 @@ const SessionTimer: React.FC<SessionTimerProps> = ({
     hasExpiredRef.current = true;
 
     try {
-      const res = await fetch(`${collabApiBase}disconnect/system`, {
+      const res = await fetch(`${COLLAB_API_URL}disconnect/system`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, force: true }),

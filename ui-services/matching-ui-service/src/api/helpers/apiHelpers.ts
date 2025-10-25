@@ -5,8 +5,23 @@ import type {
   PreferenceResult,
 } from "../dto/matching.dto";
 
-export const MATCHING_API_BASE = import.meta.env.VITE_MATCHING_SERVICE_API_LINK;
-export const QUESTION_API_BASE = import.meta.env.VITE_QUESTION_SERVICE_API_LINK;
+export const MATCHING_API_BASE =
+  (import.meta.env.VITE_MODE == "dev"
+    ? "http://localhost:5274"
+    : "http://peerprep-matching-service.ap-southeast-1.elasticbeanstalk.com") +
+  "/api/v1/matching-service";
+
+export const QUESTION_API_BASE =
+  (import.meta.env.VITE_MODE == "dev"
+    ? "http://localhost:5275"
+    : "http://peerprep-question-service.ap-southeast-1.elasticbeanstalk.com") +
+  "/api/v1/question-service";
+
+export const COLLAB_API_BASE =
+  (import.meta.env.VITE_MODE == "dev"
+    ? "http://localhost:5276"
+    : "http://peerprep-collab-service.ap-southeast-1.elasticbeanstalk.com") +
+  "/api/v1/collab-service";
 
 /**
  * Universal fetch wrapper with JSON parsing and structured result.

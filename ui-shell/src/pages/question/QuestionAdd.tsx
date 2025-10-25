@@ -7,6 +7,7 @@ const QuestionAddPageShell: React.FC = () => (
   <Layout navHeader={<NavHeader />}>
     <RemoteWrapper
       remote={() => import("questionUiService/QuestionAdd")}
+      remoteName="Question UI Service"
       loadingMessage="Loading Question Add..."
       errorMessage="Question Add service unavailable"
     />

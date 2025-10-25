@@ -6,6 +6,7 @@ const SetDisplayNamePage: React.FC = () => {
     <AuthLayout>
       <RemoteWrapper
         remote={() => import("userUiService/SetDisplayNameForm")}
+        remoteName="User UI Service"
         loadingMessage="Loading display name form..."
         errorMessage="Display name service unavailable"
       />

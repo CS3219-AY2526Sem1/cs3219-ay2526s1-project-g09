@@ -25,6 +25,7 @@ const OtpPage: React.FC = () => {
     <AuthLayout>
       <RemoteWrapper
         remote={() => import("userUiService/OtpForm")}
+        remoteName="User UI Service"
         remoteProps={{
           user,
           onOTPSuccess: handleOTPSuccess,

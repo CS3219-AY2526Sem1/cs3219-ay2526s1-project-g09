@@ -13,6 +13,7 @@ const ForgotPasswordPage: React.FC = () => {
     <AuthLayout>
       <RemoteWrapper
         remote={() => import("userUiService/ForgotPasswordForm")}
+        remoteName="User UI Service"
         remoteProps={{
           errorType,
           onBackToLogin: () => navigate("/login"),

@@ -20,6 +20,7 @@ const QuestionAttemptsPage: React.FC = () => {
           <div className="flex flex-1">
             <RemoteWrapper
               remote={() => import("historyUiService/NotesWindow")}
+              remoteName="History UI Service"
               loadingMessage="Loading Notes..."
               errorMessage="Notes service unavailable"
             />
@@ -30,6 +31,7 @@ const QuestionAttemptsPage: React.FC = () => {
         <div className="flex flex-1">
           <RemoteWrapper
             remote={() => import("collabUiService/WorkingWindow")}
+            remoteName="History UI Service"
             loadingMessage="Loading Workspace..."
             errorMessage="Workspace service unavailable"
           />

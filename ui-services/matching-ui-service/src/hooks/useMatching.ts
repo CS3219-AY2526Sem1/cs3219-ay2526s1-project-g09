@@ -14,7 +14,7 @@ import {
   requestMatch,
   getTimeoutConfig,
 } from "@/api/routes/matchingService";
-import { type CollabSession } from "@/api/collabService";
+import { type CollabSession } from "@/api/routes/collabService";
 import { useNavigate } from "react-router-dom";
 
 type PageView = "initial" | "preferences" | "matching" | "matchFound";

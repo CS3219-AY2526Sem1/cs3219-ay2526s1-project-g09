@@ -14,6 +14,7 @@ const QuestionAttemptsPage: React.FC = () => {
           <div className="h-[40vh] overflow-y-auto">
             <RemoteWrapper
               remote={() => import("questionUiService/QuestionDisplay")}
+              remoteName="Question UI Service"
               remoteProps={{ question: mockQuestions[0] }}
               loadingMessage="Loading Question..."
               errorMessage="Question Display service unavailable"
@@ -24,6 +25,7 @@ const QuestionAttemptsPage: React.FC = () => {
           <div className="flex flex-1">
             <RemoteWrapper
               remote={() => import("historyUiService/NotesWindow")}
+              remoteName="History UI Service"
               loadingMessage="Loading Notes..."
               errorMessage="Notes service unavailable"
             />
@@ -34,6 +36,7 @@ const QuestionAttemptsPage: React.FC = () => {
         <div className="flex flex-1">
           <RemoteWrapper
             remote={() => import("collabUiService/WorkingWindow")}
+            remoteName="Collab UI Service"
             loadingMessage="Loading Collaboration Window..."
             errorMessage="Collaboration service unavailable"
           />

@@ -14,6 +14,7 @@ const UserProfile: React.FC = () => {
       <div className="flex justify-center items-center pt-20">
         <RemoteWrapper
           remote={() => import("userUiService/UserProfileCard")}
+          remoteName="User UI Service"
           remoteProps={{
             user,
             onUserUpdated: (updatedUser: User) => setUser(updatedUser),

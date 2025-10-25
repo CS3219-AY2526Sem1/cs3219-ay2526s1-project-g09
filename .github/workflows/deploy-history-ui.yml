@@ -1,0 +1,18 @@
+name: Deploy history-ui-service to S3
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "ui-services/history-ui-service/**"
+      - ".github/workflows/deploy-history-ui.yml"
+  workflow_dispatch:
+
+jobs:
+  call-base:
+    uses: ./.github/workflows/deploy-ui-to-s3.yml
+    with:
+      name: history-ui-service
+      path: ui-services/history-ui-service
+      bucket: peerprep-history-ui-service

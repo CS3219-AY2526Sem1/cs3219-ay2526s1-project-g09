@@ -33,7 +33,10 @@ const refreshSocketActivity = (socket, options = {}) => {
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: [
+        "http://localhost:5173",
+        "http://peerprep-ui-shell.s3-website-ap-southeast-1.amazonaws.com",
+      ],
       methods: ["GET", "POST"],
     },
   });

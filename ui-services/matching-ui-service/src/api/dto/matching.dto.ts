@@ -1,4 +1,4 @@
-import type { CollabSession } from "@/api/collabService";
+import type { CollabSession } from "@/api/routes/collabService";
 
 export interface UserPreferences {
   userId: string;

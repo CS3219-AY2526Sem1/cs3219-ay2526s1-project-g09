@@ -7,6 +7,7 @@ const QuestionPage: React.FC = () => (
   <Layout navHeader={<NavHeader />}>
     <RemoteWrapper
       remote={() => import("questionUiService/QuestionList")}
+      remoteName="Question UI Service"
       loadingMessage="Loading Question List..."
       errorMessage="Question List service unavailable"
     />

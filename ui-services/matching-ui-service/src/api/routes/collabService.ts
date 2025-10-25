@@ -1,53 +1,17 @@
-export interface StartSessionPayload {
-  questionId: string;
-  users: string[];
-  sessionId?: string;
-}
+import type {
+  ActiveSessionResponse,
+  CollabSession,
+  ConnectSessionResponse,
+  StartSessionPayload,
+  StartSessionResponse,
+} from "../dto/collab.dto";
+import { COLLAB_API_BASE } from "../helpers/apiHelpers";
 
-export interface CollabSession {
-  sessionId: string;
-  questionId: string;
-  users?: string[];
-  active: boolean;
-  createdAt?: string;
-  endedAt?: string;
-  timeTaken?: number;
-  question?: {
-    questionId: string;
-    title: string;
-    body: string;
-    topics: string[];
-    hints: string[];
-    answer: string;
-    timeLimit?: number;
-    raw?: unknown;
-  } | null;
-}
+const collabApiBase = COLLAB_API_BASE.endsWith("/")
+  ? COLLAB_API_BASE
+  : `${COLLAB_API_BASE}/`;
 
-interface StartSessionResponse {
-  success?: boolean;
-  session?: CollabSession;
-  error?: string;
-}
-
-interface ActiveSessionResponse {
-  success?: boolean;
-  session?: CollabSession;
-  error?: string;
-}
-
-interface ConnectSessionResponse {
-  success?: boolean;
-  session?: CollabSession;
-  addedUser?: boolean;
-  error?: string;
-}
-
-const rawBaseUrl =
-  import.meta.env.VITE_COLLAB_SERVICE_API_LINK ??
-  "http://localhost:5276/api/v1/collab-service/";
-
-const collabApiBase = rawBaseUrl.endsWith("/") ? rawBaseUrl : `${rawBaseUrl}/`;
+export type { CollabSession } from "../dto/collab.dto";
 
 export async function startCollabSession(
   payload: StartSessionPayload,

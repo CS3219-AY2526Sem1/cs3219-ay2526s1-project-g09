@@ -62,7 +62,7 @@ services:
     container_name: peerprep-user-backend
 
   redis:
-    image: redis:8.2.1
+    image: valkey/valkey:8.0
     ports:
       - "6379:6379"
 
@@ -83,10 +83,11 @@ services:
       context: ./backend-services/collab-backend-service
       dockerfile: Dockerfile
     container_name: collab-service
+    env_file:
+      - ./backend-services/collab-backend-service/.env
     ports:
       - "5276:5276"
-    environment:
-      - MONGODB_URI=${MONGODB_URI}
+
   leetcode-backend-service:
     build:
       context: ./backend-services/leetcode-backend-service

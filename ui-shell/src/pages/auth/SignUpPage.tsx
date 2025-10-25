@@ -12,6 +12,7 @@ const SignUpPage: React.FC = () => {
     <AuthLayout>
       <RemoteWrapper
         remote={() => import("userUiService/SignUpForm")}
+        remoteName="User UI Service"
         remoteProps={{
           onSignUpSuccess: (user: User) => {
             setUser(user);

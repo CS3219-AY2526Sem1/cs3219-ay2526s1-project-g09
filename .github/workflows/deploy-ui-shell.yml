@@ -1,0 +1,18 @@
+name: Deploy ui-shell to S3
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "ui-shell/**"
+      - ".github/workflows/deploy-ui-shell.yml"
+  workflow_dispatch:
+
+jobs:
+  call-base:
+    uses: ./.github/workflows/deploy-ui-to-s3.yml
+    with:
+      name: ui-shell
+      path: ui-shell
+      bucket: peerprep-ui-shell

@@ -9,6 +9,7 @@ const ResetPasswordPage: React.FC = () => {
     <AuthLayout>
       <RemoteWrapper
         remote={() => import("userUiService/ResetPasswordForm")}
+        remoteName="User UI Service"
         remoteProps={{
           onResetSuccess: () => navigate("/login"),
           onTokenInvalid: () =>

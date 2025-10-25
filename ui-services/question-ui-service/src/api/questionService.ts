@@ -1,7 +1,11 @@
 import type { QuestionPreview } from "@/types/QuestionPreview";
 
-const API_URI = import.meta.env.VITE_QUESTION_SERVICE_API_LINK;
-const ADMIN_TOKEN = import.meta.env.VITE_QUESTION_SERVICE_ADMIN_TOKEN;
+const API_URI =
+  (import.meta.env.VITE_MODE == "dev"
+    ? "http://localhost:5275"
+    : "http://peerprep-question-service.ap-southeast-1.elasticbeanstalk.com") +
+  "/api/v1/question-service";
+const ADMIN_TOKEN = "I-love-irish-ice-cream";
 
 /** Generic type-safe fetch helper */
 async function apiFetch<T>(

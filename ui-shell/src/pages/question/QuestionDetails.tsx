@@ -13,6 +13,7 @@ const QuestionDetailsPageShell: React.FC = () => {
     <Layout navHeader={<NavHeader />}>
       <RemoteWrapper
         remote={() => import("questionUiService/QuestionDetails")}
+        remoteName="Question UI Service"
         remoteProps={{ questionId: id }}
         loadingMessage="Loading Question Details..."
         errorMessage="Question Details service unavailable"

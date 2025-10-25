@@ -1,3 +1,4 @@
+import { COLLAB_API_URL } from "@/api/collabService";
 import React, {
   createContext,
   useCallback,
@@ -36,13 +37,6 @@ const defaultState: CollabSessionState = {
 
 const CollabSessionContext = createContext<CollabSessionState>(defaultState);
 
-const rawCollabApiBase =
-  import.meta.env.VITE_COLLAB_SERVICE_API_LINK ??
-  "http://localhost:5276/api/v1/collab-service/";
-const collabApiBase = rawCollabApiBase.endsWith("/")
-  ? rawCollabApiBase
-  : `${rawCollabApiBase}/`;
-
 const delay = (ms: number) =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -80,7 +74,7 @@ export const CollabSessionProvider: React.FC<ProviderProps> = ({
     while (attempts < maxAttempts && !fetchedSession) {
       try {
         const response = await fetch(
-          `${collabApiBase}sessions/${encodeURIComponent(currentUserId)}`,
+          `${COLLAB_API_URL}sessions/${encodeURIComponent(currentUserId)}`,
         );
 
         if (response.status === 404) {
@@ -123,7 +117,7 @@ export const CollabSessionProvider: React.FC<ProviderProps> = ({
 
     try {
       const connectResponse = await fetch(
-        `${collabApiBase}connect/${encodeURIComponent(currentUserId)}`,
+        `${COLLAB_API_URL}connect/${encodeURIComponent(currentUserId)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

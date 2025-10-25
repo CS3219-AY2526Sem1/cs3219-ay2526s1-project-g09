@@ -1,8 +1,6 @@
 import SessionService from "../services/session.service.js";
 
-const QUESTION_SERVICE_BASE_URL =
-  process.env.QUESTION_SERVICE_URL ??
-  "http://question-backend-service:5275/api/v1/question-service";
+const QUESTION_SERVICE_BASE_URL = process.env.QUESTION_SERVICE_URL;
 
 const VALID_DIFFICULTIES = new Set(["Easy", "Medium", "Hard"]);
 
@@ -66,7 +64,7 @@ const mapQuestionForSession = (question) => {
 };
 
 const fetchRandomQuestion = async (categories) => {
-  const endpoint = `${QUESTION_SERVICE_BASE_URL.replace(/\/$/, "")}/random`;
+  const endpoint = `${QUESTION_SERVICE_BASE_URL}/random`;
   console.log(
     "Fetching random question from:",
     endpoint,

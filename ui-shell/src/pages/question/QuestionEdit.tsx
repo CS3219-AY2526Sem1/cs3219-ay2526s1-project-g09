@@ -13,6 +13,7 @@ const QuestionEditPageShell: React.FC = () => {
     <Layout navHeader={<NavHeader />}>
       <RemoteWrapper
         remote={() => import("questionUiService/QuestionEdit")}
+        remoteName="Question UI Service"
         remoteProps={{ questionId: id }}
         loadingMessage="Loading Question Edit..."
         errorMessage="Question Edit service unavailable"

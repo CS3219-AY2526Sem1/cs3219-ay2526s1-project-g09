@@ -1,66 +1,50 @@
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
 import federation from "@originjs/vite-plugin-federation";
+import { defineConfig, loadEnv } from "vite";
 
-// Returns a remote config that safely falls back if the remote cannot be fetched
-function remoteUrl(url: string) {
-  const fallbackModule =
-    "data:text/javascript,export function init(){}; export function get(){return Promise.resolve(() => ({ default: () => null, __mfe_status: { isOffline: true } }))};";
+import { remoteUrl, getRemoteUrls } from "./helpers/remote-config";
 
-  const externalPromise = `(new Promise((resolve) => {
-    fetch('${url}')
-      .then(res => {
-        if (!res.ok) throw new Error('Remote not reachable: ${url}');
-        resolve('${url}');
-      })
-      .catch((e) => {
-        console.warn('[MFE Offline]', '${url}', e.message);
-        resolve('${fallbackModule}');
-      });
-  }))`;
+export default defineConfig(({ mode }) => {
+  // Load mode from .env
+  const env = loadEnv(mode, process.cwd(), "");
+  const MODE = env.VITE_MODE || "production";
+
+  // Get all remote URLs for this mode
+  const {
+    MATCHING_UI_URL,
+    QUESTION_UI_URL,
+    COLLAB_UI_URL,
+    USER_UI_URL,
+    HISTORY_UI_URL,
+  } = getRemoteUrls(MODE);
 
   return {
-    external: externalPromise,
-    externalType: "promise",
-    format: "esm",
-    from: "vite",
-  };
-}
-
-export default defineConfig({
-  build: { cssCodeSplit: false },
-  plugins: [
-    react(),
-    tailwindcss(),
-    federation({
-      name: "peerprep",
-      remotes: {
-        matchingUiService: remoteUrl(
-          "http://localhost:5174/assets/remoteEntry.js",
-        ),
-        questionUiService: remoteUrl(
-          "http://localhost:5175/assets/remoteEntry.js",
-        ),
-        collabUiService: remoteUrl(
-          "http://localhost:5176/assets/remoteEntry.js",
-        ),
-        userUiService: remoteUrl("http://localhost:5177/assets/remoteEntry.js"),
-        historyUiService: remoteUrl(
-          "http://localhost:5178/assets/remoteEntry.js",
-        ),
+    build: { cssCodeSplit: false },
+    plugins: [
+      react(),
+      tailwindcss(),
+      federation({
+        name: "peerprep",
+        remotes: {
+          matchingUiService: remoteUrl(MATCHING_UI_URL),
+          questionUiService: remoteUrl(QUESTION_UI_URL),
+          collabUiService: remoteUrl(COLLAB_UI_URL),
+          userUiService: remoteUrl(USER_UI_URL),
+          historyUiService: remoteUrl(HISTORY_UI_URL),
+        },
+        shared: ["react", "react-dom", "react-router-dom"],
+      }),
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+        "@pages": path.resolve(__dirname, "./src/pages"),
+        "@components": path.resolve(__dirname, "./src/components"),
+        "@assets": path.resolve(__dirname, "./src/assets"),
       },
-      shared: ["react", "react-dom", "react-router-dom"],
-    }),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@pages": path.resolve(__dirname, "./src/pages"),
-      "@components": path.resolve(__dirname, "./src/components"),
-      "@assets": path.resolve(__dirname, "./src/assets"),
     },
-  },
-  server: { port: 5173 },
+    server: { port: 5173 },
+  };
 });

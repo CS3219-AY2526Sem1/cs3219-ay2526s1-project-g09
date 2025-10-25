@@ -1,16 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Editor from "@monaco-editor/react";
 import io from "socket.io-client";
+import { COLLAB_API_URL, SOCKET_BASE_URL } from "@/api/collabService";
 
-const socket = io("http://localhost:5276");
+const socket = io(SOCKET_BASE_URL);
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const DEFAULT_LANGUAGE = "java";
-const rawCollabApiBase =
-  import.meta.env.VITE_COLLAB_SERVICE_API_LINK ??
-  "http://localhost:5276/api/v1/collab-service/";
-const collabApiBase = rawCollabApiBase.endsWith("/")
-  ? rawCollabApiBase
-  : `${rawCollabApiBase}/`;
 
 interface CollabEditorProps {
   questionId?: string;
@@ -44,7 +39,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       if (effectiveSessionId) {
         const targetUser = currentUserId ?? "unknown-user";
         const res = await fetch(
-          `${collabApiBase}disconnect/${encodeURIComponent(targetUser)}`,
+          `${COLLAB_API_URL}disconnect/${encodeURIComponent(targetUser)}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

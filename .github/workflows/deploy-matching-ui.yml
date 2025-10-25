@@ -1,0 +1,18 @@
+name: Deploy matching-ui-service to S3
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "ui-services/matching-ui-service/**"
+      - ".github/workflows/deploy-matching-ui.yml"
+  workflow_dispatch:
+
+jobs:
+  call-base:
+    uses: ./.github/workflows/deploy-ui-to-s3.yml
+    with:
+      name: matching-ui-service
+      path: ui-services/matching-ui-service
+      bucket: peerprep-matching-ui-service

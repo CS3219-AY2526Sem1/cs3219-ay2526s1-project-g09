@@ -18,6 +18,7 @@ const whitelist = [
   "http://localhost:5176",
   "http://localhost:5177",
   "http://localhost:5178",
+  "http://peerprep-ui-shell.s3-website-ap-southeast-1.amazonaws.com", //Prod
 ];
 
 app.use(

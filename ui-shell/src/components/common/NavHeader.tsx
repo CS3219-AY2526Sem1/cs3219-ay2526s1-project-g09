@@ -54,6 +54,7 @@ const NavHeader: React.FC = () => {
 
         <RemoteWrapper
           remote={() => import("userUiService/LogoutButton")}
+          remoteName="User UI Service"
           remoteProps={{
             onLogOutSuccess: () => {
               setIsLoggingOut(true);

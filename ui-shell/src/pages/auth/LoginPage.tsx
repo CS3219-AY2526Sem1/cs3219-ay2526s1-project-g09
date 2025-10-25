@@ -12,6 +12,7 @@ const LoginPage: React.FC = () => {
     <AuthLayout>
       <RemoteWrapper
         remote={() => import("userUiService/LoginForm")}
+        remoteName="User UI Service"
         remoteProps={{
           onLoginRequireOtp: (user: User) => {
             setUser(user);

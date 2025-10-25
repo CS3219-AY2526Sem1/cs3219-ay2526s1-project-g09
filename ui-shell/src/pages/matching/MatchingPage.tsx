@@ -12,6 +12,7 @@ const MatchingPage: React.FC = () => {
       <div className="mb-20 flex-1 flex">
         <RemoteWrapper
           remote={() => import("matchingUiService/MatchingUi")}
+          remoteName="Matching UI Service"
           remoteProps={{ user }}
           loadingMessage="Loading Matching UI..."
           errorMessage="Matching service unavailable"

@@ -1,17 +1,18 @@
 import type { User } from "@/types/User";
 
-const BASE_URL = "http://localhost:5277/api/v1/user-service";
+const BASE_URL =
+  (import.meta.env.VITE_MODE == "dev"
+    ? "http://localhost:5277"
+    : "http://peerprep-user-service.ap-southeast-1.elasticbeanstalk.com") +
+  "/api/v1/user-service";
 
 let csrfToken: string | null = null;
 
 async function getCsrfToken(): Promise<string> {
   if (csrfToken) return csrfToken;
-  const res = await fetch(
-    "http://localhost:5277/api/v1/user-service/csrf-token",
-    {
-      credentials: "include",
-    },
-  );
+  const res = await fetch(`${BASE_URL}/csrf-token`, {
+    credentials: "include",
+  });
   const data = await res.json();
   csrfToken = data.csrfToken;
   if (!csrfToken) {

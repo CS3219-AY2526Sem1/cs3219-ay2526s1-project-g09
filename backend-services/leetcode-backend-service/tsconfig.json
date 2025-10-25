@@ -4,6 +4,9 @@
     // File Layout
     // "rootDir": "./src",
     "outDir": "dist",
+    "paths": {
+      "@src/*": ["./src/*"]
+    },
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
