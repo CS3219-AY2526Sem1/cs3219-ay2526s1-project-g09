@@ -19,7 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Redis message listener for Redis Pub/Sub channels to handle matching-related notifications.
+ * Redis message listener for Redis Pub/Sub channels to handle matching-related
+ * notifications.
  */
 @Component
 @RequiredArgsConstructor
@@ -29,29 +30,29 @@ public class MatchNotificationListener implements MessageListener {
   private final MatchingService matchingService;
   private final AcceptanceService acceptanceService;
   private final ObjectMapper objectMapper;
-  private final RedisChannels channels;
 
   /**
    * Called when a message is received from Redis.
    * 
    * @param message the Redis message must not be {@literal null}.
-   * @param _pattern pattern matching the channel (if specified) - can be {@literal null}.
+   * @param pattern pattern matching the channel (if specified) - can be
+   *                {@literal null}.
    */
   @Override
-  public void onMessage(Message message, byte[] _pattern) {
+  public void onMessage(Message message, byte[] pattern) {
     String channel = new String(message.getChannel());
     String body = new String(message.getBody());
     log.info("Received message on channel {}: {}", channel, body);
 
-    if (channel.equals(channels.CANCEL_CHANNEL)) {
+    if (channel.equals(RedisChannels.CANCEL_CHANNEL)) {
       processCancelNotification(body);
     }
 
-    if (channel.equals(channels.MATCH_CHANNEL)) {
+    if (channel.equals(RedisChannels.MATCH_CHANNEL)) {
       processMatchNotification(body);
     }
 
-    if (channel.equals(channels.MATCH_ACCEPTANCE_CHANNEL)) {
+    if (channel.equals(RedisChannels.MATCH_ACCEPTANCE_CHANNEL)) {
       processAcceptanceNotification(body);
     }
 
@@ -77,8 +78,8 @@ public class MatchNotificationListener implements MessageListener {
 
     matchingService.handleMatchNotification(matchNotification);
     log.info("Processed match notification for {} & {}",
-      matchNotification.getUser1Preference().getUserId(),
-      matchNotification.getUser2Preference().getUserId());
+        matchNotification.getUser1Preference().getUserId(),
+        matchNotification.getUser2Preference().getUserId());
   }
 
   /**
@@ -119,7 +120,7 @@ public class MatchNotificationListener implements MessageListener {
     }
 
     log.info("Handling acceptance notification for users {} and {} with status {}", acceptanceNotification.getUser1Id(),
-      acceptanceNotification.getUser2Id(), acceptanceNotification.getStatus());
+        acceptanceNotification.getUser2Id(), acceptanceNotification.getStatus());
     acceptanceService.handleAcceptanceNotification(acceptanceNotification);
   }
 
