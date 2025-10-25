@@ -493,7 +493,7 @@ jobs:
       - name: Generate Checkstyle report
         run: |
           cd ./backend-services/matching-backend-service
-          mvn -B -DskipTests checkstyle:checkstyle -Dcheckstyle.failsOnError=false
+          mvn -B -DskipTests checkstyle:checkstyle || exit_code=$?
 
       - name: Install reviewdog
         uses: reviewdog/action-setup@v1
