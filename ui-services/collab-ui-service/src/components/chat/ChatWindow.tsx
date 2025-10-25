@@ -32,26 +32,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const { session } = useCollabSession();
   const socketRef = useRef<Socket | null>(null);
 
-  const lastOnlineEvent = useRef<number>(0);
-
   function handleSystemMessage(message: SystemMessagePayload) {
-    const now = Date.now();
     const { event } = message;
 
     switch (event) {
       case "connect":
       case "reconnect": {
-        lastOnlineEvent.current = now;
         setIsOtherUserOnline(true);
         break;
       }
 
       case "disconnect": {
-        // Ignore disconnects that occur too soon after a reconnect
-        if (now - lastOnlineEvent.current < 2000) {
-          console.log("🟡 Ignoring stale disconnect event");
-          return;
-        }
         setIsOtherUserOnline(false);
         break;
       }
@@ -110,7 +101,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
     return () => {
       socket.off("receive_message");
       socket.off("system_message");
-      socket.io.off("reconnect");
       socket.disconnect();
       socketRef.current = null;
     };
