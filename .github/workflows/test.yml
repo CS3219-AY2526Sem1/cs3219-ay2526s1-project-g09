@@ -37,7 +37,7 @@ jobs:
         working-directory: ${{ matrix.service.context }}
         run: |
           mkdir -p test-results
-          npm run test -- --coverage --reporter=junit --outputFile=./test-results/junit.xml
+          npm run test:ci
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
