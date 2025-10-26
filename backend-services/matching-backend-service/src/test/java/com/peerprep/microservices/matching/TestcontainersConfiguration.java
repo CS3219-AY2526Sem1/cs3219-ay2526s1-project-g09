@@ -13,16 +13,16 @@ import redis.embedded.RedisServer;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
-	@Bean
-	MongoDBContainer mongoDbContainer() {
-		return new MongoDBContainer(DockerImageName.parse("mongo:latest"));
-	}
+  @Bean
+  MongoDBContainer mongoDbContainer() {
+    return new MongoDBContainer(DockerImageName.parse("mongo:latest"));
+  }
 
-	@Bean(destroyMethod = "stop")
-	@Primary
-	RedisServer embeddedRedisServer() throws IOException {
-		RedisServer server = new RedisServer(6379);
-		server.start();
-		return server;
-	}
+  @Bean(destroyMethod = "stop")
+  @Primary
+  RedisServer embeddedRedisServer() throws IOException {
+    RedisServer server = new RedisServer(6379);
+    server.start();
+    return server;
+  }
 }

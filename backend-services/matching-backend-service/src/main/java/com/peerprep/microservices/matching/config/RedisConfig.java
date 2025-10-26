@@ -25,8 +25,8 @@ import com.peerprep.microservices.matching.event.MatchNotificationListener;
 /**
  * Spring configuration for Redis integration.
  *
- * Provides beans for caching, Redis templates, and message listener containers
- * to support both cache-based and pub/sub use cases in the matching service.
+ * Provides beans for caching, Redis templates, and message listener containers to support both cache-based and pub/sub
+ * use cases in the matching service.
  */
 @Configuration
 public class RedisConfig {
@@ -40,14 +40,14 @@ public class RedisConfig {
   @Bean
   public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
     RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
-        .entryTtl(Duration.ofMinutes(10))
-        .disableCachingNullValues()
-        .serializeValuesWith(RedisSerializationContext.SerializationPair
-            .fromSerializer(new Jackson2JsonRedisSerializer<>(UserPreferenceResponse.class)));
+      .entryTtl(Duration.ofMinutes(10))
+      .disableCachingNullValues()
+      .serializeValuesWith(RedisSerializationContext.SerializationPair
+        .fromSerializer(new Jackson2JsonRedisSerializer<>(UserPreferenceResponse.class)));
 
     return RedisCacheManager.builder(connectionFactory)
-        .cacheDefaults(redisCacheConfiguration)
-        .build();
+      .cacheDefaults(redisCacheConfiguration)
+      .build();
   }
 
   /**
@@ -79,28 +79,27 @@ public class RedisConfig {
   }
 
   /**
-   * Configures a {@link RedisMessageListenerContainer} for subscribing to Redis
-   * pub/sub topics.
+   * Configures a {@link RedisMessageListenerContainer} for subscribing to Redis pub/sub topics.
    * 
-   * Subscribes to {@code match-notifications} and {@code cancel-notifications}
-   * topics.
-   * Delegates message handling to {@link MatchNotificationListener}.
+   * Subscribes to {@code match-notifications} and {@code cancel-notifications} topics. Delegates message handling to
+   * {@link MatchNotificationListener}.
    *
    * @param connectionFactory the Redis connection factory
-   * @param messageListener   the listener to handle incoming Redis messages
+   * @param messageListener the listener to handle incoming Redis messages
+   * @param channels the channels to listen on
    * @return the configured message listener container
    */
   @Bean
   public RedisMessageListenerContainer redisContainer(
-      RedisConnectionFactory connectionFactory,
-      MatchNotificationListener messageListener,
-      RedisChannels channels) {
+    RedisConnectionFactory connectionFactory,
+    MatchNotificationListener messageListener,
+    RedisChannels channels) {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
 
-    container.addMessageListener(messageListener, new PatternTopic(channels.MATCH_CHANNEL));
-    container.addMessageListener(messageListener, new PatternTopic(channels.CANCEL_CHANNEL));
-    container.addMessageListener(messageListener, new PatternTopic(channels.MATCH_ACCEPTANCE_CHANNEL));
+    container.addMessageListener(messageListener, new PatternTopic(RedisChannels.MATCH_CHANNEL));
+    container.addMessageListener(messageListener, new PatternTopic(RedisChannels.CANCEL_CHANNEL));
+    container.addMessageListener(messageListener, new PatternTopic(RedisChannels.MATCH_ACCEPTANCE_CHANNEL));
 
     return container;
   }

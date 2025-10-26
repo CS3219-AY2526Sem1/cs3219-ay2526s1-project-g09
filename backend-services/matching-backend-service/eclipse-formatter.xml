@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<profiles version="13">
+  <profile kind="CodeFormatterProfile" name="CustomVSCodeEclipseStyle" version="13">
+
+    <!-- ===== General layout ===== -->
+    <setting id="org.eclipse.jdt.core.formatter.comment.format_comments" value="false"/>
+    <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="120"/>
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.char" value="space"/>
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="2"/>
+    <setting id="org.eclipse.jdt.core.formatter.indentation.size" value="2"/>
+    <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.blank_lines_before_package" value="0"/>
+    <setting id="org.eclipse.jdt.core.formatter.blank_lines_after_package" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.blank_lines_before_imports" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.blank_lines_after_imports" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.blank_lines_before_class" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.join_wrapped_lines" value="false"/>
+
+    <!-- ===== Braces and indentation ===== -->
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_type_declaration" value="end_of_line"/>
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_method_declaration" value="end_of_line"/>
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_block" value="end_of_line"/>
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_constructor_declaration" value="end_of_line"/>
+    <setting id="org.eclipse.jdt.core.formatter.insert_space_after_opening_brace_in_array_initializer" value="insert"/>
+    <setting id="org.eclipse.jdt.core.formatter.insert_space_before_closing_brace_in_array_initializer" value="insert"/>
+    <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_type_declaration" value="insert"/>
+    <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_method_declaration" value="insert"/>
+    <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_constructor_declaration" value="insert"/>
+    <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_block" value="insert"/>
+
+    <!-- Javadoc comments -->
+    <setting id="org.eclipse.jdt.core.formatter.comment.format_javadoc_comments" value="true"/>
+    <setting id="org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_javadoc_comment" value="false"/>
+    <setting id="org.eclipse.jdt.core.formatter.comment.indent_root_tags" value="true"/>
+    <setting id="org.eclipse.jdt.core.formatter.comment.line_length" value="120"/>
+
+    <!-- ===== Imports ===== -->
+    <setting id="org.eclipse.jdt.core.formatter.number_of_empty_lines_to_preserve" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.comment.insert_new_line_for_parameter" value="true"/>
+
+    <!-- ===== Record declarations (your preference) ===== -->
+    <!-- value="16" means 'wrap all elements, each on a new line' -->
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_record_components" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="16"/>
+  </profile>
+</profiles>

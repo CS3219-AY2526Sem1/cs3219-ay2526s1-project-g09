@@ -44,13 +44,15 @@ public class QuestionPreference {
    */
   @JsonCreator
   public QuestionPreference(
-      @JsonProperty("topics") Map<String, Set<String>> topics) {
+    @JsonProperty("topics") Map<String, Set<String>> topics) {
     validate(topics);
     this.topics = topics;
   }
 
   /**
    * Validation logic for constructor
+   * 
+   * @param topics the map of topics to selected difficulties.
    */
   private static void validate(Map<String, Set<String>> topics) {
     if (topics == null || topics.isEmpty()) {
@@ -60,14 +62,18 @@ public class QuestionPreference {
     for (Map.Entry<String, Set<String>> entry : topics.entrySet()) {
       if (entry.getValue() == null || entry.getValue().isEmpty()) {
         throw new IllegalArgumentException(
-            "Each topic must have at least one selected difficulty: " + entry.getKey());
+          "Each topic must have at least one selected difficulty: " + entry.getKey());
       }
     }
   }
 
   /**
-   * Returns a new QuestionPreference containing only the overlapping topics and
-   * difficulties between this user and another user.
+   * Returns a new QuestionPreference containing only the overlapping topics and difficulties between this user and
+   * another user.
+   * 
+   * @param other the {@link QuestionPreference} of another user to compare against
+   * @return a new {@link QuestionPreference} containing only topics and difficulties present in both this and the other
+   *         user's preferences
    */
   public QuestionPreference getOverlap(QuestionPreference other) {
     Map<String, Set<String>> overlappingTopics = new HashMap<>();
@@ -87,7 +93,7 @@ public class QuestionPreference {
     }
 
     return QuestionPreference.builder()
-        .topics(overlappingTopics)
-        .build();
+      .topics(overlappingTopics)
+      .build();
   }
 }

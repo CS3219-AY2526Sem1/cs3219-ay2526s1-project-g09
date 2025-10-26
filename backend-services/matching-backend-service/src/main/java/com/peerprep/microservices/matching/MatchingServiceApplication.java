@@ -5,8 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 
 /**
- * Main application class for the Matching Service.
- * This service handles user matching based on preferences and manages match requests.
+ * Main application class for the Matching Service. This service handles user matching based on preferences and manages
+ * match requests.
  */
 @SpringBootApplication
 @EnableCaching
