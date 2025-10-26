@@ -1,18 +1,29 @@
-# Use Node for build & serve
-FROM node:22-alpine
+# Stage 1: Build Stage
+FROM node:22-alpine AS build
+
 WORKDIR /app
 
-# Install deps
-COPY package*.json .
-RUN npm ci
+# Install dependencies (only package.json first to leverage Docker caching)
+COPY package*.json ./
+RUN npm install --frozen-lockfile
 
-# Copy source
+# Copy the source code
 COPY . .
 
-# Build the app (generates /dist)
-RUN npm run build
+# Stage 2: Runtime Stage
+FROM node:22-alpine AS runtime
 
-# Expose port
+WORKDIR /app
+
+# Install only production dependencies to keep image size small
+COPY package*.json ./
+RUN npm install --production --frozen-lockfile
+
+# Copy the built source code from the build stage
+COPY --from=build /app /app
+
+# Expose the port your app will listen on
 EXPOSE 5275
 
-CMD ["node", "dist/index.js"]
+# Start the app
+CMD ["node", "src/server.js"]

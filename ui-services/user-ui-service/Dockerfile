@@ -1,19 +1,30 @@
-# Use Node for build & serve
-FROM node:22-alpine
+# Stage 1: Build Stage
+FROM node:22-alpine AS build
+
 WORKDIR /app
 
-# Install deps
-COPY package*.json .
+# Install dependencies and build the app
+COPY package*.json ./
 RUN npm install --frozen-lockfile
 
-# Copy source
+# Copy the rest of the application files and build the app
 COPY . .
-
-# Build the app (generates /dist)
 RUN npm run build
 
-# Expose port
+# Stage 2: Runtime Stage
+FROM node:22-alpine AS runtime
+
+WORKDIR /app
+
+# Install only production dependencies (if any, to keep the image small)
+COPY package*.json ./
+RUN npm install --production --frozen-lockfile
+
+# Copy the built files from the build stage
+COPY --from=build /app/dist /app/dist
+
+# Expose the port the app will run on
 EXPOSE 5177
 
-# Start with Vite preview (serves dist/)
+# Start the application with Vite preview
 CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "5177", "--strictPort"]
