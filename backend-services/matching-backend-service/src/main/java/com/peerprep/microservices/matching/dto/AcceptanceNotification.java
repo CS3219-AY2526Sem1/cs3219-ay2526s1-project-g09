@@ -8,19 +8,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO representing an update to the status of match acceptance in Redis
- * Pub/Sub.
+ * DTO representing an update to the status of match acceptance in Redis Pub/Sub.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AcceptanceNotification {
-    private String user1Id;
-    private String user2Id;
+  private String user1Id;
+  private String user2Id;
 
-    @JsonProperty
-    private MatchAcceptanceOutcome.Status status;
-    private String matchId;
-    private CollabSession session;
+  @JsonProperty
+  private MatchAcceptanceOutcome.Status status;
+  private String matchId;
+  private CollabSession session;
 }

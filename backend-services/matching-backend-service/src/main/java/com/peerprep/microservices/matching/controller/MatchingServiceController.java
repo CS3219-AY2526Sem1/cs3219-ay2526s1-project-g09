@@ -162,12 +162,9 @@ public class MatchingServiceController {
    * 
    * @param userId the ID of the user connecting to the match request
    * @param matchAcceptanceRequest the request body containing the match ID
-   * @return a {@link CompletableFuture} containing a {@link ResponseEntity} with
-   *         a
-   *         {@link MatchAcceptanceResponse} with HTTP 200 (OK) to indicates the
-   *         match connection was successful.
-   *         HTTP 409 (CONFLICT) indicates the match was rejected.
-   *         HTTP 202 (ACCEPTED) which indicates the match connection is pending.
+   * @return a {@link CompletableFuture} containing a {@link ResponseEntity} with a {@link MatchAcceptanceResponse} with
+   *         HTTP 200 (OK) to indicates the match connection was successful. HTTP 409 (CONFLICT) indicates the match was
+   *         rejected. HTTP 202 (ACCEPTED) which indicates the match connection is pending.
    */
   @PostMapping("/match-requests/{userId}/connect")
   public CompletableFuture<ResponseEntity<MatchAcceptanceResponse>> connectMatch(
@@ -196,8 +193,7 @@ public class MatchingServiceController {
    * 
    * @param userId the ID of the user accepting the match request
    * @param matchAcceptanceRequest the request body containing the match ID
-   * @return the {@link MatchAcceptanceStatus} indicating the current acceptance
-   *         status of both users.
+   * @return the {@link MatchAcceptanceStatus} indicating the current acceptance status of both users.
    */
   @PutMapping("/match-requests/{userId}/accept")
   public MatchAcceptanceStatus acceptMatch(
@@ -212,8 +208,7 @@ public class MatchingServiceController {
    * 
    * @param userId the ID of the user rejecting the match request
    * @param matchAcceptanceRequest the request body containing the match ID
-   * @return the {@link MatchAcceptanceStatus} indicating the current acceptance
-   *         status of both users.
+   * @return the {@link MatchAcceptanceStatus} indicating the current acceptance status of both users.
    */
   @PutMapping("/match-requests/{userId}/reject")
   @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -10,6 +10,6 @@ import java.util.Set;
  * @param topics a mapping of question categories with a set of difficulties
  */
 public record UserPreferenceResponse(String userId,
-        Map<String, Set<String>> topics) {
+  Map<String, Set<String>> topics) {
 
 }
