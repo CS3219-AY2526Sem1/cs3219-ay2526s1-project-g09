@@ -1,11 +1,8 @@
 package com.peerprep.microservices.matching.config;
 
-import org.springframework.stereotype.Component;
-
 /**
  * Contains the Redis channel names used for pub/sub communication in the matching service.
  */
-@Component
 public class RedisChannels {
   public static final String MATCH_CHANNEL = "match-notifications";
   public static final String CANCEL_CHANNEL = "cancel-notifications";
