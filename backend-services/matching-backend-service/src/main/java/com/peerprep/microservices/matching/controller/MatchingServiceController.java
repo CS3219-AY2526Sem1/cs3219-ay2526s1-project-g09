@@ -163,7 +163,7 @@ public class MatchingServiceController {
    * @param userId the ID of the user connecting to the match request
    * @param matchAcceptanceRequest the request body containing the match ID
    * @return a {@link CompletableFuture} containing a {@link ResponseEntity} with a {@link MatchAcceptanceResponse} with
-   *         HTTP 200 (OK) to indicates the match connection was successful. HTTP 409 (CONFLICT) indicates the match was
+   *         HTTP 200 (OK) indicating the match connection was successful. HTTP 409 (CONFLICT) indicates the match was
    *         rejected. HTTP 202 (ACCEPTED) which indicates the match connection is pending.
    */
   @PostMapping("/match-requests/{userId}/connect")

@@ -234,8 +234,8 @@ public class MatchingService {
    * 
    * @param userPreference The preference of the user whose future is to be completed.
    * @param future The CompletableFuture to complete.
-   * @param matchedPreference The preference of the matched user
-   * @param matchId the unique ID of the match used for the outcome
+   * @param matchedPreference The preference of the matched user.
+   * @param matchId The unique ID of the match used for the outcome.
    */
   private void completeUserFuture(UserPreference userPreference, UserPreference matchedPreference,
     CompletableFuture<MatchingOutcome> future, String matchId) {
