@@ -26,7 +26,7 @@ COPY package*.json ./
 RUN npm install --production --frozen-lockfile
 
 # Copy the built app (from build stage)
-COPY --from=build /app /app
+COPY --from=build /app/dist ./dist
 
 # Expose the port
 EXPOSE 5277
