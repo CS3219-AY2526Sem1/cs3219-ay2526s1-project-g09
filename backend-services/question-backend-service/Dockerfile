@@ -1,26 +1,30 @@
-# Stage 1: Build Stage
+# ---------- Stage 1: Build ----------
 FROM node:22-alpine AS build
-
 WORKDIR /app
 
-# Install all dependencies (dev + prod) for building the app
+# Copy only what’s needed to install & compile
 COPY package*.json ./
-RUN npm install --frozen-lockfile
+COPY tsconfig*.json ./
 
-# Copy source files and build the app
-COPY ./src ./src
+# Install deps (including dev deps for TypeScript)
+RUN npm ci
+
+# Copy source and any other assets needed at build time
+COPY src ./src
+
+# Compile to /app/dist
 RUN npm run build
 
-# Stage 2: Runtime Stage
+# ---------- Stage 2: Runtime ----------
 FROM node:22-alpine AS runtime
-
 WORKDIR /app
+ENV NODE_ENV=production
 
-# Install only production dependencies to reduce image size
+# Install only production deps
 COPY package*.json ./
-RUN npm install --production --frozen-lockfile  # Installs only production dependencies
+RUN npm ci --omit=dev
 
-# Copy necessary files from build stage (compiled code)
+# Bring over compiled output
 COPY --from=build /app/dist ./dist
 
 EXPOSE 5275
