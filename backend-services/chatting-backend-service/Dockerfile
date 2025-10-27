@@ -1,29 +1,11 @@
-# Stage 1: Build Stage
-FROM node:22-alpine AS build
-
-WORKDIR /app
-
-# Install dependencies (only package.json first to leverage Docker caching)
-COPY package*.json ./
-RUN npm install --frozen-lockfile
-
-# Copy the source code
-COPY . .
-
-# Stage 2: Runtime Stage
 FROM node:22-alpine AS runtime
-
 WORKDIR /app
+ENV NODE_ENV=production
 
-# Install only production dependencies to keep image size small
 COPY package*.json ./
-RUN npm install --production --frozen-lockfile
+RUN npm ci --omit=dev
 
-# Copy the source code and other necessary files from the build stage (excluding node_modules)
-COPY --from=build /app/src ./src
+COPY src ./src
 
-# Expose the port your app will listen on
 EXPOSE 5286
-
-# Start the app
 CMD ["node", "src/server.js"]
