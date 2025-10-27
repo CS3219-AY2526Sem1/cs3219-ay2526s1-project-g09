@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install dependencies and build the app
 COPY package*.json ./
-RUN npm install --frozen-lockfile
+RUN npm ci
 
 # Copy the rest of the application files and build the app
 COPY . .
@@ -18,7 +18,7 @@ WORKDIR /app
 
 # Install only production dependencies (if any, to keep the image small)
 COPY package*.json ./
-RUN npm install --production --frozen-lockfile
+RUN npm ci --omit=dev
 
 # Copy the built files from the build stage
 COPY --from=build /app/dist /app/dist
