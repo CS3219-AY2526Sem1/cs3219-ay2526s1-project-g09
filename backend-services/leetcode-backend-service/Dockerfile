@@ -10,7 +10,7 @@ COPY tsconfig*.json ./
 RUN npm ci
 
 # Copy source and any other assets needed at build time
-COPY src ./src
+COPY . .
 
 # Compile to /app/dist
 RUN npm run build
