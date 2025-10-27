@@ -19,8 +19,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production --frozen-lockfile
 
-# Copy the built source code from the build stage
-COPY --from=build /app /app
+# Copy the source code and other necessary files from the build stage (excluding node_modules)
+COPY --from=build /app/src ./src
 
 # Expose the port your app will listen on
 EXPOSE 5286
