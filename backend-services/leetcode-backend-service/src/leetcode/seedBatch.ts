@@ -43,20 +43,20 @@ export async function seedLeetCodeBatch() {
     new SeedCursor({ _id: id, nextSkip: 0, pageSize: PAGE_SIZE });
   const { pageSize, nextSkip } = cursor;
 
-  // try {
-  //   if (!process.env.QUESTION_API_URL) {
-  //     throw new Error("QUESTION_API_URL is not set");
-  //   }
-  //   await checkQuestionServiceHealth();
-  // } catch (err) {
-  //   cursor.lastRunAt = new Date();
-  //   await cursor.save();
-  //   return {
-  //     ok: false as const,
-  //     message: `Aborted: question service not healthy — ${(err as Error).message}`,
-  //     nextSkip: cursor.nextSkip,
-  //   };
-  // }
+  try {
+    if (!process.env.QUESTION_API_URL) {
+      throw new Error("QUESTION_API_URL is not set");
+    }
+    await checkQuestionServiceHealth();
+  } catch (err) {
+    cursor.lastRunAt = new Date();
+    await cursor.save();
+    return {
+      ok: false as const,
+      message: `Aborted: question service not healthy — ${(err as Error).message}`,
+      nextSkip: cursor.nextSkip,
+    };
+  }
 
   // Fetch question list
   let questionList: BasicInformation[] = [];
