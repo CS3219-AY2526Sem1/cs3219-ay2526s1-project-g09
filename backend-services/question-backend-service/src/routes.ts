@@ -68,8 +68,9 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
 
   /**
    * Get a random question based on categoryTitle and difficulty.
-   * Returns 400 if params are missing.
+   * Returns 400 if the body is malformed or missing data.
    * Returns 404 if no question found.
+   * Returns 500 on MongoDB server error.
    * Returns the question document if found.
    */
   app.post<{
@@ -125,71 +126,6 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       req.log?.error({ err }, "Failed to fetch random question");
       return reply.status(500).send({ error: "Internal Server Error" });
     }
-  });
-
-  /**
-   * Post a new question to the database.
-   * Only create if it does not already exist.
-   * If it already exists, return 200 with a message.
-   */
-  app.post("/post-question", async (req, res) => {
-    const token = getHeader(req, "x-admin-token");
-    if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
-      return res.status(401).send({ error: "Unauthorized" });
-    }
-    const Body = z.object({
-      source: z.string(),
-      globalSlug: z.string().min(1),
-      titleSlug: z.string().min(1),
-      title: z.string().min(1),
-      categoryTitle: z.string().max(100),
-      difficulty: z.enum(["Easy", "Medium", "Hard"]),
-      timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES), // in minutes
-      content: z.string(),
-      hints: z.array(z.string()).nullable().optional(),
-      exampleTestcases: z.string().nullable().optional(),
-      codeSnippets: z
-        .array(
-          z.object({
-            lang: z.string(),
-            langSlug: z.string(),
-            code: z.string(),
-          }),
-        )
-        .nullable()
-        .optional(),
-      answer: z.string().nullable().optional(),
-    });
-    const result = Body.safeParse(req.body);
-    if (!result.success) {
-      return res
-        .status(400)
-        .send({ error: "Invalid input", details: result.error.issues });
-    }
-    const doc = {
-      ...result.data,
-    };
-
-    const saved = await withDbLimit(() =>
-      Question.updateOne(
-        { globalSlug: doc.globalSlug },
-        { $setOnInsert: doc },
-        { upsert: true },
-      ),
-    );
-    if (saved.acknowledged !== true)
-      return res.status(500).send({ error: "Failed to save question" });
-    if (saved.matchedCount > 0)
-      return res
-        .status(200)
-        .send({ ok: true, message: "Question already exists" });
-    if (saved.upsertedCount === 0)
-      return res.status(500).send({ error: "Failed to save question" });
-    return res.status(200).send({
-      ok: true,
-      id: saved.upsertedId?.toString(),
-      message: "Question inserted successfully",
-    });
   });
 
   /**
@@ -423,14 +359,32 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       return res.status(401).send({ error: "Unauthorized" });
     }
 
+    const source = getHeader(req, "x-source");
+    if (!source) {
+      return res
+        .status(400)
+        .send({ error: "Missing required header: x-source" });
+    }
+
     const Body = z.object({
       title: z.string().min(1, "Title is required"),
+      titleSlug: z.string().min(1).optional(),
       categoryTitle: z.string().max(100, "Category title is required"),
       difficulty: z.enum(["Easy", "Medium", "Hard"]),
       timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES),
       content: z.string().min(1, "Content is required"),
       hints: z.array(z.string()).optional(),
       answer: z.string().optional(),
+      exampleTestcases: z.string().optional(),
+      codeSnippets: z
+        .array(
+          z.object({
+            lang: z.string(),
+            langSlug: z.string(),
+            code: z.string(),
+          }),
+        )
+        .optional(),
     });
 
     const result = Body.safeParse(req.body);
@@ -461,18 +415,20 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
 
+    const globalSlug = `${source}:${slug}`;
+
     const doc = {
-      source: "admin",
-      globalSlug: slug,
-      titleSlug: slug,
+      source: source,
+      globalSlug: globalSlug,
+      titleSlug: data.titleSlug ?? slug,
       title: data.title,
       categoryTitle: data.categoryTitle,
       difficulty: data.difficulty,
       timeLimit: data.timeLimit,
       content: data.content,
       hints: data.hints && data.hints.length > 0 ? data.hints : null,
-      exampleTestcases: null,
-      codeSnippets: null,
+      exampleTestcases: data.exampleTestcases ?? null,
+      codeSnippets: data.codeSnippets ?? null,
       answer: data.answer ?? null,
     };
 

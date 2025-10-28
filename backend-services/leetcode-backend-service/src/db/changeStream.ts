@@ -48,12 +48,13 @@ function hasFullDocument<T>(
 async function postDoc(doc: QuestionDoc) {
   try {
     const res = await axios.post<SeedBatchResponse>(
-      `${QUESTION_API_URL}/post-question`,
+      `${QUESTION_API_URL}/add-question`,
       doc,
       {
         headers: {
           "Content-Type": "application/json",
           "x-admin-token": TOKEN,
+          "x-source": "leetcode",
         },
       },
     );

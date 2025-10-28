@@ -18,8 +18,6 @@ const CodeSnippetSchema = new Schema(
 
 const QuestionSchema = new Schema<QuestionDoc>(
   {
-    source: { type: String, required: true, index: true },
-    globalSlug: { type: String, required: true, unique: true, index: true },
     title: { type: String, required: true, index: true },
     titleSlug: { type: String, required: true, index: true },
 
@@ -45,7 +43,6 @@ const QuestionSchema = new Schema<QuestionDoc>(
 
 // Compound indexes for faster queries
 QuestionSchema.index({
-  source: 1,
   titleSlug: 1,
   categoryTitle: 1,
   difficulty: 1,
