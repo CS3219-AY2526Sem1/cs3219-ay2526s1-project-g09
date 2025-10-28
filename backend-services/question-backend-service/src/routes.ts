@@ -26,8 +26,11 @@ const MAX_TIME_LIMIT_MINUTES = 240;
 /**
  * Extract a header value from the request.
  * Returns undefined if the header is not present or not a string.
+ *
+ * @param req The Fastify request object.
+ * @param name The name of the header to extract.
+ * @returns The header value or undefined.
  */
-
 function getHeader(req: FastifyRequest, name: string): string | undefined {
   const headers = req.headers as Record<string, unknown> | undefined;
   const value = headers?.[name];
@@ -51,50 +54,16 @@ function safeCompare(a: string, b: string): boolean {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+/**
+ * Leetcode-related routes.
+ */
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
+  /**
+   * Health check endpoint.
+   * Returns 200 OK with { ok: true }.
+   */
   app.get("/health", async (_req, reply) => {
     return reply.send({ ok: true });
-  });
-
-  /**
-   * Check if questions exist based on categoryTitle and difficulty.
-   * Returns 400 if the body is malformed or missing data.
-   * Returns a list of true/false for each category and difficulty combination.
-   */
-  app.post<{
-    Body: {
-      categories: {
-        [category: string]: ("Easy" | "Medium" | "Hard")[]; // category as key and difficulty levels as values
-      };
-    };
-  }>("/exists-categories-difficulties", async (req, reply) => {
-    const { categories } = req.body;
-
-    if (!categories || Object.keys(categories).length === 0) {
-      return reply.status(400).send({
-        error: "Missing required body: categories",
-      });
-    }
-
-    const result: {
-      [category: string]: {
-        [difficulty in "Easy" | "Medium" | "Hard"]?: boolean;
-      };
-    } = {};
-
-    // Iterate through the categories and check for each difficulty
-    for (const [categoryTitle, difficulties] of Object.entries(categories)) {
-      result[categoryTitle] = {};
-
-      for (const difficulty of difficulties) {
-        const exists = await withDbLimit(() =>
-          Question.exists({ categoryTitle, difficulty }),
-        );
-        result[categoryTitle][difficulty] = !!exists;
-      }
-    }
-
-    return reply.send(result);
   });
 
   /**
