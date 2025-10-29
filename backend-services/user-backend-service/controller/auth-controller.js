@@ -62,7 +62,7 @@ export async function handleLogin(req, res) {
       httpOnly: true,
       secure: isProd, // HTTPS in prod
       sameSite: isProd ? "none" : "lax", // None in prod, Lax in dev
-      partitioned: true,
+      partitioned: isProd,
       path: "/",
       ...(rememberMe ? { maxAge: 24 * 60 * 60 * 1000 } : {}), // 1 day
     });
