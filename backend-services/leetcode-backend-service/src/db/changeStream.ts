@@ -24,6 +24,9 @@ if (!QUESTION_API_URL) {
   throw new Error("QUESTION_API_URL environment variable must be set");
 }
 
+/**
+ * Type guard to check if a change stream document has a fullDocument field.
+ */
 function hasFullDocument<T>(
   c: ChangeStreamDocument<
     T extends mongoose.mongo.BSON.Document ? T : mongoose.mongo.BSON.Document
@@ -45,6 +48,10 @@ function hasFullDocument<T>(
   );
 }
 
+/**
+ * Posts a question document to the question backend service.
+ * @param doc The question document to post.
+ */
 async function postDoc(doc: QuestionDoc) {
   try {
     const res = await axios.post<SeedBatchResponse>(

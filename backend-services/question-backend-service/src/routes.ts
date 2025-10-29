@@ -55,12 +55,13 @@ function safeCompare(a: string, b: string): boolean {
 }
 
 /**
- * Leetcode-related routes.
+ * Questions routes plugin.
+ * @param app The Fastify instance.
  */
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   /**
    * Health check endpoint.
-   * Returns 200 OK with { ok: true }.
+   * Returns 200 OK if the service is running.
    */
   app.get("/health", async (_req, reply) => {
     return reply.send({ ok: true });
@@ -68,10 +69,10 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
 
   /**
    * Get a random question based on categoryTitle and difficulty.
+   * Returns 200 with the question document.
    * Returns 400 if the body is malformed or missing data.
    * Returns 404 if no question found.
    * Returns 500 on MongoDB server error.
-   * Returns the question document if found.
    */
   app.post<{
     Body: {
@@ -129,8 +130,12 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions
-   * Supports filtering, pagination, and sorting.
+   * Get a paginated list of question previews.
+   * Supports filtering by title, category, difficulty, time limits.
+   * Supports sorting by various fields.
+   * Returns 200 with paginated question previews.
+   * Returns 400 if query params are invalid.
+   * Returns 500 on MongoDB server error.
    */
   app.get("/questions", async (req, reply) => {
     // Define schema for validation
@@ -241,8 +246,9 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions/categories
-   * Returns a list of distinct categories from questions.
+   * Get all distinct categories from questions.
+   * Returns 200 with array of categories.
+   * Returns 500 on MongoDB server error.
    */
   app.get("/questions/categories", async (_req, reply) => {
     try {
@@ -257,8 +263,9 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions/difficulties
-   * Returns all distinct difficulties from questions.
+   * Get all distinct difficulties from questions.
+   * Returns 200 with array of difficulties.
+   * Returns 500 on MongoDB server error.
    */
   app.get("/questions/difficulties", async (_req, reply) => {
     try {
@@ -277,13 +284,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions/categories-with-difficulties
-   * Returns a map of category -> distinct difficulties available (sorted Easy → Medium → Hard)
-   * Example output:
+   * Get categories with their distinct difficulties.
+   * Returns 200 with map of category titles to arrays of distinct difficulties.
+   * Returns 500 on MongoDB server error.
+   * Sample Response:
    * {
    *   "OOP": ["Easy", "Medium"],
-   *   "Database": ["Medium", "Hard"],
-   *   "Algorithm": ["Easy", "Hard"]
+   *   "Database": ["Hard"]
    * }
    */
   app.get("/questions/categories-with-difficulties", async (_req, reply) => {
@@ -349,9 +356,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * POST /add-question
-   * Add a new question to the database with minimal required fields from the PeerPrep app itself.
-   * Auto-generates slugs from title.
+   * Add a new question.
+   * Requests must include x-admin-token and x-source headers.
+   * Returns 200 with the ID of the newly created question.
+   * Returns 400 if the body is malformed or missing data.
+   * Returns 401 if unauthorized.
+   * Returns 409 if a question with the same title already exists.
+   * Returns 500 on MongoDB server error.
    */
   app.post("/add-question", async (req, res) => {
     const token = getHeader(req, "x-admin-token");
@@ -450,8 +461,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions/:id
-   * Returns full question details for a given ID.
+   * Get question details by ID.
+   * Returns 200 with question details.
+   * Returns 400 if the ID is invalid.
+   * Returns 404 if the question is not found.
+   * Returns 500 on MongoDB server error.
    */
   app.get<{
     Params: { id: string };
@@ -495,9 +509,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * PUT /questions/:id
-   * Updates a question by ID.
-   * Requires admin token.
+   * Update question details by ID.
+   * Must include x-admin-token header.
+   * Returns 200 with the ID of the updated question.
+   * Returns 400 if the ID is invalid or the body is malformed.
+   * Returns 401 if unauthorized.
+   * Returns 404 if the question is not found.
+   * Returns 500 on MongoDB server error.
    */
   app.put<{
     Params: { id: string };
@@ -589,9 +607,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * DELETE /questions/:id
    * Deletes a question from the database by ID.
-   * Requires admin token.
+   * Must include x-admin-token header.
+   * Returns 200 with the ID of the deleted question.
+   * Returns 400 if the ID is invalid.
+   * Returns 401 if unauthorized.
+   * Returns 404 if the question is not found.
+   * Returns 500 on MongoDB server error.
    */
   app.delete<{
     Params: { id: string };
