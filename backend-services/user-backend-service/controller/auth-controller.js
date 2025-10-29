@@ -53,19 +53,7 @@ export async function handleLogin(req, res) {
       });
     }
 
-    const tokenLifetime = rememberMe ? "30d" : "1d";
-
-    const accessToken = generateAccessToken(user, tokenLifetime);
-    const isProd = process.env.NODE_ENV === "production";
-
-    res.cookie("authToken", accessToken, {
-      httpOnly: true,
-      secure: isProd, // HTTPS in prod
-      sameSite: isProd ? "none" : "lax", // None in prod, Lax in dev
-      partitioned: isProd,
-      path: "/",
-      ...(rememberMe ? { maxAge: 24 * 60 * 60 * 1000 } : {}), // 1 day
-    });
+    generateCookie(res, user, rememberMe);
 
     return res.status(200).json({
       message: "User logged in",
@@ -154,17 +142,7 @@ export async function verifyOTP(req, res) {
     const updatedUser = await _updateVerificationById(user._id, true);
     await _updateUserExpirationById(user._id, null);
 
-    const accessToken = generateAccessToken(user, "1d"); // token expiry 1 day by default
-    const isProd = process.env.NODE_ENV === "production";
-
-    // give user a cookie
-    res.cookie("authToken", accessToken, {
-      httpOnly: true,
-      secure: isProd, // HTTPS in prod
-      sameSite: isProd ? "none" : "lax", // None in prod, Lax in dev
-      partitioned: true,
-      path: "/",
-    });
+    generateCookie(res, user, false);
 
     return res.status(200).json({
       message: "Email verified successfully",
@@ -278,5 +256,21 @@ export async function handleValidateResetToken(req, res) {
 function generateAccessToken(user, expiresIn) {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
     expiresIn: expiresIn,
+  });
+}
+
+function generateCookie(res, user, rememberMe) {
+  const tokenLifetime = rememberMe ? "30d" : "1d";
+
+  const accessToken = generateAccessToken(user, tokenLifetime);
+  const isProd = process.env.NODE_ENV === "production";
+
+  res.cookie("authToken", accessToken, {
+    httpOnly: true,
+    secure: isProd, // HTTPS in prod
+    sameSite: isProd ? "none" : "lax", // None in prod, Lax in dev
+    partitioned: isProd,
+    path: "/",
+    ...(rememberMe ? { maxAge: 24 * 60 * 60 * 1000 } : {}), // 1 day
   });
 }
