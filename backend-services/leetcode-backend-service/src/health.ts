@@ -19,7 +19,6 @@ const BASE_DELAY_MS = 250;
  * @param opts - Options for health check.
  * @returns A promise that resolves to true if healthy, otherwise throws an error.
  */
-
 export async function checkQuestionServiceHealth({
   url = `${process.env.QUESTION_API_URL}/health`,
   timeoutMs = BATCH_HEALTH_TIMEOUT_MS,
