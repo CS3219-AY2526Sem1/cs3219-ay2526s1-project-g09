@@ -24,6 +24,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const [isOtherUserOnline, setIsOtherUserOnline] = useState<boolean>(true);
   const { session } = useCollabSession();
   const socketRef = useRef<Socket | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   function handleSystemMessage(message: SystemMessagePayload) {
     const { event } = message;
@@ -104,6 +105,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
     };
   }, [session?.sessionId, user?.id, user?.username]);
 
+  useEffect(() => {
+    // Scroll to bottom when messages update
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
   const handleSendMessage = () => {
     if (!chatInput.trim() || !socketRef.current) return;
 
@@ -139,6 +147,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
             isSystem={msg.isSystem}
           />
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
