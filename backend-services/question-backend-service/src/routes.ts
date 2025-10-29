@@ -359,7 +359,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
    * Add a new question.
    * Requests must include x-admin-token and x-source headers.
    * Returns 200 with the ID of the newly created question.
-   * Returns 400 if the body is malformed or missing data.
+   * Returns 400 if the body is malformed, or required headers are missing/invalid.
    * Returns 401 if unauthorized.
    * Returns 409 if a question with the same title already exists.
    * Returns 500 on MongoDB server error.
@@ -375,6 +375,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       return res
         .status(400)
         .send({ error: "Missing required header: x-source" });
+    }
+
+    const allowedSources = ["admin", "leetcode"];
+    if (!allowedSources.includes(source)) {
+      return res.status(400).send({
+        error: `Invalid source: ${source}. Must be one of ${allowedSources.join(", ")}`,
+      });
     }
 
     const Body = z.object({
@@ -429,8 +436,8 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     const globalSlug = `${source}:${slug}`;
 
     const doc = {
-      source: source,
-      globalSlug: globalSlug,
+      source,
+      globalSlug,
       titleSlug: data.titleSlug ?? slug,
       title: data.title,
       categoryTitle: data.categoryTitle,
