@@ -271,6 +271,8 @@ function generateCookie(res, user, rememberMe) {
     sameSite: isProd ? "none" : "lax", // None in prod, Lax in dev
     partitioned: isProd,
     path: "/",
-    ...(rememberMe ? {} : { maxAge: 24 * 60 * 60 * 1000 }), // if rememberMe is true, no maxAge, else false, maxAge is 1 day
+    ...(rememberMe
+      ? { maxAge: 30 * 24 * 60 * 60 * 1000 }
+      : { maxAge: 24 * 60 * 60 * 1000 }), // if rememberMe is true, maxAge is 30 days, else false, maxAge is 1 day
   });
 }
