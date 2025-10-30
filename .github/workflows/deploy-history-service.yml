@@ -1,4 +1,4 @@
-name: Deploy User Service
+name: Deploy History Service
 on:
   push:
     branches:
