@@ -6,20 +6,13 @@ export type BasicInformation = {
   title: string;
   titleSlug: string;
   isPaidOnly: boolean;
-  difficulty: "Easy" | "Medium" | "Hard";
-  categoryTitle?: string | null;
-};
-
-export type QuestionList = {
-  problemsetQuestionList: {
-    total: number;
-    questions: BasicInformation[];
-  };
 };
 
 export type Details = {
   question:
     | (BasicInformation & {
+        difficulty: "Easy" | "Medium" | "Hard";
+        categoryTitle?: string | null;
         content: string | null;
         exampleTestcases?: string | null;
         hints?: string[] | null;
