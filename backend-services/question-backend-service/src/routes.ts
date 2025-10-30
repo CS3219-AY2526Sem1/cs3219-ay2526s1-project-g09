@@ -438,7 +438,7 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
     const doc = {
       source,
       globalSlug,
-      titleSlug: data.titleSlug ?? slug,
+      titleSlug: slug,
       title: data.title,
       categoryTitle: data.categoryTitle,
       difficulty: data.difficulty,
