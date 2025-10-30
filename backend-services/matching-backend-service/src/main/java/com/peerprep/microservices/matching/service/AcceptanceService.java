@@ -45,7 +45,7 @@ public class AcceptanceService {
   /**
    * Connects a user to a match acceptance.
    *
-   * @param userId  the ID of the user to connect
+   * @param userId the ID of the user to connect
    * @param matchId the ID of the match to connect to
    * @return the match acceptance outcome
    */
@@ -56,10 +56,10 @@ public class AcceptanceService {
     CompletableFuture<MatchAcceptanceOutcome.Status> connectFuture = new CompletableFuture<>();
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.CONNECTED,
-        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.CONNECTED,
+      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -94,7 +94,7 @@ public class AcceptanceService {
   /**
    * Accepts a match for a specified user.
    *
-   * @param userId  the ID of the accepting user
+   * @param userId the ID of the accepting user
    * @param matchId the ID of the match the user is accepting
    * @return the updated match acceptance status
    */
@@ -102,10 +102,10 @@ public class AcceptanceService {
     log.info("User {} accepted match {}", userId, matchId);
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.ACCEPTED,
-        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.ACCEPTED,
+      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -131,7 +131,7 @@ public class AcceptanceService {
   /**
    * Rejects a match for a specified user.
    *
-   * @param userId  the ID of the user rejecting the match
+   * @param userId the ID of the user rejecting the match
    * @param matchId the ID of the match to reject
    * @return the updated match acceptance status
    */
@@ -139,10 +139,10 @@ public class AcceptanceService {
     log.info("User {} rejecting match {}", userId, matchId);
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.REJECTED,
-        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.REJECTED,
+      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -165,7 +165,7 @@ public class AcceptanceService {
    * 
    * @param user1Id the user ID of the first user in the match acceptance
    * @param user2Id the user ID of the second user in the match acceptance
-   * @param status  the status of the match acceptance
+   * @param status the status of the match acceptance
    */
   private void publishAcceptanceNotification(String user1Id, String user2Id, MatchAcceptanceOutcome.Status status) {
     log.info("Publishing acceptance notification for match status {} to users {} and {}", status, user1Id, user2Id);
@@ -225,8 +225,8 @@ public class AcceptanceService {
 
     if (preference == null || preference.getTopics() == null || preference.getTopics().isEmpty()) {
       throw new IllegalStateException(
-          "Question preferences are required to create a collaboration session for match "
-              + status.getMatchDetails().getMatchId());
+        "Question preferences are required to create a collaboration session for match "
+          + status.getMatchDetails().getMatchId());
     }
 
     Map<String, List<String>> mapped = new HashMap<>();
@@ -243,8 +243,7 @@ public class AcceptanceService {
    * Helper to determine the overall match acceptance result.
    *
    * @param status the MatchAcceptanceStatus to check
-   * @return "SUCCESS" if both accepted, "REJECTED" if one rejected, or "PENDING"
-   *         otherwise
+   * @return "SUCCESS" if both accepted, "REJECTED" if one rejected, or "PENDING" otherwise
    */
   private MatchAcceptanceOutcome.Status evaluateMatchOutcome(MatchAcceptanceStatus status) {
     if (status == null) {

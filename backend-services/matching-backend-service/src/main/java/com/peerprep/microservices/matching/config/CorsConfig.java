@@ -29,14 +29,14 @@ public class CorsConfig {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
         String[] origins = Arrays.stream(allowedOriginsEnv.split(","))
-            .map(String::trim)
-            .toArray(String[]::new);
+          .map(String::trim)
+          .toArray(String[]::new);
 
         registry.addMapping("/**")
-            .allowedOrigins(origins)
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-            .allowedHeaders("*")
-            .allowCredentials(true);
+          .allowedOrigins(origins)
+          .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+          .allowedHeaders("*")
+          .allowCredentials(true);
       }
     };
   }
