@@ -28,6 +28,7 @@
     "bottleneck": "^2.19.5",
     "dotenv": "^17.2.2",
     "fastify": "^5.6.0",
+    "leetcode-query": "^2.0.1",
     "mongodb": "^6.20.0",
     "mongoose": "^8.18.1",
     "p-limit": "^7.1.1",
