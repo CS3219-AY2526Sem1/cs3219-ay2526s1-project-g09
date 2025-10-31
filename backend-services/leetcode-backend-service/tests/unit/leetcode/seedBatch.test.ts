@@ -37,8 +37,6 @@ function makeQuestion(slug: string, isPaidOnly = false) {
     isPaidOnly,
     titleSlug: slug,
     title: slug.replace(/-/g, " "),
-    difficulty: "Easy",
-    categoryTitle: "Array",
   };
 }
 
