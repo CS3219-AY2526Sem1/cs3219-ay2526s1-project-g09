@@ -188,20 +188,13 @@ export async function fetchNonPaidQuestionInfo(
 
 export async function getQuestionDetail(slug: string) {
   const leetcode = new LeetCode();
-  const res = await leetcode.graphql({
+  const res = (await leetcode.graphql({
     query: QUERY_DETAIL,
     variables: { titleSlug: slug },
-  });
+  })) as { data: { question: QuestionDetail | null } | null };
 
-  if (!res || !res.data) {
+  if (!res || !res.data || !res.data.question) {
     return null;
   }
-
-  const resData = res.data as unknown as Details;
-
-  if (!resData || !resData.question) {
-    return null;
-  }
-
-  return resData.question as unknown as QuestionDetail;
+  return res.data.question;
 }

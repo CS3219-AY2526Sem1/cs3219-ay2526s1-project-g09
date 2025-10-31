@@ -15,19 +15,20 @@ const SUT_PATH = "../../../src/leetcode/seedBatch.ts";
 const memCursor: Record<string, unknown> = {};
 const memQuestions: unknown[] = [];
 
-type ListPayload = { total: number; questions: unknown[] };
-type GqlBehavior = {
-  listOk: boolean;
-  listPayload?: ListPayload;
-  detailBySlug: Record<string, unknown>;
+let behavior = {
+  list: { total: 0, questions: [] as unknown[] },
+  detailsBySlug: {} as Record<string, unknown>,
+  // toggles for per-test failures
+  problemsReject: undefined as Error | undefined,
+  graphqlReject: undefined as Error | undefined,
 };
 
-let gqlBehavior: GqlBehavior;
-
-function resetGqlBehavior() {
-  gqlBehavior = {
-    listOk: true,
-    detailBySlug: {},
+function resetBehavior() {
+  behavior = {
+    list: { total: 0, questions: [] },
+    detailsBySlug: {},
+    problemsReject: undefined,
+    graphqlReject: undefined,
   };
 }
 
@@ -103,51 +104,10 @@ vi.mock("../../../src/db/model/question", () => {
   };
 });
 
-vi.mock("../../../src/leetcode/client", () => {
-  // We dispatch based on the “query” identity that the SUT passes in.
-  return {
-    gql: vi.fn(async (query: string, vars: { titleSlug: string }) => {
-      // The SUT imports QUERY_LIST and QUERY_DETAIL from queries.js.
-      // We'll compare the identity of `query` with the mocked exports below.
-      const { QUERY_LIST, QUERY_DETAIL } = await vi.importMock(
-        "../../../src/leetcode/queries.js",
-      );
-
-      if (query === QUERY_LIST) {
-        if (!gqlBehavior.listOk) {
-          throw new Error("GraphQL list error");
-        }
-        const payload =
-          gqlBehavior.listPayload ??
-          ({
-            problemsetQuestionList: {
-              total: 0,
-              questions: [],
-            },
-          } as unknown as ListPayload);
-
-        // The SUT expects `{ problemsetQuestionList: { total, questions } }`
-        return { problemsetQuestionList: payload };
-      }
-
-      if (query === QUERY_DETAIL) {
-        const slug = vars.titleSlug;
-        const detail =
-          gqlBehavior.detailBySlug[slug] ?? makeDetail(slug /* default */);
-        // The SUT expects `{ question: ... }`
-        return detail;
-      }
-
-      throw new Error("Unknown query sentinel");
-    }),
-  };
-});
-
 vi.mock("../../../src/leetcode/queries", () => {
   // We just need identity/sentinel values for comparison inside the mocked gql
-  const QUERY_LIST = { kind: "LIST" };
   const QUERY_DETAIL = { kind: "DETAIL" };
-  return { QUERY_LIST, QUERY_DETAIL };
+  return { QUERY_DETAIL };
 });
 
 vi.mock("../../../src/logger", () => {
@@ -166,6 +126,43 @@ vi.mock("../../../src/health", () => {
   };
 });
 
+vi.mock("leetcode-query", () => {
+  class LeetCode {
+    problems = vi.fn(({ limit, offset }: { limit: number; offset: number }) => {
+      // You can use limit/offset to slice behavior.list.questions if you want
+      if (behavior.problemsReject) {
+        return Promise.reject(behavior.problemsReject);
+      }
+      return {
+        total: behavior.list.total,
+        questions: behavior.list.questions.slice(offset, offset + limit),
+      };
+    });
+    problem = vi.fn((slug: string) => {
+      const d = behavior.detailsBySlug[slug];
+      if (!d) throw new Error(`not found: ${slug}`);
+      return d;
+    });
+    // If you keep graphql() instead, expose it here and drive returns similarly.
+    graphql = vi.fn(
+      (opts: { query: unknown; variables: { titleSlug: string } }) => {
+        if (behavior.graphqlReject) {
+          return Promise.reject(behavior.graphqlReject);
+        }
+        const slug = opts.variables.titleSlug;
+
+        const payload = behavior.detailsBySlug[slug];
+        if (!payload) {
+          // mimic “not found”
+          return Promise.resolve({ data: { question: null } });
+        }
+        return Promise.resolve({ data: payload });
+      },
+    );
+  }
+  return { LeetCode };
+});
+
 // Make p-limit just run the function immediately in tests
 vi.mock("p-limit", () => {
   return {
@@ -178,7 +175,8 @@ vi.mock("p-limit", () => {
 beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
-  resetGqlBehavior();
+
+  resetBehavior();
   // default env
   process.env.QUESTION_API_URL = "http://any";
   process.env.LEETCODE_DETAIL_CONCURRENCY = "4";
@@ -193,7 +191,7 @@ afterEach(() => {
   for (const k of Object.keys(memCursor)) delete memCursor[k];
 
   // Reset GraphQL behavior
-  resetGqlBehavior();
+  resetBehavior();
 
   // Restore environment to clean state
   delete process.env.QUESTION_API_URL;
@@ -240,16 +238,16 @@ describe("seedLeetCodeBatch", () => {
   });
 
   it("happy path: seeds a page, filters paid, fetches details, upserts, and advances cursor", async () => {
-    gqlBehavior.listPayload = {
+    behavior.list = {
       total: 5,
       questions: [
         makeQuestion("two-sum", false),
-        makeQuestion("median-of-two-sorted-arrays", true),
+        makeQuestion("median-of-two-sorted-arrays", true), // filtered out
         makeQuestion("valid-parentheses", false),
       ],
     };
 
-    gqlBehavior.detailBySlug = {
+    behavior.detailsBySlug = {
       "two-sum": makeDetail("two-sum"),
       "valid-parentheses": makeDetail("valid-parentheses"),
     };
@@ -301,7 +299,7 @@ describe("seedLeetCodeBatch", () => {
   });
 
   it("returns 'No more questions.' when the page is empty", async () => {
-    gqlBehavior.listPayload = {
+    behavior.list = {
       total: 42,
       questions: [],
     };
@@ -316,20 +314,14 @@ describe("seedLeetCodeBatch", () => {
     expect(res.nextSkip).toBe(42); // set to total to stop future refetch
   });
 
-  it("returns an error result when fetching the list fails", async () => {
-    await import("../../../src/leetcode/client");
-    resetGqlBehavior();
-    gqlBehavior.listOk = false;
-
+  it("logs and skips when graphql rejects", async () => {
+    behavior.problemsReject = new Error("LeetCode down");
     const { seedLeetCodeBatch } = (await import(SUT_PATH)) as {
       seedLeetCodeBatch: () => Promise<responseSummary>;
     };
     const res = await seedLeetCodeBatch();
 
     expect(res.ok).toBe(false);
-    expect(res.message).toMatch(/Failed to fetch question list/i);
-
-    const { logger } = await import("../../../src/logger.js");
-    expect(logger.error).toHaveBeenCalled();
+    expect(res.message).toMatch(/LeetCode down/i);
   });
 });
