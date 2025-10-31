@@ -50,33 +50,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   }
 
   useEffect(() => {
-    const handleLeaveSession = () => {
-      if (!socketRef.current || !socketReadyRef.current) {
-        console.warn("Socket not ready, skipping leave_session emit");
-        return;
-      }
-
-      console.log("Manually leaving chat session...");
-      socketRef.current.emit("leave_session");
-      socketRef.current.disconnect();
-      socketRef.current = null;
-      socketReadyRef.current = false;
-    };
-
-    window.addEventListener(
-      "collab:leave-session-confirmed",
-      handleLeaveSession,
-    );
-
-    return () => {
-      window.removeEventListener(
-        "collab:leave-session-confirmed",
-        handleLeaveSession,
-      );
-    };
-  }, []);
-
-  useEffect(() => {
     if (socketRef.current) {
       console.log("Socket already initialized, skipping re-init");
       return;
@@ -136,6 +109,36 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
       socketReadyRef.current = false;
     };
   }, [session?.sessionId, user?.id, user?.username]);
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket || !socketReadyRef.current) return;
+
+    const handleLeaveSession = () => {
+      if (!socketRef.current?.connected) {
+        console.warn("Socket not connected, skipping leave_session emit");
+        return;
+      }
+
+      console.log("Manually leaving chat session...");
+      socketRef.current.emit("leave_session");
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      socketReadyRef.current = false;
+    };
+
+    window.addEventListener(
+      "collab:leave-session-confirmed",
+      handleLeaveSession,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "collab:leave-session-confirmed",
+        handleLeaveSession,
+      );
+    };
+  }, [session?.sessionId, user?.id]);
 
   useEffect(() => {
     // Scroll to bottom when messages update
