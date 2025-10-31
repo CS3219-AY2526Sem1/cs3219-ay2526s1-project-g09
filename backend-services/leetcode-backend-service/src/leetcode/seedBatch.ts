@@ -32,6 +32,8 @@ const DIFFICULTY_TIME_LIMITS: Record<string, number> = {
   Hard: 120,
 };
 
+const leetcode = new LeetCode();
+
 /**
  * Run one batch (default pageSize=200). Returns a summary.
  * @returns An object containing the result of the seeding operation.
@@ -63,7 +65,6 @@ export async function seedLeetCodeBatch() {
   let total = 0;
 
   try {
-    const leetcode = new LeetCode();
     const res = await leetcode.problems({ limit: pageSize, offset: nextSkip });
 
     questionList = res.questions
@@ -187,7 +188,6 @@ export async function fetchNonPaidQuestionInfo(
 }
 
 export async function getQuestionDetail(slug: string) {
-  const leetcode = new LeetCode();
   const res = (await leetcode.graphql({
     query: QUERY_DETAIL,
     variables: { titleSlug: slug },
