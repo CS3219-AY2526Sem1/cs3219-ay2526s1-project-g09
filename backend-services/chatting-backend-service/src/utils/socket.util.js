@@ -57,9 +57,9 @@ export const initSocket = async (server) => {
 
       // Clean up if everyone disconnected
       const users = await redis.getAllUsers(roomId);
-      const allDisconnected = Object.values(users).every(
-        (u) => u.isDisconnectConfirm,
-      );
+      const hasUsers = Object.keys(users).length > 0;
+      const allDisconnected =
+        hasUsers && Object.values(users).every((u) => u.isDisconnectConfirm);
 
       if (allDisconnected) {
         await redis.deleteRoom(roomId);
