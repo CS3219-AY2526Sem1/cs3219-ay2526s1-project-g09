@@ -23,6 +23,61 @@ export const initSocket = async (server) => {
 
   io.adapter(createAdapter(pubClient, subClient));
 
+  async function handleDisconnect(socket, immediate) {
+    const { userId, username, roomId } = socket.data;
+    if (!roomId || !userId) return;
+
+    const timerKey = `${roomId}:${userId}`;
+
+    // cancel any existing timer with same key (in case)
+    if (disconnectTimers.has(timerKey)) {
+      clearTimeout(disconnectTimers.get(timerKey));
+      disconnectTimers.delete(timerKey);
+    }
+
+    console.log(`User disconnected: ${username} (${socket.id})`);
+
+    async function performDisconnect() {
+      const latest = await RedisRooms.getUser(roomId, userId);
+      if (!latest || latest.isDisconnectConfirm) return;
+
+      io.to(roomId).emit("system_message", {
+        event: "disconnect",
+        userId,
+        username,
+        text: `${username} has left the chat.`,
+      });
+
+      await RedisRooms.addOrUpdateUser(roomId, userId, {
+        ...latest,
+        isDisconnectConfirm: true,
+      });
+
+      console.log(`${username} confirmed disconnected.`);
+
+      // Clean up if everyone disconnected
+      const users = await RedisRooms.getAllUsers(roomId);
+      const allDisconnected = Object.values(users).every(
+        (u) => u.isDisconnectConfirm,
+      );
+
+      if (allDisconnected) {
+        await RedisRooms.deleteRoom(roomId);
+        console.log(`Room ${roomId} cleaned up.`);
+      }
+
+      disconnectTimers.delete(timerKey);
+    }
+    if (immediate) {
+      await performDisconnect();
+    } else {
+      // Establish a pending disconnect timer for this event,
+      // once 10 secs have passed without reconnection, emit disconnect message
+      const timer = setTimeout(performDisconnect, DISCONNECT_TIMEOUT_MS);
+      disconnectTimers.set(timerKey, timer);
+    }
+  }
+
   io.on("connection", async (socket) => {
     console.log("New user connected to chat service at socket", socket.id);
 
@@ -104,59 +159,17 @@ export const initSocket = async (server) => {
       socket.to(roomId).emit("receive_message", payload.message);
     });
 
+    socket.on("leave_session", () => {
+      socket.data.manualLeave = true;
+      socket.disconnect(true);
+    });
+
     socket.on("disconnect", async () => {
-      const { userId, username, roomId } = socket.data;
-      if (!roomId || !userId) return;
-      console.log(`User disconnected: ${username} (${socket.id})`);
-
-      const user = await RedisRooms.getUser(roomId, userId);
-      if (!user) return;
-
-      const timerKey = `${roomId}:${userId}`;
-
-      // cancel any existing timer with same key (in case)
-      if (disconnectTimers.has(timerKey)) {
-        clearTimeout(disconnectTimers.get(timerKey));
-        disconnectTimers.delete(timerKey);
-      }
-
-      // Establish a pending disconnect timer for this event, once 10 secs have passed without reconnection, emit disconnect message
-      const timer = setTimeout(async () => {
-        const latest = await RedisRooms.getUser(roomId, userId);
-        if (!latest) return;
-
-        // If still not reconnected, confirm disconnect
-        if (!latest.isDisconnectConfirm) {
-          io.to(roomId).emit("system_message", {
-            event: "disconnect",
-            userId,
-            username,
-            text: `${username} has left the chat.`,
-          });
-
-          await RedisRooms.addOrUpdateUser(roomId, userId, {
-            ...latest,
-            isDisconnectConfirm: true,
-          });
-
-          console.log(`${username} confirmed disconnected.`);
-
-          // Clean up if everyone disconnected
-          const users = await RedisRooms.getAllUsers(roomId);
-          const allDisconnected = Object.values(users).every(
-            (u) => u.isDisconnectConfirm,
-          );
-
-          if (allDisconnected) {
-            await RedisRooms.deleteRoom(roomId);
-            console.log(`Room ${roomId} cleaned up.`);
-          }
-        }
-
-        disconnectTimers.delete(timerKey);
-      }, DISCONNECT_TIMEOUT_MS);
-
-      disconnectTimers.set(timerKey, timer);
+      const isManual = socket.data?.manualLeave || false;
+      console.log(
+        `Socket ${socket.id} disconnected (${isManual ? "manual" : "auto"})`,
+      );
+      await handleDisconnect(socket, isManual); // true = immediate, false = delayed
     });
   });
 

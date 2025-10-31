@@ -49,6 +49,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   }
 
   useEffect(() => {
+    const handleLeaveSession = () => {
+      if (socketRef.current) {
+        console.log("Manually leaving chat session...");
+        socketRef.current.emit("leave_session");
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+
+    window.addEventListener(
+      "collab:leave-session-confirmed",
+      handleLeaveSession,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "collab:leave-session-confirmed",
+        handleLeaveSession,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     if (socketRef.current) {
       console.log("Socket already initialized, skipping re-init");
       return;

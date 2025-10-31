@@ -67,6 +67,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       setSessionEnded(true);
       setSessionId(null);
       setSessionEndedMessage(null);
+      window.dispatchEvent(new Event("collab:leave-session-confirmed"));
       window.location.href = "/matching";
     }
   }, [currentUserId, initialSessionId, sessionId]);
