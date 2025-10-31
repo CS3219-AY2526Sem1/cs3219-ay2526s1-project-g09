@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.peerprep.microservices.matching.dto.CollabSession;
 import com.peerprep.microservices.matching.dto.CollabStartRequest;
 import com.peerprep.microservices.matching.dto.CollabStartResponse;
 
@@ -29,7 +28,7 @@ public class CollabServiceClient {
   @Value("${collab.service.base-url}")
   private String collabServiceBaseUrl;
 
-  public CollabSession createSession(List<String> users, Map<String, List<String>> questionPreferences) {
+  public void createSession(List<String> users, Map<String, List<String>> questionPreferences) {
     log.info("Creating collaboration session for users: {}", users);
     String base = collabServiceBaseUrl.endsWith("/")
       ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
@@ -41,32 +40,24 @@ public class CollabServiceClient {
     headers.setContentType(MediaType.APPLICATION_JSON);
 
     try {
-      log.info("Sending request to collaboration service: {}", url);
-      log.info("Request payload: {}", request);
-      log.info("Request headers: {}", headers);
+      log.debug("Sending request to collaboration service: {}", url);
       ResponseEntity<CollabStartResponse> response = restTemplate.postForEntity(
         url,
         new HttpEntity<>(request, headers),
         CollabStartResponse.class);
 
       CollabStartResponse body = response.getBody();
-
       if (body == null) {
         throw new IllegalStateException("Collaboration service returned an empty response");
       }
 
       if (!body.success()) {
-        String errorMessage = body.error() != null ? body.error() : body.message();
+        String errorMessage = body.error() != null ? body.error() : "Unknown error";
         throw new IllegalStateException(
           String.format("Collaboration service failed to create session: %s", errorMessage));
       }
 
-      if (body.session() == null) {
-        throw new IllegalStateException("Collaboration service response missing session data");
-      }
-      log.info("Successfully created collaboration session: {}", body.session());
-
-      return body.session();
+      log.info("Successfully created collaboration session for users {}", users);
     } catch (RestClientException ex) {
       log.error("Failed to create collaboration session", ex);
       throw new IllegalStateException("Unable to create collaboration session", ex);

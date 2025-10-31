@@ -15,7 +15,6 @@ import com.peerprep.microservices.matching.client.CollabServiceClient;
 import com.peerprep.microservices.matching.config.MatchingTimeoutConfig;
 import com.peerprep.microservices.matching.config.RedisChannels;
 import com.peerprep.microservices.matching.dto.AcceptanceNotification;
-import com.peerprep.microservices.matching.dto.CollabSession;
 import com.peerprep.microservices.matching.dto.MatchAcceptanceOutcome;
 import com.peerprep.microservices.matching.dto.MatchAcceptanceStatus;
 import com.peerprep.microservices.matching.dto.MatchAcceptanceStatus.AcceptanceStatus;

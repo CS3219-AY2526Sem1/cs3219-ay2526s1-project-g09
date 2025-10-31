@@ -87,6 +87,8 @@ services:
       - ./backend-services/collab-backend-service/.env
     ports:
       - "5276:5276"
+    depends_on:
+      - history-backend-service
 
   chat-service:
     build:

@@ -154,6 +154,7 @@ export const startSession = async (req, res) => {
     if (!resolvedQuestionId) {
       if (Object.keys(categories).length === 0) {
         return res.status(400).json({
+          success: false,
           error: "questionId or valid questionPreferences is required",
         });
       }
@@ -168,18 +169,22 @@ export const startSession = async (req, res) => {
       } catch (questionError) {
         console.error("Failed to fetch random question:", questionError);
         return res.status(502).json({
+          success: false,
           error: "Unable to retrieve random question",
-          details: questionError.message,
         });
       }
     }
 
     if (!resolvedQuestionId) {
-      return res.status(400).json({ error: "questionId is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "questionId is required" });
     }
 
     if (!Array.isArray(users) || users.length === 0) {
-      return res.status(400).json({ error: "At least one user is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "At least one user is required" });
     }
 
     const session = await SessionService.createSession({
@@ -200,10 +205,9 @@ export const startSession = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      session,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -213,7 +217,9 @@ export const connectSession = async (req, res) => {
     const { sessionId } = req.body ?? {};
 
     if (!userId) {
-      return res.status(400).json({ error: "User ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "User ID is required" });
     }
 
     if (!sessionId || typeof sessionId !== "string") {
@@ -226,14 +232,15 @@ export const connectSession = async (req, res) => {
     );
 
     if (!session) {
-      return res
-        .status(404)
-        .json({ error: "Session not found or user not part of session" });
+      return res.status(404).json({
+        success: false,
+        error: "Session not found or user not part of session",
+      });
     }
 
     res.json({ success: true, session, addedUser });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -254,7 +261,9 @@ export const disconnectSession = async (req, res) => {
       });
 
     if (!session) {
-      return res.status(404).json({ error: "Session not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Session not found" });
     }
 
     const io = req.app?.locals?.io;

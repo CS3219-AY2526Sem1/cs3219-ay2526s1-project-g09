@@ -8,10 +8,8 @@ export interface QuestionDoc {
   _id: mongoose.Types.ObjectId;
 
   // identity
-  globalSlug: string; // e.g. "leetcode:two-sum"
   title: string;
   titleSlug: string;
-  source: "leetcode";
 
   // metadata
   difficulty?: "Easy" | "Medium" | "Hard";
