@@ -1,51 +1,69 @@
-// src/services/redis.service.js
 import { createClient } from "redis";
 
-let pubClient, subClient, appClient;
+class RedisService {
+  static instance = null;
 
-export const initRedis = async () => {
-  const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+  constructor() {
+    const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
-  pubClient = createClient({ url: redisUrl });
-  subClient = pubClient.duplicate();
-  appClient = pubClient.duplicate();
+    this.pubClient = createClient({ url: redisUrl });
+    this.subClient = this.pubClient.duplicate();
+    this.appClient = this.pubClient.duplicate();
 
-  pubClient.on("error", (err) => console.error("Redis Pub Error:", err));
-  subClient.on("error", (err) => console.error("Redis Sub Error:", err));
-  appClient.on("error", (err) => console.error("Redis App Error:", err));
+    const handleError = (label) => (err) =>
+      console.error(`Redis ${label} Error:`, err);
 
-  await Promise.all([
-    pubClient.connect(),
-    subClient.connect(),
-    appClient.connect(),
-  ]);
+    this.pubClient.on("error", handleError("Pub"));
+    this.subClient.on("error", handleError("Sub"));
+    this.appClient.on("error", handleError("App"));
+  }
 
-  console.log("Redis connected");
-  return { pubClient, subClient, appClient };
-};
+  async connect() {
+    await Promise.all([
+      this.pubClient.connect(),
+      this.subClient.connect(),
+      this.appClient.connect(),
+    ]);
+    console.log("Redis connected");
+  }
 
-export const RedisRooms = {
+  static async getInstance() {
+    if (!RedisService.instance) {
+      const service = new RedisService();
+      await service.connect();
+      RedisService.instance = service;
+    }
+    return RedisService.instance;
+  }
+
+  // -------- Room operations --------
   async addOrUpdateUser(roomId, userId, data) {
-    await appClient.hSet(`room:${roomId}:users`, userId, JSON.stringify(data));
-  },
+    await this.appClient.hSet(
+      `room:${roomId}:users`,
+      userId,
+      JSON.stringify(data),
+    );
+  }
 
   async getUser(roomId, userId) {
-    const raw = await appClient.hGet(`room:${roomId}:users`, userId);
+    const raw = await this.appClient.hGet(`room:${roomId}:users`, userId);
     return raw ? JSON.parse(raw) : null;
-  },
+  }
 
   async getAllUsers(roomId) {
-    const users = await appClient.hGetAll(`room:${roomId}:users`);
+    const users = await this.appClient.hGetAll(`room:${roomId}:users`);
     return Object.fromEntries(
       Object.entries(users).map(([id, val]) => [id, JSON.parse(val)]),
     );
-  },
+  }
 
   async removeUser(roomId, userId) {
-    await appClient.hDel(`room:${roomId}:users`, userId);
-  },
+    await this.appClient.hDel(`room:${roomId}:users`, userId);
+  }
 
   async deleteRoom(roomId) {
-    await appClient.del(`room:${roomId}:users`);
-  },
-};
+    await this.appClient.del(`room:${roomId}:users`);
+  }
+}
+
+export default RedisService;

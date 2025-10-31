@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { initRedis, RedisRooms } from "../services/redis.service.js";
+import RedisService from "../services/redis.service.js";
 
 const DISCONNECT_TIMEOUT_MS = 10_000;
 
@@ -8,7 +8,7 @@ const DISCONNECT_TIMEOUT_MS = 10_000;
 const disconnectTimers = new Map();
 
 export const initSocket = async (server) => {
-  const { pubClient, subClient } = await initRedis();
+  const redis = await RedisService.getInstance();
 
   const io = new Server(server, {
     path: "/api/v1/chat-service/socket.io",
@@ -21,7 +21,7 @@ export const initSocket = async (server) => {
     },
   });
 
-  io.adapter(createAdapter(pubClient, subClient));
+  io.adapter(createAdapter(redis.pubClient, redis.subClient));
 
   async function handleDisconnect(socket, immediate) {
     const { userId, username, roomId } = socket.data;
@@ -38,7 +38,7 @@ export const initSocket = async (server) => {
     console.log(`User disconnected: ${username} (${socket.id})`);
 
     async function performDisconnect() {
-      const latest = await RedisRooms.getUser(roomId, userId);
+      const latest = await redis.getUser(roomId, userId);
       if (!latest || latest.isDisconnectConfirm) return;
 
       io.to(roomId).emit("system_message", {
@@ -48,7 +48,7 @@ export const initSocket = async (server) => {
         text: `${username} has left the chat.`,
       });
 
-      await RedisRooms.addOrUpdateUser(roomId, userId, {
+      await redis.addOrUpdateUser(roomId, userId, {
         ...latest,
         isDisconnectConfirm: true,
       });
@@ -56,13 +56,13 @@ export const initSocket = async (server) => {
       console.log(`${username} confirmed disconnected.`);
 
       // Clean up if everyone disconnected
-      const users = await RedisRooms.getAllUsers(roomId);
+      const users = await redis.getAllUsers(roomId);
       const allDisconnected = Object.values(users).every(
         (u) => u.isDisconnectConfirm,
       );
 
       if (allDisconnected) {
-        await RedisRooms.deleteRoom(roomId);
+        await redis.deleteRoom(roomId);
         console.log(`Room ${roomId} cleaned up.`);
       }
 
@@ -98,8 +98,8 @@ export const initSocket = async (server) => {
       socket.join(roomId);
       socket.data = { userId, username, roomId };
 
-      const currentUser = await RedisRooms.getUser(roomId, userId);
-      const allUsers = await RedisRooms.getAllUsers(roomId);
+      const currentUser = await redis.getUser(roomId, userId);
+      const allUsers = await redis.getAllUsers(roomId);
 
       // clear pending disconnect timers
       const timerKey = `${roomId}:${userId}`;
@@ -127,13 +127,13 @@ export const initSocket = async (server) => {
         }
 
         // Reset flag on any reconnect
-        await RedisRooms.addOrUpdateUser(roomId, userId, {
+        await redis.addOrUpdateUser(roomId, userId, {
           username,
           isDisconnectConfirm: false,
         });
       } else {
         // New user joins
-        await RedisRooms.addOrUpdateUser(roomId, userId, {
+        await redis.addOrUpdateUser(roomId, userId, {
           username,
           isDisconnectConfirm: false,
         });
