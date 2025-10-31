@@ -153,7 +153,7 @@ export async function updateUser(req, res) {
 
     let updatedUser = user;
     if (
-      hashedPassword !== user.password ||
+      !bcrypt.compare(hashedPassword, user.password) ||
       username !== user.username ||
       email !== user.email
     ) {
