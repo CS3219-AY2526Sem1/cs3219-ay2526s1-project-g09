@@ -1,0 +1,21 @@
+name: Deploy Matching Service
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "backend-services/matching-backend-service/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-service-to-eb.yml
+    with:
+      service_name: matching-service
+      service_path: backend-services/matching-backend-service
+      application_name: peerprep-matching-service
+      environment_name: peerprep-matching-service-prod
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

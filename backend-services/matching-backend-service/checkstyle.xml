@@ -1,0 +1,44 @@
+<!DOCTYPE module PUBLIC
+  "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+  "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+  <!-- Optional: link a suppressions file to silence generated code, etc. -->
+  <module name="SuppressionFilter">
+    <property name="file" value="checkstyle-suppressions.xml"/>
+    <property name="optional" value="true"/>
+  </module>
+
+  <!-- ===== IMPORTANT: DO NOT add ImportOrder / Indentation / whitespace checks ===== -->
+  <!-- Spotless handles all formatting (Eclipse), import order, and unused imports. -->
+
+  <module name="TreeWalker">
+
+    <!-- Structure & correctness policies -->
+    <module name="NeedBraces"/>
+    <module name="LeftCurly"/>
+    <module name="RightCurly"/>
+    <module name="EmptyCatchBlock">
+      <property name="exceptionVariableName" value="expected|ignore"/>
+    </module>
+    <module name="IllegalThrows"/>  
+    <module name="EqualsHashCode"/>  
+    <module name="VisibilityModifier"/>
+    <module name="ModifierOrder"/>    
+    <module name="FinalClass"/>
+    <module name="OneTopLevelClass"/>  
+
+    <!-- Naming rules -->
+    <module name="TypeName"/>
+    <module name="MethodName"/> 
+    <module name="ParameterName"/>
+    <module name="MemberName"/>
+    <module name="LocalVariableName"/>
+
+    <!-- Javadoc -->
+    <module name="JavadocType">
+      <property name="scope" value="public"/>
+    </module>
+    <module name="JavadocMethod"/>
+  </module>
+</module>

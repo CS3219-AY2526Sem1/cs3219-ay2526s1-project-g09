@@ -1,0 +1,30 @@
+{
+  "name": "history-backend-service",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Stores collaboration session history snapshots",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@eslint/js": "^9.38.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "express": "^5.1.0",
+    "globals": "^15.11.0",
+    "mongoose": "^8.18.1",
+    "morgan": "^1.10.0",
+    "typescript-eslint": "^8.46.2",
+    "vite": "^7.1.12",
+    "vitest": "^3.2.4"
+  }
+}

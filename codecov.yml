@@ -1,0 +1,27 @@
+codecov:
+  require_ci_to_pass: yes
+
+comment:
+  layout: "header, diff, flags, files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  after_n_builds: 1
+  show_carryforward_flags: true
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 0%
+        informational: true
+    patch:
+      default:
+        target: auto
+        threshold: 0%
+        informational: true
+
+flag_management:
+  default_rules:
+    carryforward: true

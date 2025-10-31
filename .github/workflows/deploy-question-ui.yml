@@ -1,0 +1,20 @@
+name: Deploy question-ui-service to S3
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "ui-services/question-ui-service/**"
+      - ".github/workflows/deploy-question-ui.yml"
+  workflow_dispatch:
+
+jobs:
+  call-base:
+    uses: ./.github/workflows/deploy-ui-to-s3.yml
+    with:
+      name: question-ui-service
+      path: ui-services/question-ui-service
+      bucket: peerprep-question-ui-service
+      distribution_id: "E3OUNMOA65S9P0"
+    secrets: inherit

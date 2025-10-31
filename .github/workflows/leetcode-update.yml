@@ -1,0 +1,110 @@
+name: Sync Question Bank
+on:
+  schedule:
+    - cron: "0 18 * * *" # Every day at 18:00 UTC (02:00 SGT)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  sync_leetcode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lowercase owner
+        id: lc
+        run: echo "value=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ steps.lc.outputs.value }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create shared network
+        run: docker network create peerprep_net || true
+
+      - name: Pull images (ensure latest tag exists)
+        run: |
+          docker pull ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
+          docker pull ghcr.io/${{ steps.lc.outputs.value }}/peerprep-question-backend:latest
+
+      # ---------- LEETCODE BACKEND ----------
+      - name: Run LeetCode Backend (exposed for triggering)
+        run: |
+          docker run -d --name leetcode-backend --network peerprep_net \
+            -p 5285:5285 \
+            -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+            -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
+            -e QUESTION_API_URL=${{ vars.QUESTION_API_URL }} \
+            ghcr.io/${{ steps.lc.outputs.value }}/peerprep-leetcode-backend:latest
+
+      - name: Wait for Leetcode Backend to be ready
+        run: |
+          echo "Waiting for leetcode-backend to respond..."
+          for i in {1..60}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5285/api/v1/leetcode-service/health || true)
+            if [ "$code" = "200" ]; then
+              echo "Leetcode backend is ready (HTTP 200)"
+              exit 0
+            fi
+            echo "Still waiting... (attempt $i, got $code)"
+            sleep 2
+          done
+          echo "::error::Leetcode backend did not become ready in time"
+          docker logs leetcode-backend || true
+          exit 1
+
+      # ---------- QUESTION BACKEND ----------
+      - name: Run Question Backend (internal only)
+        run: |
+          docker run -d --name question-backend --network peerprep_net \
+            -p 5275:5275 \
+            -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+            -e ADMIN_TOKEN="${{ secrets.ADMIN_TOKEN }}" \
+            ghcr.io/${{ steps.lc.outputs.value }}/peerprep-question-backend:latest
+
+      - name: Wait for Question Backend to be ready
+        run: |
+          echo "Waiting for question-backend to respond..."
+          for i in {1..60}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5275/api/v1/question-service/health || true)
+            if [ "$code" = "200" ]; then
+              echo "Question backend is ready (HTTP 200)"
+              exit 0
+            fi
+            echo "Still waiting... (attempt $i, got $code)"
+            sleep 2
+          done
+          echo "::error::Question backend did not become ready in time"
+          docker logs question-backend || true
+          exit 1
+
+      - name: Trigger seed-batch
+        run: |
+          curl -X POST \
+            -H "X-Admin-Token: ${{ secrets.ADMIN_TOKEN }}" \
+            http://localhost:5285/api/v1/leetcode/seed-batch
+
+          echo "Seed triggered successfully — waiting 2 minutes for background sync..."
+          sleep 120
+          echo "Wait complete — proceeding with cleanup."
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo "===== question-backend logs ====="
+          docker logs question-backend || true
+          echo "===== leetcode-backend logs ====="
+          docker logs leetcode-backend || true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop leetcode-backend question-backend || true
+          docker network rm peerprep_net || true

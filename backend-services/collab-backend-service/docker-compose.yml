@@ -1,0 +1,11 @@
+# This docker-compose.yml is mostly used for cloud deployment.
+services:
+  collab-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: peerprep-collab-service
+    ports:
+      - "80:5276"
+    env_file:
+      - .env

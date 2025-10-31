@@ -1,0 +1,11 @@
+# This docker-compose.yml is mostly used for cloud deployment.
+services:
+  history-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: peerprep-history-service
+    ports:
+      - "80:5278"
+    env_file:
+      - .env

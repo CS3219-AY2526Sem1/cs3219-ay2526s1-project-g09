@@ -1,0 +1,10 @@
+services:
+  leetcode-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: leetcode-service
+    ports:
+      - "5285:5285"
+    env_file:
+      - .env

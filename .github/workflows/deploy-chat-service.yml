@@ -1,0 +1,20 @@
+name: Deploy Collab Service
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "backend-services/chatting-backend-service/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-service-to-eb.yml
+    with:
+      service_name: chat-service
+      service_path: backend-services/chatting-backend-service
+      application_name: peerprep-chat-service
+      environment_name: peerprep-chat-service-prod
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
