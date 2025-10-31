@@ -237,7 +237,7 @@ export async function handleResetPassword(req, res) {
     return res.status(200).json({ message: "Password has been reset." });
   } catch (err) {
     console.error(err);
-    return res.status(400).json({ message: "Unable to reset password" });
+    return res.status(500).json({ message: "Unable to reset password" });
   }
 }
 

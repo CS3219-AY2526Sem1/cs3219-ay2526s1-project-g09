@@ -141,7 +141,6 @@ export async function updateUser(req, res) {
     if (password) {
       const salt = bcrypt.genSaltSync(10);
       hashedPassword = bcrypt.hashSync(password, salt);
-      // get user password and load if no password given
     }
     const updatedUser = await _updateUserById(
       userId,
