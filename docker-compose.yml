@@ -97,6 +97,8 @@ services:
       - "5286:5286"
     env_file:
       - ./backend-services/chatting-backend-service/.env
+    depends_on:
+      - redis
 
   leetcode-backend-service:
     build:
