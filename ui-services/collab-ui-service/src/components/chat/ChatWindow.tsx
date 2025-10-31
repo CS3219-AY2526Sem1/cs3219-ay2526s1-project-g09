@@ -111,18 +111,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   }, [session?.sessionId, user?.id, user?.username]);
 
   useEffect(() => {
-    const socket = socketRef.current;
-    if (!socket || !socketReadyRef.current) return;
-
     const handleLeaveSession = () => {
-      if (!socketRef.current?.connected) {
+      const socket = socketRef.current;
+      if (!socket || !socket.connected) {
         console.warn("Socket not connected, skipping leave_session emit");
         return;
       }
 
       console.log("Manually leaving chat session...");
-      socketRef.current.emit("leave_session");
-      socketRef.current.disconnect();
+      socket.emit("leave_session");
+      socket.disconnect();
       socketRef.current = null;
       socketReadyRef.current = false;
     };
