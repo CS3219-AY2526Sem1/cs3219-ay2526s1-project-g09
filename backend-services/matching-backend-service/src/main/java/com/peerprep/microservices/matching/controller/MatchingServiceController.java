@@ -26,6 +26,7 @@ import com.peerprep.microservices.matching.dto.UserPreferenceRequest;
 import com.peerprep.microservices.matching.dto.UserPreferenceResponse;
 import com.peerprep.microservices.matching.exception.UserPreferenceNotFoundException;
 import com.peerprep.microservices.matching.service.AcceptanceService;
+import com.peerprep.microservices.matching.service.GracefulShutdownService;
 import com.peerprep.microservices.matching.service.HealthService;
 import com.peerprep.microservices.matching.service.MatchingService;
 import com.peerprep.microservices.matching.service.UserPreferenceService;
@@ -45,6 +46,7 @@ public class MatchingServiceController {
   private final AcceptanceService matchingAcceptanceService;
   private final HealthService healthService;
   private final MatchingTimeoutConfig timeoutConfig;
+  private final GracefulShutdownService shutdownService;
 
   @GetMapping("/health")
   public ResponseEntity<Map<String, Object>> health() {
@@ -58,7 +60,7 @@ public class MatchingServiceController {
 
   @GetMapping("config")
   @ResponseStatus(HttpStatus.OK)
-  public TimeoutConfig updateUserPreference() {
+  public TimeoutConfig geTimeoutConfig() {
     TimeoutConfig timeoutConfigResponse = new TimeoutConfig(
       timeoutConfig.getMatchRequest(),
       timeoutConfig.getMatchAcceptance());
@@ -122,6 +124,13 @@ public class MatchingServiceController {
    */
   @PutMapping("/match-requests")
   public CompletableFuture<ResponseEntity<?>> requestMatch(@RequestBody UserPreferenceRequest userPreferenceRequest) {
+
+    // Check if service is shutting down
+    if (shutdownService.isShuttingDown()) {
+      ResponseEntity<?> response = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+        .body("Service is shutting down");
+      return CompletableFuture.completedFuture(response);
+    }
 
     long timeoutMs = timeoutConfig.getMatchRequest();
 

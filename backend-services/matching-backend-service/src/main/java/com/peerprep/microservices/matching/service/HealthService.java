@@ -24,6 +24,7 @@ public class HealthService {
 
   @Value("${collab.service.base-url}")
   private String collabServiceBaseUrl;
+  private final GracefulShutdownService shutdownService;
 
   /**
    * Simple liveness check — confirms that the service itself is running.
@@ -32,6 +33,13 @@ public class HealthService {
    */
   public ResponseEntity<Map<String, Object>> getLiveness() {
     Map<String, Object> health = new HashMap<>();
+
+    if (shutdownService.isShuttingDown()) {
+      health.put("status", "DOWN");
+      health.put("message", "Instance is shutting down");
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(health);
+    }
+
     health.put("status", "UP");
     health.put("service", "matching-service");
     health.put("timestamp", System.currentTimeMillis());
@@ -49,6 +57,12 @@ public class HealthService {
   public ResponseEntity<Map<String, Object>> getReadiness() {
     Map<String, Object> result = new HashMap<>();
     result.put("service", "matching-service");
+
+    if (shutdownService.isShuttingDown()) {
+      result.put("status", "DOWN");
+      result.put("message", "Not ready - shutting down");
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(result);
+    }
 
     boolean collabUp = false;
     String collabMessage;

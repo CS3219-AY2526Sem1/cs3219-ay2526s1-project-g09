@@ -16,5 +16,5 @@ public class MatchingTimeoutConfig {
   /**
    * Timeout for match acceptance (in milliseconds)
    */
-  private long matchAcceptance = 30_000; // 30 seconds
+  private long matchAcceptance = 15_000; // 15 seconds
 }

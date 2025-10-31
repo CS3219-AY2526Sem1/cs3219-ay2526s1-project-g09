@@ -1,5 +1,6 @@
 package com.peerprep.microservices.matching.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -263,4 +264,57 @@ public class AcceptanceService {
     return MatchAcceptanceOutcome.Status.PENDING;
 
   }
+
+  /**
+   * Waits for all ongoing acceptance requests to complete naturally through their timeout mechanism or user response.
+   * Logs progress periodically until all are done or the timeout expires.
+   *
+   * @param timeout the maximum time to wait before giving up
+   */
+  public void awaitTermination(Duration timeout) {
+    long start = System.currentTimeMillis();
+    long end = start + timeout.toMillis();
+
+    int initialCount = matchedWaitingFutures.size();
+    log.info("Graceful shutdown: waiting up to {}s for {} acceptance requests to complete...",
+      timeout.getSeconds(), initialCount);
+
+    if (initialCount == 0) {
+      log.info("No pending acceptance requests. Proceeding with continuing shutdown.");
+      return;
+    }
+
+    // Run monitoring asynchronously so it doesn’t block Spring shutdown thread
+    CompletableFuture.runAsync(() -> {
+      try {
+        int previous = initialCount;
+        while (System.currentTimeMillis() < end) {
+          int remaining = matchedWaitingFutures.size();
+          long elapsed = (System.currentTimeMillis() - start) / 1000;
+
+          if (remaining != previous) {
+            log.info("Acceptance shutdown progress: {} → {} remaining after {}s",
+              previous, remaining, elapsed);
+            previous = remaining;
+          } else if (elapsed % 5 == 0) {
+            log.debug("Acceptance shutdown: {} still remaining after {}s", remaining, elapsed);
+          }
+
+          Thread.sleep(1000);
+        }
+
+        if (matchedWaitingFutures.isEmpty()) {
+          log.info("All acceptance requests completed cleanly in {}s",
+            (System.currentTimeMillis() - start) / 1000);
+        } else {
+          log.warn("Shutdown timeout reached: {} acceptance requests still pending",
+            matchedWaitingFutures.size());
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.warn("Acceptance termination monitoring interrupted", e);
+      }
+    });
+  }
+
 }

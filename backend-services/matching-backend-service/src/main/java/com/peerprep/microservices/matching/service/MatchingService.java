@@ -1,5 +1,6 @@
 package com.peerprep.microservices.matching.service;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -263,8 +264,8 @@ public class MatchingService {
    * @param oldRequestId The Id of the match request being canceled.
    */
   public void handleCancelNotification(String oldRequestId) {
-
-    CompletableFuture<MatchingOutcome> oldFuture = waitingFutures.get(oldRequestId);
+    log.info("Handling Cancel Notification for {}", oldRequestId);
+    CompletableFuture<MatchingOutcome> oldFuture = waitingFutures.remove(oldRequestId);
     if (oldFuture == null) {
       log.info("Cancel-notification ignored: no pending request with requestId {}", oldRequestId);
       return;
@@ -275,6 +276,44 @@ public class MatchingService {
     }
 
     log.info("Cancelled old match request with requestId {}", oldRequestId);
+  }
+
+  // ---------- [Shutting Down Handlers] ----------
+
+  /**
+   * Wait for all ongoing match requests to complete naturally through timeout mechanism. Monitors the waiting futures
+   * and logs progress.
+   * 
+   * @param timeout The maximum time to wait for completion.
+   */
+  public void awaitTermination(Duration timeout) {
+    log.info("Waiting up to {} seconds for {} match requests to complete",
+      timeout.getSeconds(), waitingFutures.size());
+
+    long startTime = System.currentTimeMillis();
+    long endTime = startTime + timeout.toMillis();
+
+    try {
+      while (System.currentTimeMillis() < endTime) {
+        int remaining = waitingFutures.size();
+        long elapsed = (System.currentTimeMillis() - startTime) / 1000;
+
+        log.info("Shutdown progress: {} requests remaining after {}s", remaining, elapsed);
+        Thread.sleep(5000); // Log every 5 seconds
+      }
+
+      if (waitingFutures.isEmpty()) {
+        log.info("All match requests completed naturally");
+      } else {
+        log.warn("Shutdown timeout reached with {} requests still pending - forcing exit",
+          waitingFutures.size());
+      }
+
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      log.warn("Termination wait interrupted with {} requests remaining",
+        waitingFutures.size(), e);
+    }
   }
 
 }

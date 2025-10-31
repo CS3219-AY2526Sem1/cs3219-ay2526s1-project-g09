@@ -7,3 +7,4 @@ services:
       - .env
     ports:
       - "80:5274" # Use 80:5274 for deployment. 5274:5274 for local testing.
+    stop_grace_period: 125s
