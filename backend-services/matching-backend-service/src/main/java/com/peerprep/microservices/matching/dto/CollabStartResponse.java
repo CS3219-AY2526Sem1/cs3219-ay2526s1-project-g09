@@ -3,17 +3,11 @@ package com.peerprep.microservices.matching.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
- * Response payload from the collaboration service when creating a session.
+ * Lightweight response payload indicating whether the collab session was created successfully.
  * 
- * @param success whether the session creation was successful
- * @param session the {@link CollabSession} object containing session details if successful
- * @param error an optional error code or identifier if the request failed
- * @param message a descriptive message providing additional context or error details
+ * @param success indicates if the collaboration session was created successfully
+ * @param error contains error message if session creation failed
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record CollabStartResponse(
-  boolean success,
-  CollabSession session,
-  String error,
-  String message) {
+public record CollabStartResponse(boolean success, String error) {
 }

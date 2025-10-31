@@ -26,8 +26,11 @@ const MAX_TIME_LIMIT_MINUTES = 240;
 /**
  * Extract a header value from the request.
  * Returns undefined if the header is not present or not a string.
+ *
+ * @param req The Fastify request object.
+ * @param name The name of the header to extract.
+ * @returns The header value or undefined.
  */
-
 function getHeader(req: FastifyRequest, name: string): string | undefined {
   const headers = req.headers as Record<string, unknown> | undefined;
   const value = headers?.[name];
@@ -51,57 +54,25 @@ function safeCompare(a: string, b: string): boolean {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+/**
+ * Questions routes plugin.
+ * @param app The Fastify instance.
+ */
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
+  /**
+   * Health check endpoint.
+   * Returns 200 OK if the service is running.
+   */
   app.get("/health", async (_req, reply) => {
     return reply.send({ ok: true });
   });
 
   /**
-   * Check if questions exist based on categoryTitle and difficulty.
-   * Returns 400 if the body is malformed or missing data.
-   * Returns a list of true/false for each category and difficulty combination.
-   */
-  app.post<{
-    Body: {
-      categories: {
-        [category: string]: ("Easy" | "Medium" | "Hard")[]; // category as key and difficulty levels as values
-      };
-    };
-  }>("/exists-categories-difficulties", async (req, reply) => {
-    const { categories } = req.body;
-
-    if (!categories || Object.keys(categories).length === 0) {
-      return reply.status(400).send({
-        error: "Missing required body: categories",
-      });
-    }
-
-    const result: {
-      [category: string]: {
-        [difficulty in "Easy" | "Medium" | "Hard"]?: boolean;
-      };
-    } = {};
-
-    // Iterate through the categories and check for each difficulty
-    for (const [categoryTitle, difficulties] of Object.entries(categories)) {
-      result[categoryTitle] = {};
-
-      for (const difficulty of difficulties) {
-        const exists = await withDbLimit(() =>
-          Question.exists({ categoryTitle, difficulty }),
-        );
-        result[categoryTitle][difficulty] = !!exists;
-      }
-    }
-
-    return reply.send(result);
-  });
-
-  /**
    * Get a random question based on categoryTitle and difficulty.
-   * Returns 400 if params are missing.
+   * Returns 200 with the question document.
+   * Returns 400 if the body is malformed or missing data.
    * Returns 404 if no question found.
-   * Returns the question document if found.
+   * Returns 500 on MongoDB server error.
    */
   app.post<{
     Body: {
@@ -159,73 +130,12 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * Post a new question to the database.
-   * Only create if it does not already exist.
-   * If it already exists, return 200 with a message.
-   */
-  app.post("/post-question", async (req, res) => {
-    const token = getHeader(req, "x-admin-token");
-    if (!ADMIN_TOKEN || !token || !safeCompare(token, ADMIN_TOKEN)) {
-      return res.status(401).send({ error: "Unauthorized" });
-    }
-    const Body = z.object({
-      source: z.string(),
-      globalSlug: z.string().min(1),
-      titleSlug: z.string().min(1),
-      title: z.string().min(1),
-      categoryTitle: z.string().max(100),
-      difficulty: z.enum(["Easy", "Medium", "Hard"]),
-      timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES), // in minutes
-      content: z.string(),
-      hints: z.array(z.string()).nullable().optional(),
-      exampleTestcases: z.string().nullable().optional(),
-      codeSnippets: z
-        .array(
-          z.object({
-            lang: z.string(),
-            langSlug: z.string(),
-            code: z.string(),
-          }),
-        )
-        .nullable()
-        .optional(),
-      answer: z.string().nullable().optional(),
-    });
-    const result = Body.safeParse(req.body);
-    if (!result.success) {
-      return res
-        .status(400)
-        .send({ error: "Invalid input", details: result.error.issues });
-    }
-    const doc = {
-      ...result.data,
-    };
-
-    const saved = await withDbLimit(() =>
-      Question.updateOne(
-        { globalSlug: doc.globalSlug },
-        { $setOnInsert: doc },
-        { upsert: true },
-      ),
-    );
-    if (saved.acknowledged !== true)
-      return res.status(500).send({ error: "Failed to save question" });
-    if (saved.matchedCount > 0)
-      return res
-        .status(200)
-        .send({ ok: true, message: "Question already exists" });
-    if (saved.upsertedCount === 0)
-      return res.status(500).send({ error: "Failed to save question" });
-    return res.status(200).send({
-      ok: true,
-      id: saved.upsertedId?.toString(),
-      message: "Question inserted successfully",
-    });
-  });
-
-  /**
-   * GET /questions
-   * Supports filtering, pagination, and sorting.
+   * Get a paginated list of question previews.
+   * Supports filtering by title, category, difficulty, time limits.
+   * Supports sorting by various fields.
+   * Returns 200 with paginated question previews.
+   * Returns 400 if query params are invalid.
+   * Returns 500 on MongoDB server error.
    */
   app.get("/questions", async (req, reply) => {
     // Define schema for validation
@@ -336,8 +246,9 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions/categories
-   * Returns a list of distinct categories from questions.
+   * Get all distinct categories from questions.
+   * Returns 200 with array of categories.
+   * Returns 500 on MongoDB server error.
    */
   app.get("/questions/categories", async (_req, reply) => {
     try {
@@ -352,8 +263,9 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions/difficulties
-   * Returns all distinct difficulties from questions.
+   * Get all distinct difficulties from questions.
+   * Returns 200 with array of difficulties.
+   * Returns 500 on MongoDB server error.
    */
   app.get("/questions/difficulties", async (_req, reply) => {
     try {
@@ -372,13 +284,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions/categories-with-difficulties
-   * Returns a map of category -> distinct difficulties available (sorted Easy → Medium → Hard)
-   * Example output:
+   * Get categories with their distinct difficulties.
+   * Returns 200 with map of category titles to arrays of distinct difficulties.
+   * Returns 500 on MongoDB server error.
+   * Sample Response:
    * {
    *   "OOP": ["Easy", "Medium"],
-   *   "Database": ["Medium", "Hard"],
-   *   "Algorithm": ["Easy", "Hard"]
+   *   "Database": ["Hard"]
    * }
    */
   app.get("/questions/categories-with-difficulties", async (_req, reply) => {
@@ -444,9 +356,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * POST /add-question
-   * Add a new question to the database with minimal required fields from the PeerPrep app itself.
-   * Auto-generates slugs from title.
+   * Add a new question.
+   * Requests must include x-admin-token and x-source headers.
+   * Returns 200 with the ID of the newly created question.
+   * Returns 400 if the body is malformed, or required headers are missing/invalid.
+   * Returns 401 if unauthorized.
+   * Returns 409 if a question with the same title already exists.
+   * Returns 500 on MongoDB server error.
    */
   app.post("/add-question", async (req, res) => {
     const token = getHeader(req, "x-admin-token");
@@ -454,14 +370,39 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       return res.status(401).send({ error: "Unauthorized" });
     }
 
+    const source = getHeader(req, "x-source");
+    if (!source) {
+      return res
+        .status(400)
+        .send({ error: "Missing required header: x-source" });
+    }
+
+    const allowedSources = ["admin", "leetcode"];
+    if (!allowedSources.includes(source)) {
+      return res.status(400).send({
+        error: `Invalid source: ${source}. Must be one of ${allowedSources.join(", ")}`,
+      });
+    }
+
     const Body = z.object({
       title: z.string().min(1, "Title is required"),
+      titleSlug: z.string().min(1).optional(),
       categoryTitle: z.string().max(100, "Category title is required"),
       difficulty: z.enum(["Easy", "Medium", "Hard"]),
       timeLimit: z.number().min(1).max(MAX_TIME_LIMIT_MINUTES),
       content: z.string().min(1, "Content is required"),
       hints: z.array(z.string()).optional(),
       answer: z.string().optional(),
+      exampleTestcases: z.string().optional(),
+      codeSnippets: z
+        .array(
+          z.object({
+            lang: z.string(),
+            langSlug: z.string(),
+            code: z.string(),
+          }),
+        )
+        .optional(),
     });
 
     const result = Body.safeParse(req.body);
@@ -492,9 +433,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
 
+    const globalSlug = `${source}:${slug}`;
+
     const doc = {
-      source: "admin",
-      globalSlug: slug,
+      source,
+      globalSlug,
       titleSlug: slug,
       title: data.title,
       categoryTitle: data.categoryTitle,
@@ -502,8 +445,8 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
       timeLimit: data.timeLimit,
       content: data.content,
       hints: data.hints && data.hints.length > 0 ? data.hints : null,
-      exampleTestcases: null,
-      codeSnippets: null,
+      exampleTestcases: data.exampleTestcases ?? null,
+      codeSnippets: data.codeSnippets ?? null,
       answer: data.answer ?? null,
     };
 
@@ -525,8 +468,11 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * GET /questions/:id
-   * Returns full question details for a given ID.
+   * Get question details by ID.
+   * Returns 200 with question details.
+   * Returns 400 if the ID is invalid.
+   * Returns 404 if the question is not found.
+   * Returns 500 on MongoDB server error.
    */
   app.get<{
     Params: { id: string };
@@ -570,9 +516,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * PUT /questions/:id
-   * Updates a question by ID.
-   * Requires admin token.
+   * Update question details by ID.
+   * Must include x-admin-token header.
+   * Returns 200 with the ID of the updated question.
+   * Returns 400 if the ID is invalid or the body is malformed.
+   * Returns 401 if unauthorized.
+   * Returns 404 if the question is not found.
+   * Returns 500 on MongoDB server error.
    */
   app.put<{
     Params: { id: string };
@@ -664,9 +614,13 @@ const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
   });
 
   /**
-   * DELETE /questions/:id
    * Deletes a question from the database by ID.
-   * Requires admin token.
+   * Must include x-admin-token header.
+   * Returns 200 with the ID of the deleted question.
+   * Returns 400 if the ID is invalid.
+   * Returns 401 if unauthorized.
+   * Returns 404 if the question is not found.
+   * Returns 500 on MongoDB server error.
    */
   app.delete<{
     Params: { id: string };

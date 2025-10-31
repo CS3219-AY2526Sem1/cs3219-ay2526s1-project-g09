@@ -48,11 +48,25 @@ function assertAdmin(req: FastifyRequest) {
   }
 }
 
+/**
+ * LeetCode routes plugin.
+ * @param app The Fastify instance.
+ */
 const leetcodeRoutes: FastifyPluginCallback = (app: FastifyInstance) => {
+  /**
+   * Health check endpoint.
+   * Returns 200 OK if the service is running.
+   */
   app.get("/health", async (_req, reply) => {
     return reply.send({ ok: true });
   });
 
+  /**
+   * Seed LeetCode questions in batches.
+   * Must include x-admin-token header.
+   * If `reset=1` query parameter is provided, resets the seeding cursor before seeding.
+   * Returns 200 with the result of the seeding operation.
+   */
   app.post("/seed-batch", async (req) => {
     assertAdmin(req);
     const reset = (req.query as { reset?: string })?.reset === "1";
