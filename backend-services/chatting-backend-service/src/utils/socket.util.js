@@ -4,6 +4,9 @@ import { initRedis, RedisRooms } from "../services/redis.service.js";
 
 const DISCONNECT_TIMEOUT_MS = 10_000;
 
+// Purpose: to hold pending disconnect timers
+const disconnectTimers = new Map();
+
 export const initSocket = async (server) => {
   const { pubClient, subClient } = await initRedis();
 
@@ -31,6 +34,14 @@ export const initSocket = async (server) => {
 
       const currentUser = await RedisRooms.getUser(roomId, userId);
       const allUsers = await RedisRooms.getAllUsers(roomId);
+
+      // clear pending disconnect timers
+      const timerKey = `${roomId}:${userId}`;
+      if (disconnectTimers.has(timerKey)) {
+        clearTimeout(disconnectTimers.get(timerKey));
+        disconnectTimers.delete(timerKey);
+        console.log(`Cleared pending disconnect timer for ${username}`);
+      }
 
       if (currentUser) {
         if (currentUser.isDisconnectConfirm) {
@@ -101,10 +112,21 @@ export const initSocket = async (server) => {
       const user = await RedisRooms.getUser(roomId, userId);
       if (!user) return;
 
-      // Wait 10 secs before confirming disconnect
-      setTimeout(async () => {
+      const timerKey = `${roomId}:${userId}`;
+
+      // cancel any existing timer with same key (in case)
+      if (disconnectTimers.has(timerKey)) {
+        clearTimeout(disconnectTimers.get(timerKey));
+        disconnectTimers.delete(timerKey);
+      }
+
+      // Establish a pending disconnect timer for this event, once 10 secs have passed without reconnection, emit disconnect message
+      const timer = setTimeout(async () => {
         const latest = await RedisRooms.getUser(roomId, userId);
-        if (latest && !latest.isDisconnectConfirm) {
+        if (!latest) return;
+
+        // If still not reconnected, confirm disconnect
+        if (!latest.isDisconnectConfirm) {
           io.to(roomId).emit("system_message", {
             event: "disconnect",
             userId,
@@ -124,12 +146,17 @@ export const initSocket = async (server) => {
           const allDisconnected = Object.values(users).every(
             (u) => u.isDisconnectConfirm,
           );
+
           if (allDisconnected) {
             await RedisRooms.deleteRoom(roomId);
             console.log(`Room ${roomId} cleaned up.`);
           }
         }
+
+        disconnectTimers.delete(timerKey);
       }, DISCONNECT_TIMEOUT_MS);
+
+      disconnectTimers.set(timerKey, timer);
     });
   });
 
