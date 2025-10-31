@@ -73,7 +73,18 @@ export const initSocket = async (server) => {
     } else {
       // Establish a pending disconnect timer for this event,
       // once 10 secs have passed without reconnection, emit disconnect message
-      const timer = setTimeout(performDisconnect, DISCONNECT_TIMEOUT_MS);
+      const timer = setTimeout(async () => {
+        try {
+          await performDisconnect();
+        } catch (err) {
+          console.error(
+            `Error performing delayed disconnect for ${username}:`,
+            err,
+          );
+        } finally {
+          disconnectTimers.delete(timerKey);
+        }
+      }, DISCONNECT_TIMEOUT_MS);
       disconnectTimers.set(timerKey, timer);
     }
   }
