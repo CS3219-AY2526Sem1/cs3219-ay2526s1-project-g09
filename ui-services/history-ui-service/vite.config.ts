@@ -13,12 +13,21 @@ export default defineConfig({
       name: "history-ui-service",
       filename: "remoteEntry.js",
       exposes: {
-        "./QuestionHistoryTable": "./src/components/QuestionHistoryTable",
-        "./QuestionAttemptTable": "./src/components/QuestionAttemptTable",
+        "./QuestionHistoryTable":
+          "./src/components/QuestionTable/QuestionHistoryTable",
+        "./QuestionAttemptTable":
+          "./src/components/AttemptTable/QuestionAttemptTable",
         "./NotesWindow": "./src/components/NotesWindow",
+        "./SavedCodePanel": "./src/components/SavedCodePanel",
+        "./HistoryApp": "./src/App",
       },
       remotes: {
         userUiService: "http://localhost:5177/assets/remoteEntry.js",
+        questionUiService:
+          process.env.VITE_QUESTION_UI_REMOTE ??
+          (process.env.VITE_MODE === "dev"
+            ? "http://localhost:5175/assets/remoteEntry.js"
+            : "https://peerprep-question-ui-service.s3-website-ap-southeast-1.amazonaws.com/assets/remoteEntry.js"),
       },
       shared: ["react", "react-dom"],
     }),

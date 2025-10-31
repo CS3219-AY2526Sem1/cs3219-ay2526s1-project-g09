@@ -70,7 +70,6 @@ local existingJson = redis.call("GET", userPrefKeyPrefix .. userId)
 if existingJson then
     local existingWrapper = cjson.decode(existingJson)
     local existingId = existingWrapper.requestId
-    local existing = existingWrapper.userPreference
 
     if existingId ~= requestId then
         redis.call("ZREM", poolKey, userId)

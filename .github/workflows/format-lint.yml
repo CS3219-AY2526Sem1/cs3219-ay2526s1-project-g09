@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Run Prettier Checks
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -79,7 +79,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -119,7 +119,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -159,7 +159,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -199,7 +199,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -239,7 +239,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -279,7 +279,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -319,7 +319,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -346,3 +346,210 @@ jobs:
 
           npx eslint --format json . > eslint-report.json
           cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  user-backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./backend-services/user-backend-service
+          npm ci
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./backend-services/user-backend-service
+          exit_code=0
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for user-backend"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  collab-backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./backend-services/collab-backend-service
+          npm ci
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./backend-services/collab-backend-service
+          exit_code=0
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for collab-backend"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  chatting-backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./backend-services/chatting-backend-service
+          npm ci
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./backend-services/chatting-backend-service
+          exit_code=0
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for chatting-backend"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  history-backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          cd ./backend-services/history-backend-service
+          npm ci
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run ESLint and Reviewdog
+        run: |
+          cd ./backend-services/history-backend-service
+          exit_code=0
+          npx eslint . || exit_code=$?
+          eslint_exit_code=$exit_code
+
+          if [ $eslint_exit_code -ne 0 ]; then
+            echo "ESLint failed for history-backend"
+            exit 1
+          fi
+
+          npx eslint --format json . > eslint-report.json
+          cat eslint-report.json | reviewdog -f=eslint -name="eslint" -reporter=github-pr-review -level=error
+
+  matching-backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set REVIEWDOG_GITHUB_API_TOKEN
+        run: echo "REVIEWDOG_GITHUB_API_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "maven"
+          cache-dependency-path: |
+            backend-services/matching-backend-service/pom.xml
+
+      - name: Spotless check
+        run: |
+          cd ./backend-services/matching-backend-service
+          mvn -B -DskipTests spotless:check
+
+      - name: Generate Checkstyle report
+        run: |
+          cd ./backend-services/matching-backend-service
+          mvn -B -DskipTests checkstyle:checkstyle || exit_code=$?
+
+      - name: Install reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run Checkstyle and Reviewdog
+        run: |
+          cd ./backend-services/matching-backend-service
+          REPORT=target/checkstyle-result.xml
+          if [ ! -f "$REPORT" ]; then
+            echo "Checkstyle report not found at $REPORT"
+            exit 1
+          fi
+          cat "$REPORT" | reviewdog -f=checkstyle -name="checkstyle" -reporter=github-pr-review -level=error
+      - name: Enforce Checkstyle (fail on violations)
+        run: |
+          cd ./backend-services/matching-backend-service
+          mvn -B -DskipTests checkstyle:check

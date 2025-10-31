@@ -40,45 +40,41 @@ public class AcceptanceService {
   /*
    * Map of userId to CompletableFuture for pending match acceptance requests.
    */
-  private final Map<String, CompletableFuture<MatchAcceptanceOutcome>> matchedWaitingFutures = new ConcurrentHashMap<>();
-
-  private final Map<String, CollabSession> collabSessionsByMatchId = new ConcurrentHashMap<>();
+  private final Map<String, CompletableFuture<MatchAcceptanceOutcome.Status>> matchedWaitingFutures = new ConcurrentHashMap<>();
 
   /**
    * Connects a user to a match acceptance.
    *
-   * @param userId  the ID of the user to connect
+   * @param userId the ID of the user to connect
    * @param matchId the ID of the match to connect to
    * @return the match acceptance outcome
    */
-  public CompletableFuture<MatchAcceptanceOutcome> connectMatch(String userId, String matchId) {
+  public CompletableFuture<MatchAcceptanceOutcome.Status> connectMatch(String userId, String matchId) {
 
     log.info("Connecting User {} to match {}..", userId, matchId);
 
-    CompletableFuture<MatchAcceptanceOutcome> connectFuture = new CompletableFuture<>();
+    CompletableFuture<MatchAcceptanceOutcome.Status> connectFuture = new CompletableFuture<>();
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.CONNECTED,
-        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.CONNECTED,
+      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
     }
 
-    MatchAcceptanceOutcome outcome = buildOutcome(updated);
-    // Complete future if outcome already determined.
+    MatchAcceptanceOutcome.Status finalStatus = evaluateMatchOutcome(updated);
 
-    if (outcome.getStatus() != MatchAcceptanceOutcome.Status.PENDING) {
+    // Complete future if outcome already determined.
+    if (finalStatus != MatchAcceptanceOutcome.Status.PENDING) {
       log.info("Match {} was rejected. Completing future.", matchId);
-      connectFuture.complete(outcome);
-    } else {
-      // Add future if no outcome yet.
-      matchedWaitingFutures.put(userId, connectFuture);
-      connectFuture.whenComplete((res, err) -> matchedWaitingFutures.remove(userId));
-      log.info("Connected User {} to match {}", userId, matchId);
+      connectFuture.complete(finalStatus);
     }
+
+    matchedWaitingFutures.put(userId, connectFuture);
+    log.info("Connected User {} to match {}", userId, matchId);
 
     // Timeout handling
     long timeoutMs = timeoutConfig.getMatchAcceptance();
@@ -98,7 +94,7 @@ public class AcceptanceService {
   /**
    * Accepts a match for a specified user.
    *
-   * @param userId  the ID of the accepting user
+   * @param userId the ID of the accepting user
    * @param matchId the ID of the match the user is accepting
    * @return the updated match acceptance status
    */
@@ -106,22 +102,27 @@ public class AcceptanceService {
     log.info("User {} accepted match {}", userId, matchId);
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.ACCEPTED,
-        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.ACCEPTED,
+      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
     }
 
-    MatchAcceptanceOutcome outcome = buildOutcome(updated);
-    log.info("Evaluated outcome for match {}: {}", matchId, outcome);
+    MatchAcceptanceOutcome.Status finalStatus = evaluateMatchOutcome(updated);
 
-    if (outcome.getStatus() != MatchAcceptanceOutcome.Status.PENDING) {
+    // If accepted, builds a collab session
+    if (finalStatus == MatchAcceptanceOutcome.Status.SUCCESS) {
+      buildCollabSession(updated);
+    }
+
+    // If accepted or refected, sends a publishAcceptanceNotification
+    if (finalStatus != MatchAcceptanceOutcome.Status.PENDING) {
       String userId1 = updated.getMatchDetails().getUser1Id();
       String userId2 = updated.getMatchDetails().getUser2Id();
-      publishAcceptanceNotification(userId1, userId2, updated.getMatchDetails().getMatchId(), outcome);
+      publishAcceptanceNotification(userId1, userId2, finalStatus);
     }
 
     return updated;
@@ -130,7 +131,7 @@ public class AcceptanceService {
   /**
    * Rejects a match for a specified user.
    *
-   * @param userId  the ID of the user rejecting the match
+   * @param userId the ID of the user rejecting the match
    * @param matchId the ID of the match to reject
    * @return the updated match acceptance status
    */
@@ -138,21 +139,20 @@ public class AcceptanceService {
     log.info("User {} rejecting match {}", userId, matchId);
 
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
-        matchId,
-        userId,
-        AcceptanceStatus.REJECTED,
-        RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      matchId,
+      userId,
+      AcceptanceStatus.REJECTED,
+      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
     }
 
-    MatchAcceptanceOutcome outcome = buildOutcome(updated);
-
-    if (outcome.getStatus() != MatchAcceptanceOutcome.Status.PENDING) {
+    MatchAcceptanceOutcome.Status finalStatus = evaluateMatchOutcome(updated);
+    if (finalStatus != MatchAcceptanceOutcome.Status.PENDING) {
       String userId1 = updated.getMatchDetails().getUser1Id();
       String userId2 = updated.getMatchDetails().getUser2Id();
-      publishAcceptanceNotification(userId1, userId2, updated.getMatchDetails().getMatchId(), outcome);
+      publishAcceptanceNotification(userId1, userId2, finalStatus);
     }
 
     log.info("User {} rejected match {}", userId, matchId);
@@ -165,19 +165,11 @@ public class AcceptanceService {
    * 
    * @param user1Id the user ID of the first user in the match acceptance
    * @param user2Id the user ID of the second user in the match acceptance
-   * @param matchId the ID of the match
-   * @param outcome the outcome of the match acceptance
+   * @param status the status of the match acceptance
    */
-  private void publishAcceptanceNotification(String user1Id, String user2Id, String matchId,
-      MatchAcceptanceOutcome outcome) {
-    log.info("Publishing acceptance notification for match status {} to users {} and {}", outcome.getStatus(), user1Id,
-        user2Id);
-    AcceptanceNotification acceptanceNotification = new AcceptanceNotification(
-        user1Id,
-        user2Id,
-        outcome.getStatus(),
-        matchId,
-        outcome.getSession());
+  private void publishAcceptanceNotification(String user1Id, String user2Id, MatchAcceptanceOutcome.Status status) {
+    log.info("Publishing acceptance notification for match status {} to users {} and {}", status, user1Id, user2Id);
+    AcceptanceNotification acceptanceNotification = new AcceptanceNotification(user1Id, user2Id, status);
 
     redisTemplate.convertAndSend(RedisChannels.MATCH_ACCEPTANCE_CHANNEL, acceptanceNotification);
   }
@@ -193,8 +185,8 @@ public class AcceptanceService {
     String user2Id = acceptanceNotification.getUser2Id();
     log.info("Handling acceptance event for users {} and {}", user1Id, user2Id);
 
-    CompletableFuture<MatchAcceptanceOutcome> user1Future = matchedWaitingFutures.get(user1Id);
-    CompletableFuture<MatchAcceptanceOutcome> user2Future = matchedWaitingFutures.get(user2Id);
+    CompletableFuture<MatchAcceptanceOutcome.Status> user1Future = matchedWaitingFutures.get(user1Id);
+    CompletableFuture<MatchAcceptanceOutcome.Status> user2Future = matchedWaitingFutures.get(user2Id);
 
     MatchAcceptanceOutcome.Status matchStatus = acceptanceNotification.getStatus();
 
@@ -203,53 +195,29 @@ public class AcceptanceService {
       return;
     }
 
-    CollabSession session = acceptanceNotification.getSession();
-
-    if (session != null && acceptanceNotification.getMatchId() != null) {
-      collabSessionsByMatchId.put(acceptanceNotification.getMatchId(), session);
-    }
-
-    MatchAcceptanceOutcome outcome = new MatchAcceptanceOutcome(matchStatus, null, session);
-
     if (user1Future != null && !user1Future.isDone()) {
-      user1Future.complete(outcome);
-      matchedWaitingFutures.remove(user1Id);
+      user1Future.complete(matchStatus);
     }
 
     if (user2Future != null && !user2Future.isDone()) {
-      user2Future.complete(outcome);
-      matchedWaitingFutures.remove(user2Id);
+      user2Future.complete(matchStatus);
     }
 
-    if (matchStatus != MatchAcceptanceOutcome.Status.PENDING
-        && acceptanceNotification.getMatchId() != null) {
-      collabSessionsByMatchId.remove(acceptanceNotification.getMatchId());
-    }
+    log.info("Handled acceptance event for users {} and {}", user1Id, user2Id);
   }
 
-  private MatchAcceptanceOutcome buildOutcome(MatchAcceptanceStatus status) {
-    MatchAcceptanceOutcome.Status finalStatus = evaluateMatchOutcome(status);
+  private void buildCollabSession(MatchAcceptanceStatus status) {
 
-    CollabSession collabSession = null;
-    if (finalStatus == MatchAcceptanceOutcome.Status.SUCCESS) {
-      log.info("Both users accepted match {}. Creating collaboration session.", status.getMatchDetails().getMatchId());
-      log.debug("Match details: {}", status.getMatchDetails());
-      collabSession = collabSessionsByMatchId.computeIfAbsent(
-          status.getMatchDetails().getMatchId(),
-          key -> collabServiceClient.createSession(
-              buildParticipantList(status),
-              toPreferenceMap(status)));
-    }
-    log.info("Created collaboration session for match {}: {}", status.getMatchDetails().getMatchId(), collabSession);
+    log.debug("Match details: {}", status.getMatchDetails());
 
-    return new MatchAcceptanceOutcome(finalStatus, status.getMatchDetails(), collabSession);
-  }
-
-  private List<String> buildParticipantList(MatchAcceptanceStatus status) {
-    List<String> participants = new ArrayList<>(2);
+    List<String> participants = new ArrayList<>();
+    Map<String, List<String>> preferenceMap = toPreferenceMap(status);
     participants.add(status.getMatchDetails().getUser1Id());
     participants.add(status.getMatchDetails().getUser2Id());
-    return participants;
+
+    collabServiceClient.createSession(participants, preferenceMap);
+
+    log.info("Created collaboration session for match {}", status.getMatchDetails().getMatchId());
   }
 
   private Map<String, List<String>> toPreferenceMap(MatchAcceptanceStatus status) {
@@ -257,8 +225,8 @@ public class AcceptanceService {
 
     if (preference == null || preference.getTopics() == null || preference.getTopics().isEmpty()) {
       throw new IllegalStateException(
-          "Question preferences are required to create a collaboration session for match "
-              + status.getMatchDetails().getMatchId());
+        "Question preferences are required to create a collaboration session for match "
+          + status.getMatchDetails().getMatchId());
     }
 
     Map<String, List<String>> mapped = new HashMap<>();
@@ -268,12 +236,6 @@ public class AcceptanceService {
       }
     });
 
-    if (mapped.isEmpty()) {
-      throw new IllegalStateException(
-          "No overlapping question preferences available for match "
-              + status.getMatchDetails().getMatchId());
-    }
-
     return mapped;
   }
 
@@ -281,8 +243,7 @@ public class AcceptanceService {
    * Helper to determine the overall match acceptance result.
    *
    * @param status the MatchAcceptanceStatus to check
-   * @return "SUCCESS" if both accepted, "REJECTED" if one rejected, or "PENDING"
-   *         otherwise
+   * @return "SUCCESS" if both accepted, "REJECTED" if one rejected, or "PENDING" otherwise
    */
   private MatchAcceptanceOutcome.Status evaluateMatchOutcome(MatchAcceptanceStatus status) {
     if (status == null) {
@@ -301,5 +262,6 @@ public class AcceptanceService {
     }
 
     return MatchAcceptanceOutcome.Status.PENDING;
+
   }
 }

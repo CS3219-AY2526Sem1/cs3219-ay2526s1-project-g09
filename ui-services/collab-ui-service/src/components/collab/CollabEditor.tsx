@@ -8,7 +8,7 @@ const socket = io(SOCKET_BASE_URL, {
   transports: ["websocket"],
 });
 const HEARTBEAT_INTERVAL_MS = 30_000;
-const DEFAULT_LANGUAGE = "java";
+const DEFAULT_LANGUAGE = "javascript";
 
 interface CollabEditorProps {
   questionId?: string;
@@ -50,6 +50,8 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
               sessionId: effectiveSessionId,
               userId: currentUserId,
               force: !currentUserId,
+              finalCode: code,
+              language: DEFAULT_LANGUAGE,
             }),
           },
         );
@@ -70,7 +72,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       window.dispatchEvent(new Event("collab:leave-session-confirmed"));
       window.location.href = "/matching";
     }
-  }, [currentUserId, initialSessionId, sessionId]);
+  }, [code, currentUserId, initialSessionId, sessionId]);
 
   useEffect(() => {
     const handleLeaveEvent = () => {

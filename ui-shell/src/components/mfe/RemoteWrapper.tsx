@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { SuspenseFallback } from "./SuspenseFallback";
 
@@ -29,17 +29,19 @@ export function RemoteWrapper<T extends Record<string, unknown>>({
   loadingMessage = "Loading...",
   errorMessage = "Service unavailable",
 }: RemoteWrapperProps<T>) {
-  const enhancedRemoteLoader = async () => {
-    const module = await remote();
+  const LazyComponent = useMemo(() => {
+    const enhancedRemoteLoader = async () => {
+      const module = await remote();
 
-    if (module.__mfe_status?.isOffline) {
-      throw new MfeOfflineError(remoteName);
-    }
+      if (module.__mfe_status?.isOffline) {
+        throw new MfeOfflineError(remoteName);
+      }
 
-    return module;
-  };
+      return module;
+    };
 
-  const LazyComponent = React.lazy(enhancedRemoteLoader);
+    return React.lazy(enhancedRemoteLoader);
+  }, [remote, remoteName]);
 
   return (
     <ErrorBoundary fallback={<SuspenseFallback message={errorMessage} />}>

@@ -119,3 +119,13 @@ services:
     ports:
       - "5275:5275"
     container_name: peerprep-question-backend
+
+  history-backend-service:
+    build:
+      context: ./backend-services/history-backend-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend-services/history-backend-service/.env
+    ports:
+      - "5278:5278"
+    container_name: peerprep-history-service

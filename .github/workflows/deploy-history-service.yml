@@ -1,0 +1,20 @@
+name: Deploy History Service
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "backend-services/user-backend-service/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-service-to-eb.yml
+    with:
+      service_name: history-service
+      service_path: backend-services/history-backend-service
+      application_name: peerprep-history-service
+      environment_name: peerprep-history-service-prod
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

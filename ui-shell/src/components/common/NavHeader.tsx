@@ -18,7 +18,9 @@ const NavHeader: React.FC = () => {
     const inactiveClasses = "bg-gray-700 hover:bg-gray-600";
     return cn(
       baseClasses,
-      currentPath === path ? activeClasses : inactiveClasses,
+      currentPath === path || currentPath.startsWith(`${path}/`)
+        ? activeClasses
+        : inactiveClasses,
     );
   };
 

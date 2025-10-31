@@ -1,5 +1,3 @@
-import type { CollabSession } from "@/api/routes/collabService";
-
 export interface UserPreferences {
   userId: string;
   topics: Record<string, string[]>;
@@ -26,7 +24,6 @@ export type PreferenceResult =
 
 export interface MatchAcceptanceResponse {
   status: "SUCCESS" | "REJECTED" | "PENDING";
-  session?: CollabSession | null;
 }
 
 export interface TimeoutConfig {

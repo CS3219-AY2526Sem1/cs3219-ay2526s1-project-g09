@@ -1,4 +1,5 @@
 import SessionService from "../services/session.service.js";
+import { persistSessionHistory } from "../services/sessionHistory.service.js";
 
 const QUESTION_SERVICE_BASE_URL = process.env.QUESTION_SERVICE_URL;
 
@@ -244,10 +245,12 @@ export const disconnectSession = async (req, res) => {
       return res.status(400).json({ error: "sessionId is required" });
     }
 
+    const forceEnd = Boolean(force);
+
     const { session, ended, removedUser } =
       await SessionService.disconnectSession(sessionId, {
         userId,
-        force: Boolean(force),
+        force: forceEnd,
       });
 
     if (!session) {
@@ -274,6 +277,93 @@ export const disconnectSession = async (req, res) => {
           removedUser,
         );
       }
+    }
+
+    const finalCode =
+      typeof req.body?.finalCode === "string" ? req.body.finalCode : undefined;
+
+    const participantIds = Array.from(
+      new Set(
+        [
+          ...(Array.isArray(session.users) ? session.users : []),
+          ...(Array.isArray(session.participants)
+            ? session.participants.map((participant) => participant?.userId)
+            : []),
+        ]
+          .filter((id) => typeof id === "string" && id.trim().length > 0)
+          .map((id) => id.trim()),
+      ),
+    );
+
+    const persistForUser = (targetId, options = {}) => {
+      if (!targetId) {
+        return;
+      }
+
+      const {
+        clearSnapshot,
+        sessionEndedAt,
+        code: overrideCode,
+        language: overrideLanguage,
+      } = options;
+
+      console.log("[collab.controller] Persisting history for user", {
+        targetId,
+        sessionId: session.sessionId,
+        ended,
+        removedUser,
+        clearSnapshot,
+      });
+
+      const participantsForPayload =
+        participantIds.length > 0 ? participantIds : [targetId];
+
+      void persistSessionHistory(session, {
+        code: overrideCode,
+        language:
+          overrideLanguage ??
+          (typeof overrideCode === "string" ? req.body?.language : undefined),
+        userId: targetId,
+        participants: participantsForPayload,
+        clearSnapshot,
+        sessionEndedAt,
+        sessionStartedAt: session.createdAt,
+        durationMs: session.timeTaken,
+      });
+    };
+
+    if (ended) {
+      const uniqueParticipants =
+        participantIds.length > 0 ? participantIds : [];
+
+      let targets = [];
+      if (forceEnd || (!userId && uniqueParticipants.length > 0)) {
+        targets = uniqueParticipants;
+      } else {
+        targets = [userId].filter(Boolean);
+        if (targets.length === 0 && uniqueParticipants.length > 0) {
+          targets = uniqueParticipants;
+        }
+      }
+
+      const sessionEndedAt = session.endedAt ?? new Date().toISOString();
+
+      targets.forEach((participantId, index) => {
+        persistForUser(participantId, {
+          clearSnapshot: index === targets.length - 1,
+          sessionEndedAt,
+          code: finalCode,
+        });
+      });
+    } else if (removedUser) {
+      console.log("[collab.controller] Persisting history for removed user", {
+        removedUser,
+        sessionId: session.sessionId,
+      });
+      persistForUser(removedUser, {
+        clearSnapshot: false,
+        code: finalCode,
+      });
     }
 
     res.json({
