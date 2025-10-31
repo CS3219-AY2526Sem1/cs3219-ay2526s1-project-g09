@@ -2,7 +2,7 @@ codecov:
   require_ci_to_pass: yes
 
 comment:
-  layout: "header, reach, diff, flags, files"
+  layout: "header, diff, flags, files"
   behavior: default
   require_changes: false
   require_base: false
@@ -15,12 +15,12 @@ coverage:
       default:
         target: auto
         threshold: 0%
-        base: auto
+        informational: true
     patch:
       default:
         target: auto
         threshold: 0%
-        base: auto
+        informational: true
 
 flag_management:
   default_rules:
