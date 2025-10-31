@@ -6,12 +6,12 @@
  * to continue fetching more questions until all are processed.
  */
 import { Question, SeedCursor } from "../db/model/question.js";
-import { gql } from "./client.js";
-import { QUERY_LIST, QUERY_DETAIL } from "./queries.js";
-import type { BasicInformation, QuestionList, Details } from "./types.js";
+import { QUERY_DETAIL } from "./queries.js";
+import type { BasicInformation, Details } from "./types.js";
 import pLimit from "p-limit";
 import { logger } from "../logger.js";
 import { checkQuestionServiceHealth } from "../health.js";
+import { LeetCode } from "leetcode-query";
 
 const PAGE_SIZE = 200;
 /**
@@ -31,6 +31,8 @@ const DIFFICULTY_TIME_LIMITS: Record<string, number> = {
   Medium: 60,
   Hard: 120,
 };
+
+const leetcode = new LeetCode();
 
 /**
  * Run one batch (default pageSize=200). Returns a summary.
@@ -63,10 +65,16 @@ export async function seedLeetCodeBatch() {
   let total = 0;
 
   try {
-    const { questionList: fetchedQuestionList, total: fetchedTotal } =
-      await fetchNonPaidQuestionList(pageSize, nextSkip);
-    questionList = fetchedQuestionList;
-    total = fetchedTotal;
+    const res = await leetcode.problems({ limit: pageSize, offset: nextSkip });
+
+    questionList = res.questions
+      .filter((p) => !p.isPaidOnly)
+      .map((p) => ({
+        titleSlug: p.titleSlug,
+        title: p.title,
+        isPaidOnly: p.isPaidOnly,
+      }));
+    total = res.total ?? res.questions.length;
   } catch (err) {
     logger.error(
       `Failed to fetch question list from LeetCode: ${(err as Error).message}`,
@@ -95,7 +103,6 @@ export async function seedLeetCodeBatch() {
 
   const questionInfos: QuestionDetail[] =
     await fetchNonPaidQuestionInfo(questionList);
-
   const ops = questionInfos.map((q) => ({
     updateOne: {
       filter: { titleSlug: q.titleSlug },
@@ -180,40 +187,14 @@ export async function fetchNonPaidQuestionInfo(
   return results.filter((d): d is QuestionDetail => d !== null);
 }
 
-/**
- * Fetch non-paid question list.
- * We will only store non-paid questions in our database because
- * content of paid questions will not be accessible without a premium account.
- */
-export async function fetchNonPaidQuestionList(
-  limit: number,
-  skip: number,
-): Promise<{
-  questionList: BasicInformation[];
-  total: number;
-}> {
-  const res = await gql<
-    QuestionList,
-    {
-      categorySlug: string;
-      limit: number;
-      skip: number;
-      filters: Record<string, unknown>;
-    }
-  >(QUERY_LIST, { categorySlug: "", limit: limit, skip: skip, filters: {} });
-
-  if (!res.problemsetQuestionList) {
-    throw new Error("Failed to fetch question list from LeetCode");
-  }
-
-  const { total, questions } = res.problemsetQuestionList;
-  const questionList = questions.filter((q) => !q.isPaidOnly);
-  return { questionList, total };
-}
-
 export async function getQuestionDetail(slug: string) {
-  const res = await gql<Details, { titleSlug: string }>(QUERY_DETAIL, {
-    titleSlug: slug,
-  });
-  return res.question;
+  const res = (await leetcode.graphql({
+    query: QUERY_DETAIL,
+    variables: { titleSlug: slug },
+  })) as { data: { question: QuestionDetail | null } | null };
+
+  if (!res || !res.data || !res.data.question) {
+    return null;
+  }
+  return res.data.question;
 }

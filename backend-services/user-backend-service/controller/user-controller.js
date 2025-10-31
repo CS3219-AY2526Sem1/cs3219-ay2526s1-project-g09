@@ -119,35 +119,52 @@ export async function updateUser(req, res) {
     if (!user) {
       return res.status(404).json({ message: `User ${userId} not found` });
     }
-    const username = dirtyUsername ? checkUsername(dirtyUsername) : undefined;
-    const email = dirtyEmail ? checkEmail(dirtyEmail) : undefined;
-    const password = dirtyPassword ? checkPassword(dirtyPassword) : undefined;
 
-    if (username) {
+    let username;
+    if (dirtyUsername) {
+      username = checkUsername(dirtyUsername);
       const existingUser = await _findUserByUsername(username);
       if (existingUser && existingUser.id !== userId) {
         return res.status(409).json({ message: "Username already exists" });
       }
+    } else {
+      username = user.username;
     }
 
-    if (email) {
+    let email;
+    if (dirtyEmail) {
+      email = checkEmail(dirtyEmail);
       const existingUser = await _findUserByEmail(email);
       if (existingUser && existingUser.id !== userId) {
         return res.status(409).json({ message: "Email already exists" });
       }
+    } else {
+      email = user.email;
     }
 
     let hashedPassword;
-    if (password) {
+    if (dirtyPassword) {
+      const unhashedPassword = checkPassword(dirtyPassword);
       const salt = bcrypt.genSaltSync(10);
-      hashedPassword = bcrypt.hashSync(password, salt);
+      hashedPassword = bcrypt.hashSync(unhashedPassword, salt);
+    } else {
+      hashedPassword = user.password;
     }
-    const updatedUser = await _updateUserById(
-      userId,
-      username,
-      email,
-      hashedPassword,
-    );
+
+    let updatedUser = user;
+    if (
+      !bcrypt.compare(hashedPassword, user.password) ||
+      username !== user.username ||
+      email !== user.email
+    ) {
+      // Only update if there is a change
+      updatedUser = await _updateUserById(
+        userId,
+        username,
+        email,
+        hashedPassword,
+      );
+    }
     return res.status(200).json({
       message: `Updated data for user ${userId}`,
       data: formatUserResponse(updatedUser),

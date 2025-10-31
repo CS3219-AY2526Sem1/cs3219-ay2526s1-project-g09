@@ -93,6 +93,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           <span className="text-gray-600 text-sm">Remember me</span>
         </label>
         <button
+          type="button"
           onClick={() => {
             onForgotPassword();
           }}
