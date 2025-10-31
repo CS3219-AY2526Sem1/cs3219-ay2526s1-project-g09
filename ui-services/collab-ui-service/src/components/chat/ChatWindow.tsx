@@ -24,6 +24,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const [isOtherUserOnline, setIsOtherUserOnline] = useState<boolean>(true);
   const { session } = useCollabSession();
   const socketRef = useRef<Socket | null>(null);
+  const socketReadyRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   function handleSystemMessage(message: SystemMessagePayload) {
@@ -50,12 +51,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
 
   useEffect(() => {
     const handleLeaveSession = () => {
-      if (socketRef.current) {
-        console.log("Manually leaving chat session...");
-        socketRef.current.emit("leave_session");
-        socketRef.current.disconnect();
-        socketRef.current = null;
+      if (!socketRef.current || !socketReadyRef.current) {
+        console.warn("Socket not ready, skipping leave_session emit");
+        return;
       }
+
+      console.log("Manually leaving chat session...");
+      socketRef.current.emit("leave_session");
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      socketReadyRef.current = false;
     };
 
     window.addEventListener(
@@ -85,8 +90,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
     });
 
     socketRef.current = socket;
+    socketReadyRef.current = false;
 
     socket.on("connect", () => {
+      socketReadyRef.current = true;
+
       socket.emit("join_room", {
         userId: user?.id,
         username: user?.username,
@@ -125,6 +133,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
       socket.off("system_message");
       socket.disconnect();
       socketRef.current = null;
+      socketReadyRef.current = false;
     };
   }, [session?.sessionId, user?.id, user?.username]);
 
