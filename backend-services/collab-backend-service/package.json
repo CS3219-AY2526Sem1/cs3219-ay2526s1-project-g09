@@ -21,7 +21,10 @@
     "mongodb": "^6.20.0",
     "mongoose": "^8.18.1",
     "socket.io": "^4.8.1",
-    "typescript-eslint": "^8.46.2"
+    "typescript-eslint": "^8.46.2",
+    "yjs": "^13.6.15",
+    "@socket.io/redis-adapter": "^8.2.0",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@vitest/ui": "^3.2.4",
