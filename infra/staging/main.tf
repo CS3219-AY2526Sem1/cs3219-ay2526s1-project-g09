@@ -18,16 +18,17 @@ provider "aws" {
   region = "ap-southeast-1"
 }
 
+# S3 Bucket for Collab UI Service
 resource "aws_s3_bucket" "collab_ui_service" {
   bucket = "peerprep-staging-collab-ui-service"
 }
 
 resource "aws_s3_bucket_policy" "allow_cloudfront_access_to_collab_ui_service" {
   bucket = aws_s3_bucket.collab_ui_service.id
-  policy = data.aws_iam_policy_document.allow_cloudfront_access.json
+  policy = data.aws_iam_policy_document.allow_cloudfront_access_to_collab_ui_service.json
 }
 
-data "aws_iam_policy_document" "allow_cloudfront_access" {
+data "aws_iam_policy_document" "allow_cloudfront_access_to_collab_ui_service" {
   statement {
     sid    = "AllowCloudFrontServicePrincipal"
     effect = "Allow"
@@ -47,6 +48,7 @@ data "aws_iam_policy_document" "allow_cloudfront_access" {
   }
 }
 
+# CloudFront CORS configuration for Collab UI Service
 resource "aws_s3_bucket_cors_configuration" "frontend_cors" {
   bucket = aws_s3_bucket.collab_ui_service.id
 
@@ -59,7 +61,7 @@ resource "aws_s3_bucket_cors_configuration" "frontend_cors" {
   }
 }
 
-resource "aws_cloudfront_origin_access_control" "default" {
+resource "aws_cloudfront_origin_access_control" "collab_ui_service" {
   name                              = "oac-staging-collab-ui-service"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -70,7 +72,7 @@ resource "aws_cloudfront_distribution" "collab_ui_service" {
   origin {
     domain_name              = aws_s3_bucket.collab_ui_service.bucket_regional_domain_name
     origin_id                = "S3-${aws_s3_bucket.collab_ui_service.id}-origin"
-    origin_access_control_id = aws_cloudfront_origin_access_control.default.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.collab_ui_service.id
   }
 
   enabled         = true
@@ -103,5 +105,106 @@ resource "aws_cloudfront_distribution" "collab_ui_service" {
     Environment = "staging"
     Project     = "peerprep"
     Service     = "collab-ui"
+  }
+}
+
+# S3 Bucket for UI Shell
+resource "aws_s3_bucket" "ui_shell" {
+  bucket = "peerprep-staging-ui-shell"
+}
+
+resource "aws_s3_bucket_policy" "allow_cloudfront_access_to_ui_shell" {
+  bucket = aws_s3_bucket.ui_shell.id
+  policy = data.aws_iam_policy_document.allow_cloudfront_access_to_ui_shell.json
+}
+
+data "aws_iam_policy_document" "allow_cloudfront_access_to_ui_shell" {
+  statement {
+    sid    = "AllowCloudFrontServicePrincipal"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+    actions = ["s3:GetObject"]
+    resources = [
+      "${aws_s3_bucket.ui_shell.arn}/*",
+    ]
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = [aws_cloudfront_distribution.ui_shell.arn]
+    }
+  }
+}
+
+# CloudFront configuration for UI Shell
+resource "aws_cloudfront_origin_access_control" "ui_shell" {
+  name                              = "oac-staging-ui-shell"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "ui_shell" {
+  origin {
+    domain_name              = aws_s3_bucket.ui_shell.bucket_regional_domain_name
+    origin_id                = "S3-${aws_s3_bucket.ui_shell.id}-origin"
+    origin_access_control_id = aws_cloudfront_origin_access_control.ui_shell.id
+  }
+
+  enabled         = true
+  is_ipv6_enabled = true
+  comment         = "PeerPrep UI Shell"
+
+  default_cache_behavior {
+    allowed_methods = [
+      "GET",
+      "HEAD",
+      "OPTIONS",
+      "PUT",
+      "POST",
+      "PATCH",
+      "DELETE"
+    ]
+    cached_methods           = ["GET", "HEAD", "OPTIONS"]
+    target_origin_id         = "S3-${aws_s3_bucket.ui_shell.id}-origin"
+    viewer_protocol_policy   = "redirect-to-https"
+    cache_policy_id          = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    compress                 = true
+    origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  price_class = "PriceClass_All"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  custom_error_response {
+    error_code            = 403
+    response_page_path    = "/index.html"
+    response_code         = 200
+    error_caching_min_ttl = 10
+  }
+
+  custom_error_response {
+    error_code            = 404
+    response_page_path    = "/index.html"
+    response_code         = 200
+    error_caching_min_ttl = 10
+  }
+
+  tags = {
+    name        = "peerprep-ui-shell"
+    Environment = "staging"
+    Project     = "peerprep"
+    Service     = "ui-shell"
   }
 }
