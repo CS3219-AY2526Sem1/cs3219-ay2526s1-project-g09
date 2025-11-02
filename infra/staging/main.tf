@@ -208,3 +208,268 @@ resource "aws_cloudfront_distribution" "ui_shell" {
     Service     = "ui-shell"
   }
 }
+
+# Elastic Beanstalk Application for Collab Backend Service
+resource "aws_elastic_beanstalk_application" "collab_service" {
+  name        = "peerprep-staging-collab-service"
+  description = "Collab Backend Service"
+}
+
+resource "aws_elastic_beanstalk_environment" "collab_service_env" {
+  name                = "peerprep-staging-collab-service"
+  application         = aws_elastic_beanstalk_application.collab_service.name
+  solution_stack_name = "64bit Amazon Linux 2 v4.3.3 running Docker"
+
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "IamInstanceProfile"
+    value     = "aws-elasticbeanstalk-ec2-role"
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:environment"
+    name      = "ServiceRole"
+    value     = aws_iam_role.eb_service_role.name
+  }
+
+  # ------------------
+  # Load balancer type
+  # ------------------
+  # application = ALB (recommended); classic = ELB classic; network = NLB
+  setting {
+    namespace = "aws:elasticbeanstalk:environment"
+    name      = "LoadBalancerType"
+    value     = "application"
+  }
+
+  # ------------------
+  # Capacity / ASG
+  # ------------------
+  setting {
+    namespace = "aws:autoscaling:asg"
+    name      = "MinSize"
+    value     = 1
+  }
+  setting {
+    namespace = "aws:autoscaling:asg"
+    name      = "MaxSize"
+    value     = 2
+  }
+
+  # ------------------
+  # Health / Proc
+  # ------------------
+  # Healthcheck URL for your container (adjust path)
+  setting {
+    namespace = "aws:elasticbeanstalk:application"
+    name      = "Application Healthcheck URL"
+    value     = "/api/v1/collab-service/health"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:environment:process:default"
+    name      = "Port"
+    value     = 80
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:environment:process:default"
+    name      = "HealthCheckPath"
+    value     = "/api/v1/collab-service/health"
+  }
+
+  # ------------------
+  # Deployment settings
+  # ------------------
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "DeploymentPolicy"
+    value     = "Traffic splitting"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "BatchSizeType"
+    value     = "Percentage"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "DeploymentBatchSize"
+    value     = "100"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "TrafficSplit"
+    value     = "100"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "TrafficSplittingEvaluationTime"
+    value     = "5"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "RollingUpdateType"
+    value     = "Rolling based on Health"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "BatchSize"
+    value     = "1"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "MinimumCapacity"
+    value     = "1"
+  }
+
+  # ---------------
+  # VPC wiring
+  # ---------------
+  # Leave these out to let EB create "classic" env networking; otherwise pin VPC
+  # dynamic "setting" {
+  #   for_each = [] # Leave this empty to let EB create "classic" env networking
+  #   content {
+  #     namespace = "aws:ec2:vpc"
+  #     name      = "VPCId"
+  #     value     = ""
+  #   }
+  # }
+
+  # # Subnets for instances (private or public depending on your design)
+  # dynamic "setting" {
+  #   for_each = length(var.instance_subnets) == 0 ? [] : [1]
+  #   content {
+  #     namespace = "aws:ec2:vpc"
+  #     name      = "Subnets"
+  #     value     = join(",", var.instance_subnets)
+  #   }
+  # }
+
+  # # Subnets for the load balancer (must be public for internet ALB)
+  # dynamic "setting" {
+  #   for_each = length(var.lb_subnets) == 0 ? [] : [1]
+  #   content {
+  #     namespace = "aws:ec2:vpc"
+  #     name      = "ELBSubnets"
+  #     value     = join(",", var.lb_subnets)
+  #   }
+  # }
+
+  # # Security groups (instance & LB)
+  # dynamic "setting" {
+  #   for_each = length(var.instance_security_groups) == 0 ? [] : [1]
+  #   content {
+  #     namespace = "aws:autoscaling:launchconfiguration"
+  #     name      = "SecurityGroups"
+  #     value     = join(",", var.instance_security_groups)
+  #   }
+  # }
+  # dynamic "setting" {
+  #   for_each = length(var.lb_security_groups) == 0 ? [] : [1]
+  #   content {
+  #     namespace = "aws:elb:loadbalancer"
+  #     name      = "SecurityGroups"
+  #     value     = join(",", var.lb_security_groups)
+  #   }
+  # }
+
+  # ------------------
+  # Logs & rolling updates
+  # ------------------
+  setting {
+    namespace = "aws:elasticbeanstalk:hostmanager"
+    name      = "LogPublicationControl"
+    value     = "true" # ship logs to CloudWatch
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:command"
+    name      = "DeploymentPolicy"
+    value     = "RollingWithAdditionalBatch"
+  }
+}
+
+
+# --- Service role ---
+resource "aws_iam_role" "eb_service_role" {
+  name = "aws-elasticbeanstalk-service-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "elasticbeanstalk.amazonaws.com" },
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "eb_service_enhanced_health" {
+  role       = aws_iam_role.eb_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth"
+}
+
+resource "aws_iam_role_policy_attachment" "eb_service_managed_updates" {
+  role       = aws_iam_role.eb_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy"
+}
+
+
+
+# --- EC2 instance role + profile ---
+
+resource "aws_iam_role" "eb_ec2_role" {
+  name = "aws-elasticbeanstalk-ec2-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow",
+      Principal = { Service = "ec2.amazonaws.com" },
+    }]
+  })
+}
+
+resource "aws_iam_instance_profile" "eb_ec2_instance_profile" {
+  name = "aws-elasticbeanstalk-ec2-role"
+  role = aws_iam_role.eb_ec2_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "eb_multicontainer_docker" {
+  role       = aws_iam_role.eb_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker"
+}
+
+resource "aws_iam_role_policy_attachment" "eb_web_tier" {
+  role       = aws_iam_role.eb_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier"
+}
+
+resource "aws_iam_role_policy_attachment" "eb_worker_tier" {
+  role       = aws_iam_role.eb_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier"
+}
+
+resource "aws_iam_role_policy" "secretsmanager_mongodb" {
+  name   = "secretsmanager-mongodb"
+  role   = aws_iam_role.eb_ec2_role.id
+  policy = data.aws_iam_policy_document.secretsmanager_mongodb.json
+}
+
+# TODO: Modify account_id in the resource when migrating!
+data "aws_iam_policy_document" "secretsmanager_mongodb" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue"
+    ]
+    resources = [
+      "arn:aws:secretsmanager:ap-southeast-1:670422575487:secret:*"
+    ]
+  }
+}
