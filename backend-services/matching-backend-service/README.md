@@ -120,7 +120,7 @@ src/main/
 
   respository/
     MatchingRepository.java                   # The database operations for matching service
- 
+
   service/
     AcceptanceService.java                    # Handles operations related to acceptance
     HealthService.java                        # Handles operations related to health of matching service
@@ -130,7 +130,6 @@ src/main/
     UserPreferenceService                     # Handles operations related to user preferences for matching
 ```
 
-
 ## API Overview
 
 Base URL: `http://localhost:5274/api/v1/matching-service`
@@ -138,11 +137,10 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
 ## API Reference
 
 ### Get the service status
+
 - Usage: **GET** `http://localhost:5274/api/v1/matching-service/health`
 
-
 - Behaviour: Checks if the service is currently up.
-
 
 - Expected Response:
   - HTTP STATUS 200 OK: The service is up.
@@ -151,20 +149,19 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
     "service": "matching-service",
     "uptimeSeconds": 3590.9023,
     "status": "UP",
-    "timestamp": 1783490,
+    "timestamp": 1783490
   }
   ```
 
-
 ### Get the service readiness
-- Usage: **GET** `http://localhost:5274/api/v1/matching-service/health/ready`
 
+- Usage: **GET** `http://localhost:5274/api/v1/matching-service/health/ready`
 
 - Behaviour: Checks if services that matching depends on are currently up.
 
-
 - Expected Response:
   - HTTP STATUS 200 OK: The service dependencies are up.
+
     ```json
     {
       "service": "matching-service",
@@ -182,14 +179,11 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
     }
     ```
 
-
-
 ### Getting configuration
+
 - Usage: **GET** `http://localhost:5274/api/v1/matching-service/config`
 
-
 - Behaviour: Fetches timeout configurations for match requests and acceptance windows.
-
 
 - Expected Response:
   - HTTP STATUS 200 OK: The configurations are successfully retrieved.
@@ -202,12 +196,9 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
 
 ### Create or Update User Preference
 
-
 - Usage: **PUT** `http://localhost:5274/api/v1/matching-service/preferences/{userId}`
 
-
 - Behaviour: Updates an existing user preference or creates a new one if it does not exist. This endpoint allows clients to upsert user-specific matching preferences for topics and corresponding difficulties.
-
 
 - Parameters
 
@@ -216,7 +207,7 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
   | `userId` | `string` | Yes      | The ID of the user whose preferences are being upserted. |
 
 - Body
-  
+
   | Name     | Type     | Required | Description                                                                         |
   | -------- | -------- | -------- | ----------------------------------------------------------------------------------- |
   | `userId` | `string` | Yes      | The ID of the user whose topic preferences are being upserted.                      |
@@ -232,27 +223,24 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
   }
   ```
 
-
 - Expected Response:
-    - HTTP STATUS 200 OK:
+  - HTTP STATUS 200 OK:
     The user preference was successfully updated or created. Returns the user preference inserted.
-      ```json
-      {
-        "userId": "sampleUserId",
-        "topics": {
-          "Algorithms": ["Easy", "Medium", "Hard"],
-          "Database": ["Easy"]
-        }
+    ```json
+    {
+      "userId": "sampleUserId",
+      "topics": {
+        "Algorithms": ["Easy", "Medium", "Hard"],
+        "Database": ["Easy"]
       }
-      ```
+    }
+    ```
 
 ### Get User Preferences
 
 - Usage: **GET** `http://localhost:5274/api/v1/matching-service/preferences/{userId}`
 
-
 - Behaviour: Retrieves the saved user preference for the specified user.
-
 
 - Parameters
 
@@ -261,26 +249,23 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
   | `userId` | `string` | Yes      | The ID of the user whose preferences are being retrieved. |
 
 - Expected Response:
-    - HTTP STATUS 200 OK:
+  - HTTP STATUS 200 OK:
     The user preference was successfully retrieved.
-      ```json
-      {
-        "userId": "sampleUserId",
-        "topics": {
-          "Algorithms": ["Easy", "Medium", "Hard"],
-          "Database": ["Easy"]
-        }
+    ```json
+    {
+      "userId": "sampleUserId",
+      "topics": {
+        "Algorithms": ["Easy", "Medium", "Hard"],
+        "Database": ["Easy"]
       }
-      ```
+    }
+    ```
 
 ### Delete User Preference
 
-
 - Usage: **DELETE** `http://localhost:5274/api/v1/matching-service/preferences/{userId}`
 
-
 - Behaviour: Deletes the saved user preference for the specified user.
-
 
 - Parameters
 
@@ -288,27 +273,23 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
   | -------- | -------- | -------- | ------------------------------------------------------- |
   | `userId` | `string` | Yes      | The ID of the user whose preferences are being deleted. |
 
-
 - Expected Response:
-    - HTTP STATUS 204 NO CONTENT:
+  - HTTP STATUS 204 NO CONTENT:
     User preference successfully deleted.
 
-
-    - HTTP STATUS 404 NOT FOUND: User preference was not found
-      ```
-      User Preference was not found for userId: sampleUserId
-      ```
+  - HTTP STATUS 404 NOT FOUND: User preference was not found
+    ```
+    User Preference was not found for userId: sampleUserId
+    ```
 
 ### Request Match
 
 - Usage: **PUT** `http://localhost:5274/api/v1/matching-service/match-requests`
 
-
 - Behaviour: Attempts to find a compatible match for a user through long polling based on their submitted preferences.
 
-
 - Body
-  
+
   | Name     | Type     | Required | Description                                                                         |
   | -------- | -------- | -------- | ----------------------------------------------------------------------------------- |
   | `userId` | `string` | Yes      | The ID of the user who is requesting the match.                                     |
@@ -316,61 +297,56 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
 
   ```json
   {
-      "userId": "sampleUserId",
-      "topics": {
-        "Algorithms": ["Easy", "Medium", "Hard"],
-        "Database": ["Easy"]
-      }
+    "userId": "sampleUserId",
+    "topics": {
+      "Algorithms": ["Easy", "Medium", "Hard"],
+      "Database": ["Easy"]
+    }
   }
   ```
 
 - Expected Response:
-    - HTTP STATUS 200 OK:
+  - HTTP STATUS 200 OK:
     A compatible match where preferences overlapped was found successfully. Returns the match details and overlapping preferences.
-      ```json
-      {
-        "status": "MATCHED",
-        "match": {
-          "userId": "sampleUserId2",
-          "topics": {
-            "Database": [
-              "Easy"
-            ]
-          }
-        },
-        "matchId": "1cc1401c-9654-491b-ac72-fb8ac8fc4443"
-      }
-      ```
 
+    ```json
+    {
+      "status": "MATCHED",
+      "match": {
+        "userId": "sampleUserId2",
+        "topics": {
+          "Database": ["Easy"]
+        }
+      },
+      "matchId": "1cc1401c-9654-491b-ac72-fb8ac8fc4443"
+    }
+    ```
 
-    - HTTP STATUS 202 ACCEPTED:
+  - HTTP STATUS 202 ACCEPTED:
     The match request has timed out.
-      ```
-      No match found (timeout)
-      ```
 
+    ```
+    No match found (timeout)
+    ```
 
-    - HTTP STATUS 410 GONE:
+  - HTTP STATUS 410 GONE:
     The match request was cancelled.
-      ```
-      Match request was cancelled
-      ```
 
+    ```
+    Match request was cancelled
+    ```
 
-    - HTTP STATUS 500 INTERNAL SERVER ERROR:
+  - HTTP STATUS 500 INTERNAL SERVER ERROR:
     An unexpected error has occurred in the service.
-      ```
-      An unexpected error occurred
-      ```
+    ```
+    An unexpected error occurred
+    ```
 
 ### Cancel Match
 
-
 - Usage: **DELETE** `http://localhost:5274/api/v1/matching-service/match-requests/{userId}`
 
-
 - Behaviour: Cancels a user's pending match request, if one exists in the matching pool.
-
 
 - Parameters
 
@@ -378,33 +354,26 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
   | -------- | -------- | -------- | ---------------------------------------------------------- |
   | `userId` | `string` | Yes      | The ID of the user whose match request is being cancelled. |
 
-
 - Expected Response:
-    - HTTP STATUS 204 NO CONTENT:
+  - HTTP STATUS 204 NO CONTENT:
     Match request successfully deleted.
 
-
-    - HTTP STATUS 404 NOT FOUND: No match request found
-      ```
-      Pending Match Request not found for userId: sampleUserId
-      ```
-
+  - HTTP STATUS 404 NOT FOUND: No match request found
+    ```
+    Pending Match Request not found for userId: sampleUserId
+    ```
 
 ### Connect to Match Acceptance
 
-
 - Usage: **POST** `http://localhost:5274/api/v1/matching-service/match-requests/{userId}/connect`
 
-
 - Behaviour: Connects a specified user to the match acceptance process after having been matched.
-
 
 - Parameters
 
   | Name     | Type     | Required | Description                                                           |
   | -------- | -------- | -------- | --------------------------------------------------------------------- |
   | `userId` | `string` | Yes      | The ID of the user who is connecting to the match acceptance process. |
-
 
 - Body
 
@@ -419,35 +388,38 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
   ```
 
 - Expected Response:
-    - HTTP STATUS 202 ACCEPTED:
+  - HTTP STATUS 202 ACCEPTED:
     Connection to the match acceptance process is pending. Note: this status is to ensure a default return value, but should not be returned under normal circumstances.
-      ```json
-      {
-        "status":"pending"
-      }
-      ```
 
-    - HTTP STATUS 200 OK:
+    ```json
+    {
+      "status": "pending"
+    }
+    ```
+
+  - HTTP STATUS 200 OK:
     The match connection was accepted.
-      ```json
-      {
-        "status":"success"
-      }
-      ```
 
-    - HTTP STATUS 409 CONFLICT:
+    ```json
+    {
+      "status": "success"
+    }
+    ```
+
+  - HTTP STATUS 409 CONFLICT:
     The match connection was rejected.
-      ```json
-      {
-        "status":"rejected"
-      }
-      ```
 
-    - HTTP STATUS 500 Internal Server Error:
+    ```json
+    {
+      "status": "rejected"
+    }
+    ```
+
+  - HTTP STATUS 500 Internal Server Error:
     The matchId does not exist, has expired or the supplied userId does not belong to the match acceptance process.
-      ```
-      An unexpected error occurred
-      ```
+    ```
+    An unexpected error occurred
+    ```
 
 ### Accept match
 
@@ -456,14 +428,13 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
 - Behaviour: Accepts a match request for a specified user.
 
 - Parameters
-  
+
   | Name     | Type     | Required | Description                                     |
   | -------- | -------- | -------- | ----------------------------------------------- |
   | `userId` | `string` | Yes      | The ID of the user accepting the match request. |
 
-
 - Body
-  
+
   | Name      | Type     | Required | Description                         |
   | --------- | -------- | -------- | ----------------------------------- |
   | `matchId` | `string` | Yes      | The ID of the match to be accepted. |
@@ -474,34 +445,32 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
   }
   ```
 
-
 - Expected Response:
-    - HTTP STATUS 200 OK:
+  - HTTP STATUS 200 OK:
     The match has been accepted. Returns the updated acceptance status of both users
-      ```json
-      {
-        "matchDetails": {
-          "matchId": "eba18f5d-8330-408b-8e22-5ec844561883",
-          "user1Id": "sampleUserId",
-          "user2Id": "sampleUserId2",
-          "questionPreference": {
-            "topics": {
-              "Database": [
-                "Medium"
-              ]
-            }
-          }
-        },
-        "user1Accepted": "ACCEPTED",
-        "user2Accepted": "CONNECTED"
-      }
-      ```
 
-    - HTTP STATUS 500 Internal Server Error:
+    ```json
+    {
+      "matchDetails": {
+        "matchId": "eba18f5d-8330-408b-8e22-5ec844561883",
+        "user1Id": "sampleUserId",
+        "user2Id": "sampleUserId2",
+        "questionPreference": {
+          "topics": {
+            "Database": ["Medium"]
+          }
+        }
+      },
+      "user1Accepted": "ACCEPTED",
+      "user2Accepted": "CONNECTED"
+    }
+    ```
+
+  - HTTP STATUS 500 Internal Server Error:
     The matchId does not exist, has expired or the supplied userId does not belong to the match acceptance process.
-      ```json
-      An unexpected error occurred
-      ```
+    ```json
+    An unexpected error occurred
+    ```
 
 ### Reject match
 
@@ -528,17 +497,11 @@ Base URL: `http://localhost:5274/api/v1/matching-service`
   ```
 
 - Expected Response:
-    - HTTP STATUS 204 NO CONTENT:
+  - HTTP STATUS 204 NO CONTENT:
     The match has been successfully rejected.
 
-    - HTTP STATUS 500 INTERNAL SERVER ERROR:
+  - HTTP STATUS 500 INTERNAL SERVER ERROR:
     The matchId does not exist, has expired or the supplied userId does not belong to the match acceptance process.
-      ```
-      An unexpected error occurred
-      ```
-
-
-
-
-   
-
+    ```
+    An unexpected error occurred
+    ```
