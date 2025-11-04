@@ -1,13 +1,15 @@
+// Lightweight Yjs document lifecycle helpers used by the socket handlers.
 import * as Y from "yjs";
 import { normaliseLanguage } from "../utils/session.utils.js";
 
 const DEFAULT_LANGUAGE = "javascript";
 
-const disconnectTimers = new Map();
 const sessionCodeCache = new Map();
 const sessionDocs = new Map();
 
 const ensureSessionDoc = (sessionId) => {
+  // Lazily create or return the in-memory Yjs document for a session. The doc
+  // keeps itself in sync with the code cache via the `update` listener below.
   if (typeof sessionId !== "string" || sessionId.trim().length === 0) {
     return null;
   }
@@ -53,6 +55,9 @@ const ensureSessionDoc = (sessionId) => {
 };
 
 const destroySessionDoc = (sessionId) => {
+  // Best-effort cleanup when a session is fully torn down. Errors are swallowed
+  // because the GC hook is more of a memory hygiene measure than a hard
+  // requirement for correctness.
   const entry = sessionDocs.get(sessionId);
   if (!entry) {
     return;
@@ -69,6 +74,9 @@ const destroySessionDoc = (sessionId) => {
 };
 
 const getSessionSnapshot = (sessionId, socket) => {
+  // Provide the freshest code/language pair we have. Prefer the live Yjs doc,
+  // fall back to the cache, and finally consider socket metadata (useful right
+  // after a client pushes an update).
   const docEntry = sessionDocs.get(sessionId);
   if (docEntry?.text) {
     return {
@@ -87,6 +95,8 @@ const getSessionSnapshot = (sessionId, socket) => {
 };
 
 const updateSessionCodeCache = (sessionId, userId, code, language) => {
+  // Persist the latest content in a simple in-memory map so disconnect and
+  // inactivity handlers can run without touching the Yjs doc directly.
   if (typeof sessionId !== "string" || sessionId.trim().length === 0) {
     return;
   }
@@ -112,6 +122,8 @@ const getSessionCodeCache = (sessionId) => {
 };
 
 const clearSessionCodeCache = (sessionId) => {
+  // Called once a snapshot has been persisted. Also tears down the in-memory
+  // Yjs doc to prevent stale state hanging around between sessions.
   if (!sessionId) {
     return;
   }
@@ -120,7 +132,6 @@ const clearSessionCodeCache = (sessionId) => {
 };
 
 export {
-  disconnectTimers,
   sessionCodeCache,
   sessionDocs,
   ensureSessionDoc,

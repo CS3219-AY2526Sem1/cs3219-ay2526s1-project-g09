@@ -48,6 +48,6 @@ async function sendHistorySnapshot(payload) {
   }
 }
 
-module.exports = {
+export default {
   sendHistorySnapshot,
 };

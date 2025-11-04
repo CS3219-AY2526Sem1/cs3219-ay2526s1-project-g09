@@ -1,7 +1,6 @@
+// Collection of Socket.IO event handlers for the collaboration experience.
 import {
   ensureSessionDoc,
-  refreshSocketActivity,
-  disconnectTimers,
   getSessionSnapshot,
   clearSessionCodeCache,
 } from "./yjsSync.js";
@@ -14,8 +13,10 @@ import {
 import * as Y from "yjs";
 import SessionService from "../services/session.service.js";
 import { persistSessionHistory } from "../services/sessionHistory.service.js";
+import { refreshSocketActivity } from "./activityTracker.js";
 
 const DEFAULT_LANGUAGE = "javascript";
+const disconnectTimers = new Map();
 
 export const connectSocketEvent = (socket) => {
   console.log("connected", socket.id);
@@ -26,6 +27,7 @@ export const createSessionEvent = (s) => {
 };
 
 export const joinRoomEvent = (socket) => {
+  // Handles the initial handshake from the client.
   // sessionId and userId passed from frontend
   socket.on("joinRoom", (payload) => {
     const normalizedPayload =
@@ -148,6 +150,7 @@ export const codeUpdateEvent = (socket) => {
 };
 
 export const heartbeatEvent = (socket) => {
+  // Lightweight keep-alive sent from the frontend to mark the socket as active.
   socket.on("heartbeat", () => {
     refreshSocketActivity(socket);
     console.log("Heartbeat", {
@@ -159,6 +162,8 @@ export const heartbeatEvent = (socket) => {
 };
 
 export const yjsUpdateEvent = (socket) => {
+  // Main CRDT path: apply incoming Yjs updates, keep socket metadata in sync,
+  // then fan the update out to the rest of the session.
   socket.on("yjsUpdate", (payload) => {
     const normalizedPayload =
       typeof payload === "object" && payload !== null ? payload : {};
@@ -230,6 +235,8 @@ export const yjsUpdateEvent = (socket) => {
 };
 
 export const cursorUpdateEvent = (socket) => {
+  // Broadcast pointer / selection changes. Guard rails prevent anonymous cursors
+  // from leaking across sessions when user identity is missing.
   socket.on("cursorUpdate", (payload) => {
     const normalizedPayload =
       typeof payload === "object" && payload !== null ? payload : {};
@@ -262,6 +269,8 @@ export const cursorUpdateEvent = (socket) => {
 };
 
 export const awarenessUpdateEvent = (socket) => {
+  // Awareness updates are small, frequent messages used by the Yjs awareness
+  // protocol. We trust the client payload and simply forward it to peers.
   socket.on("awarenessUpdate", (payload) => {
     const sessionId = payload?.sessionId ?? socket.data.sessionId;
     const updatePayload = payload?.update;
@@ -285,6 +294,9 @@ export const awarenessUpdateEvent = (socket) => {
 };
 
 export const disconnectEvent = (socket, trackedSockets, io) => {
+  // Defers the heavy disconnect flow so quick reconnections (network blips)
+  // don't immediately tear down the session. After the grace period we call
+  // into SessionService to end/trim the session and persist history snapshots.
   socket.on("disconnect", async () => {
     console.log("A user disconnected:", socket.id);
     trackedSockets.delete(socket.id);

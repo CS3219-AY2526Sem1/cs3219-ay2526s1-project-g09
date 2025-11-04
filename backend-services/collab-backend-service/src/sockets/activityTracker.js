@@ -1,10 +1,8 @@
+// utilities for tracking socket activity
 import { persistSessionHistory } from "../services/sessionHistory.service.js";
 import SessionService from "../services/session.service.js";
-import {
-  getParticipantIds,
-  getSessionSnapshot,
-  clearSessionCodeCache,
-} from "./yjsSync.js";
+import { getSessionSnapshot, clearSessionCodeCache } from "./yjsSync.js";
+import { getParticipantIds } from "../utils/session.utils.js";
 
 const trackedSockets = new Map();
 const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
@@ -163,6 +161,7 @@ const createInactivitySweep = (io) => {
 };
 
 const refreshSocketActivity = (socket, options = {}) => {
+  // Update when we see a heartbeat or Yjs payload
   const { persist = true } = options;
   const { sessionId, userId } = socket.data ?? {};
   const lastActivity = Date.now();

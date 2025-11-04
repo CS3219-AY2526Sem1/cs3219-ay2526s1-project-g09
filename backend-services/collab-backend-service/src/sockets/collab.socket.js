@@ -1,5 +1,5 @@
 import { initialiseRedisAdapter } from "../services/redis.service.js";
-import { createServer } from "./socketServer.js";
+import { createIoServer } from "./socketServer.js";
 import { createInactivitySweep, trackedSockets } from "./activityTracker.js";
 import {
   connectSocketEvent,
@@ -13,7 +13,9 @@ import {
 } from "./socketEvents.js";
 
 export const initSocket = (server) => {
-  const io = createServer(server);
+  const io = createIoServer(server);
+  // Redis clients are stored for graceful shutdown; the array stays empty when
+  // the adapter falls back to the in-memory default.
   const redisClients = [];
 
   (async () => {
@@ -38,7 +40,8 @@ export const initSocket = (server) => {
   });
 
   const runInactivitySweep = createInactivitySweep(io);
-
+  // Periodically check for sockets that have gone silent and nudge SessionService
+  // to evict them. This decouples inactivity handling from per-event logic.
   const inactivityInterval = setInterval(runInactivitySweep, 30 * 1000);
 
   io.on("connection", (socket) => {
