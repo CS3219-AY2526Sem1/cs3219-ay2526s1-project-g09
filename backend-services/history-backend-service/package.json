@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -26,5 +26,9 @@
     "typescript-eslint": "^8.46.2",
     "vite": "^7.1.12",
     "vitest": "^3.2.4"
+  },
+  "devDependencies": {
+    "@types/supertest": "^6.0.3",
+    "supertest": "^7.1.4"
   }
 }

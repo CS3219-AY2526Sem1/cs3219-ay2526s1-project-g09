@@ -13,7 +13,7 @@ const alias = [
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.{js,ts}"],
     globals: true,
     setupFiles: ["tests/setup-env.ts"],
     coverage: {
@@ -21,9 +21,6 @@ export default defineConfig({
       reportsDirectory: "./coverage",
       reporter: ["text", "html", "lcov"],
       exclude: ["**/tests/**", "**/dist/**"],
-    },
-    typecheck: {
-      tsconfig: "tsconfig.test.json",
     },
   },
   resolve: {
