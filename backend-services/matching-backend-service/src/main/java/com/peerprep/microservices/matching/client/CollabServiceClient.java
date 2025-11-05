@@ -19,8 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * A client component responsible for communicating with the external
- * Collaboration Service.
+ * A client component responsible for communicating with the external Collaboration Service.
  */
 @Component
 @RequiredArgsConstructor
@@ -33,23 +32,19 @@ public class CollabServiceClient {
   private String collabServiceBaseUrl;
 
   /**
-   * Creates a new collaboration session for the specified users and their
-   * question preferences.
+   * Creates a new collaboration session for the specified users and their question preferences.
    * 
-   * @param users               a list of user identifiers participating in the
-   *                            collaboration session, must not be {@code null} or
-   *                            empty.
-   * @param questionPreferences a map of user IDs to their corresponding question
-   *                            topics or categories, may be empty but not
-   *                            {@code null}.
-   * @throws IllegalStateException if the Collaboration Service returns an error
-   *                               response.
+   * @param users a list of user identifiers participating in the collaboration session, must not be {@code null} or
+   *          empty.
+   * @param questionPreferences a map of user IDs to their corresponding question topics or categories, may be empty but
+   *          not {@code null}.
+   * @throws IllegalStateException if the Collaboration Service returns an error response.
    */
   public void createSession(List<String> users, Map<String, List<String>> questionPreferences) {
     log.info("Creating collaboration session for users: {}", users);
     String base = collabServiceBaseUrl.endsWith("/")
-        ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
-        : collabServiceBaseUrl;
+      ? collabServiceBaseUrl.substring(0, collabServiceBaseUrl.length() - 1)
+      : collabServiceBaseUrl;
     String url = base + "/start";
 
     CollabStartRequest request = new CollabStartRequest(users, questionPreferences);
@@ -59,9 +54,9 @@ public class CollabServiceClient {
     try {
       log.debug("Sending request to collaboration service: {}", url);
       ResponseEntity<CollabStartResponse> response = restTemplate.postForEntity(
-          url,
-          new HttpEntity<>(request, headers),
-          CollabStartResponse.class);
+        url,
+        new HttpEntity<>(request, headers),
+        CollabStartResponse.class);
 
       CollabStartResponse body = response.getBody();
       if (body == null) {
@@ -71,7 +66,7 @@ public class CollabServiceClient {
       if (!body.success()) {
         String errorMessage = body.error() != null ? body.error() : "Unknown error";
         throw new IllegalStateException(
-            String.format("Collaboration service failed to create session: %s", errorMessage));
+          String.format("Collaboration service failed to create session: %s", errorMessage));
       }
 
       log.info("Successfully created collaboration session for users {}", users);
