@@ -145,22 +145,22 @@ export const initSocket = async (server) => {
           text: `${username} has entered the chat.`,
         });
 
-        console.log(`${username} joined room ${roomId}`);
-      }
+        // Notify about other users in the room
+        const others = Object.entries(allUsers).filter(([id]) => id !== userId);
+        if (others.length > 0) {
+          others.forEach(([otherId, other]) => {
+            if (!other.isDisconnectConfirm) {
+              socket.emit("system_message", {
+                event: "existing_users",
+                userId: otherId,
+                username: other.username,
+                text: `${other.username} is already in the chat.`,
+              });
+            }
+          });
+        }
 
-      // Notify about other users in the room
-      const others = Object.entries(allUsers).filter(([id]) => id !== userId);
-      if (others.length > 0) {
-        others.forEach(([otherId, other]) => {
-          if (!other.isDisconnectConfirm) {
-            socket.emit("system_message", {
-              event: "existing_users",
-              userId: otherId,
-              username: other.username,
-              text: `${other.username} is already in the chat.`,
-            });
-          }
-        });
+        console.log(`${username} joined room ${roomId}`);
       }
     });
 

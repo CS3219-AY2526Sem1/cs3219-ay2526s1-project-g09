@@ -18,14 +18,37 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const [chatInput, setChatInput] = useState<string>("");
-  const [messages, setMessages] = useState<
-    { sender: string; text: string; isUser: boolean; isSystem?: boolean }[]
-  >([]);
   const [isOtherUserOnline, setIsOtherUserOnline] = useState<boolean>(true);
   const { session } = useCollabSession();
   const socketRef = useRef<Socket | null>(null);
   const socketReadyRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const storageKey = session?.sessionId
+    ? `chat_messages_${session.sessionId}`
+    : null;
+  const [messages, setMessages] = useState<
+    { sender: string; text: string; isUser: boolean; isSystem?: boolean }[]
+  >([]);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setMessages(parsed);
+        console.log("Restored chat messages from localStorage");
+      }
+    } catch (err) {
+      console.error("Failed to load chat messages:", err);
+    }
+  }, [storageKey]);
+
+  /** --- Save messages to localStorage whenever they change --- **/
+  useEffect(() => {
+    if (!storageKey) return;
+    localStorage.setItem(storageKey, JSON.stringify(messages));
+  }, [messages, storageKey]);
 
   function handleSystemMessage(message: SystemMessagePayload) {
     const { event } = message;
@@ -41,6 +64,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
         setIsOtherUserOnline(false);
         break;
       }
+
+      case "existing_users":
+        break;
 
       default: {
         console.log("Unknown system event:", event);
@@ -101,6 +127,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
       handleSystemMessage(message);
     });
 
+    socket.on("disconnect", () => {
+      console.warn("Socket disconnected");
+    });
+
     return () => {
       socket.off("receive_message");
       socket.off("system_message");
@@ -120,6 +150,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
 
       console.log("Manually leaving chat session...");
       socket.emit("leave_session");
+
+      if (storageKey) localStorage.removeItem(storageKey);
+      setMessages([]);
+
       socket.disconnect();
       socketRef.current = null;
       socketReadyRef.current = false;
@@ -136,7 +170,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
         handleLeaveSession,
       );
     };
-  }, [session?.sessionId, user?.id]);
+  }, [storageKey]);
 
   useEffect(() => {
     // Scroll to bottom when messages update

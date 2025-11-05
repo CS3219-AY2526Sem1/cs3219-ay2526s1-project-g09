@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Install dependencies and build the app
 COPY package*.json ./
+RUN npm install
 RUN npm ci
 
 # Copy the rest of the application files and build the app
@@ -18,6 +19,7 @@ WORKDIR /app
 
 # Install only production dependencies (if any, to keep the image small)
 COPY package*.json ./
+RUN npm install
 RUN npm ci --omit=dev
 
 # Copy the built files from the build stage
