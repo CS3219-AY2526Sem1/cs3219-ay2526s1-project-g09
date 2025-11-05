@@ -8,6 +8,7 @@ import lombok.Data;
 @ConfigurationProperties(prefix = "matching.timeouts")
 @Data
 public class MatchingTimeoutConfig {
+
   /**
    * Timeout for finding a match (in milliseconds)
    */
@@ -22,4 +23,5 @@ public class MatchingTimeoutConfig {
    * Timeout for match expiry (in milliseconds)
    */
   private long matchAcceptanceConnectionExpiry = 10_000; // 10 seconds
+
 }
