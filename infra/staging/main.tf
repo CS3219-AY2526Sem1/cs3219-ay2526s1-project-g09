@@ -71,7 +71,7 @@ resource "aws_cloudfront_origin_access_control" "collab_ui_service" {
 resource "aws_cloudfront_distribution" "collab_ui_service" {
   origin {
     domain_name              = aws_s3_bucket.collab_ui_service.bucket_regional_domain_name
-    origin_id                = "S3-${aws_s3_bucket.collab_ui_service.id}-origin"
+    origin_id                = aws_s3_bucket.collab_ui_service.id
     origin_access_control_id = aws_cloudfront_origin_access_control.collab_ui_service.id
   }
 
@@ -82,7 +82,7 @@ resource "aws_cloudfront_distribution" "collab_ui_service" {
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "S3-${aws_s3_bucket.collab_ui_service.id}-origin"
+    target_origin_id       = aws_s3_bucket.collab_ui_service.id
     viewer_protocol_policy = "redirect-to-https"
     cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
     compress               = true
@@ -149,7 +149,7 @@ resource "aws_cloudfront_origin_access_control" "ui_shell" {
 resource "aws_cloudfront_distribution" "ui_shell" {
   origin {
     domain_name              = aws_s3_bucket.ui_shell.bucket_regional_domain_name
-    origin_id                = "S3-${aws_s3_bucket.ui_shell.id}-origin"
+    origin_id                = aws_s3_bucket.ui_shell.id
     origin_access_control_id = aws_cloudfront_origin_access_control.ui_shell.id
   }
 
@@ -168,7 +168,7 @@ resource "aws_cloudfront_distribution" "ui_shell" {
       "DELETE"
     ]
     cached_methods           = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id         = "S3-${aws_s3_bucket.ui_shell.id}-origin"
+    target_origin_id         = aws_s3_bucket.ui_shell.id
     viewer_protocol_policy   = "redirect-to-https"
     cache_policy_id          = "658327ea-f89d-4fab-a63d-7e88639e58f6"
     compress                 = true
@@ -328,65 +328,14 @@ resource "aws_elastic_beanstalk_environment" "collab_service_env" {
     value     = "1"
   }
 
-  # ---------------
-  # VPC wiring
-  # ---------------
-  # Leave these out to let EB create "classic" env networking; otherwise pin VPC
-  # dynamic "setting" {
-  #   for_each = [] # Leave this empty to let EB create "classic" env networking
-  #   content {
-  #     namespace = "aws:ec2:vpc"
-  #     name      = "VPCId"
-  #     value     = ""
-  #   }
-  # }
-
-  # # Subnets for instances (private or public depending on your design)
-  # dynamic "setting" {
-  #   for_each = length(var.instance_subnets) == 0 ? [] : [1]
-  #   content {
-  #     namespace = "aws:ec2:vpc"
-  #     name      = "Subnets"
-  #     value     = join(",", var.instance_subnets)
-  #   }
-  # }
-
-  # # Subnets for the load balancer (must be public for internet ALB)
-  # dynamic "setting" {
-  #   for_each = length(var.lb_subnets) == 0 ? [] : [1]
-  #   content {
-  #     namespace = "aws:ec2:vpc"
-  #     name      = "ELBSubnets"
-  #     value     = join(",", var.lb_subnets)
-  #   }
-  # }
-
-  # # Security groups (instance & LB)
-  # dynamic "setting" {
-  #   for_each = length(var.instance_security_groups) == 0 ? [] : [1]
-  #   content {
-  #     namespace = "aws:autoscaling:launchconfiguration"
-  #     name      = "SecurityGroups"
-  #     value     = join(",", var.instance_security_groups)
-  #   }
-  # }
-  # dynamic "setting" {
-  #   for_each = length(var.lb_security_groups) == 0 ? [] : [1]
-  #   content {
-  #     namespace = "aws:elb:loadbalancer"
-  #     name      = "SecurityGroups"
-  #     value     = join(",", var.lb_security_groups)
-  #   }
-  # }
-
   # ------------------
   # Logs & rolling updates
   # ------------------
-  setting {
-    namespace = "aws:elasticbeanstalk:hostmanager"
-    name      = "LogPublicationControl"
-    value     = "true" # ship logs to CloudWatch
-  }
+  # setting {
+  #   namespace = "aws:elasticbeanstalk:hostmanager"
+  #   name      = "LogPublicationControl"
+  #   value     = "true"
+  # }
 
   setting {
     namespace = "aws:elasticbeanstalk:command"
@@ -394,6 +343,144 @@ resource "aws_elastic_beanstalk_environment" "collab_service_env" {
     value     = "RollingWithAdditionalBatch"
   }
 }
+
+
+
+# # Elastic Beanstalk Application for Chat Backend Service
+# resource "aws_elastic_beanstalk_application" "chat_service" {
+#   name        = "peerprep-staging-chat-service"
+#   description = "Chat Backend Service"
+# }
+
+# resource "aws_elastic_beanstalk_environment" "chat_service" {
+#   name                = "peerprep-staging-chat-service"
+#   application         = aws_elastic_beanstalk_application.chat_service.name
+#   solution_stack_name = "64bit Amazon Linux 2 v4.3.3 running Docker"
+
+#   setting {
+#     namespace = "aws:autoscaling:launchconfiguration"
+#     name      = "IamInstanceProfile"
+#     value     = "aws-elasticbeanstalk-ec2-role"
+#   }
+#   setting {
+#     namespace = "aws:elasticbeanstalk:environment"
+#     name      = "ServiceRole"
+#     value     = aws_iam_role.eb_service_role.name
+#   }
+
+#   # ------------------
+#   # Load balancer type
+#   # ------------------
+#   # application = ALB (recommended); classic = ELB classic; network = NLB
+#   setting {
+#     namespace = "aws:elasticbeanstalk:environment"
+#     name      = "LoadBalancerType"
+#     value     = "application"
+#   }
+
+#   # ------------------
+#   # Capacity / ASG
+#   # ------------------
+#   setting {
+#     namespace = "aws:autoscaling:asg"
+#     name      = "MinSize"
+#     value     = 1
+#   }
+#   setting {
+#     namespace = "aws:autoscaling:asg"
+#     name      = "MaxSize"
+#     value     = 2
+#   }
+
+#   # ------------------
+#   # Health / Proc
+#   # ------------------
+#   # Healthcheck URL for your container (adjust path)
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application"
+#     name      = "Application Healthcheck URL"
+#     value     = "/api/v1/chat-service/health"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:environment:process:default"
+#     name      = "Port"
+#     value     = 80
+#   }
+#   setting {
+#     namespace = "aws:elasticbeanstalk:environment:process:default"
+#     name      = "HealthCheckPath"
+#     value     = "/api/v1/chat-service/health"
+#   }
+
+#   # ------------------
+#   # Deployment settings
+#   # ------------------
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application:environment"
+#     name      = "DeploymentPolicy"
+#     value     = "Traffic splitting"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application:environment"
+#     name      = "BatchSizeType"
+#     value     = "Percentage"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application:environment"
+#     name      = "DeploymentBatchSize"
+#     value     = "100"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application:environment"
+#     name      = "TrafficSplit"
+#     value     = "100"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application:environment"
+#     name      = "TrafficSplittingEvaluationTime"
+#     value     = "5"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application:environment"
+#     name      = "RollingUpdateType"
+#     value     = "Rolling based on Health"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application:environment"
+#     name      = "BatchSize"
+#     value     = "1"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:application:environment"
+#     name      = "MinimumCapacity"
+#     value     = "1"
+#   }
+
+#   # ------------------
+#   # Logs & rolling updates
+#   # ------------------
+#   setting {
+#     namespace = "aws:elasticbeanstalk:hostmanager"
+#     name      = "LogPublicationControl"
+#     value     = "true"
+#   }
+
+#   setting {
+#     namespace = "aws:elasticbeanstalk:command"
+#     name      = "DeploymentPolicy"
+#     value     = "RollingWithAdditionalBatch"
+#   }
+# }
+
 
 
 # --- Service role ---
@@ -418,10 +505,6 @@ resource "aws_iam_role_policy_attachment" "eb_service_managed_updates" {
   role       = aws_iam_role.eb_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy"
 }
-
-
-
-# --- EC2 instance role + profile ---
 
 resource "aws_iam_role" "eb_ec2_role" {
   name = "aws-elasticbeanstalk-ec2-role"
@@ -471,5 +554,113 @@ data "aws_iam_policy_document" "secretsmanager_mongodb" {
     resources = [
       "arn:aws:secretsmanager:ap-southeast-1:670422575487:secret:*"
     ]
+  }
+}
+
+
+
+
+
+
+resource "aws_cloudfront_distribution" "backend_service" {
+  origin {
+    domain_name = aws_elastic_beanstalk_environment.collab_service_env.endpoint_url
+    origin_id   = "collab-backend-service-origin"
+    custom_origin_config {
+      # If your EB/ALB terminates TLS and serves HTTPS:
+      # origin_protocol_policy = "https-only"
+      # If EB is HTTP only behind the ALB, use:
+      origin_protocol_policy = "http-only"
+
+      http_port            = 80
+      https_port           = 443
+      origin_ssl_protocols = ["TLSv1.2"]
+    }
+  }
+
+  enabled         = true
+  is_ipv6_enabled = true
+  comment         = "PeerPrep Backend Staging"
+
+  default_cache_behavior {
+    allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "collab-backend-service-origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    cache_policy_id            = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    origin_request_policy_id   = "216adef6-5c7f-47e4-b989-5492eafa07d3"
+    response_headers_policy_id = "60669652-455b-4ae9-85a4-c4c02393f86c"
+    compress                   = true
+  }
+  ordered_cache_behavior {
+    path_pattern               = "/api/v1/collab-service/*"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "collab-backend-service-origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    cache_policy_id            = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    origin_request_policy_id   = "216adef6-5c7f-47e4-b989-5492eafa07d3"
+    response_headers_policy_id = "60669652-455b-4ae9-85a4-c4c02393f86c"
+    compress                   = true
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  price_class = "PriceClass_All"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tags = {
+    name        = "peerprep-backend-service"
+    Environment = "staging"
+    Project     = "peerprep"
+    Service     = "backend-service"
+  }
+}
+
+# (Optional) Use AWS default, or create your own Valkey 8 parameter group
+# resource "aws_elasticache_parameter_group" "valkey8" {
+#   name   = "matching-service-valkey8"
+#   family = "valkey8"
+# }
+
+resource "aws_elasticache_replication_group" "matching_service" {
+  replication_group_id = "matching-service-rg"
+  description          = "Matching service cache (Valkey 8)"
+
+  engine         = "valkey"
+  engine_version = "8.0"
+  # Use AWS default Valkey 8 PG, or point to your custom PG above
+  parameter_group_name = "default.valkey8"
+  # parameter_group_name        = aws_elasticache_parameter_group.valkey8.name
+
+  node_type = "cache.t3.micro"
+  port      = 6379
+
+  # Single-shard, no replicas (equivalent to your previous 1-node cluster)
+  num_node_groups            = 1
+  replicas_per_node_group    = 0
+  automatic_failover_enabled = false # must be false when there are 0 replicas
+
+  # Networking (uncomment / set these if you already have them)
+  # subnet_group_name           = aws_elasticache_subnet_group.this.name
+  # security_group_ids          = [aws_security_group.cache.id]
+
+  # Snapshots (similar to your previous settings)
+  snapshot_retention_limit = 5
+
+  # Encryption (optional—but recommended if your app supports it)
+  # at_rest_encryption_enabled  = true
+  # transit_encryption_enabled  = true
+  # auth_token                  = var.elasticache_auth_token  # if using TLS+AUTH
+
+  tags = {
+    Name = "matching-service"
   }
 }
