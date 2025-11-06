@@ -90,6 +90,20 @@ services:
       - "5276:5276"
     depends_on:
       - history-backend-service
+      - redis
+
+  collab-service-replica:
+    build:
+      context: ./backend-services/collab-backend-service
+      dockerfile: Dockerfile
+    container_name: collab-service-replica
+    env_file:
+      - ./backend-services/collab-backend-service/.env
+    ports:
+      - "5280:5276"
+    depends_on:
+      - history-backend-service
+      - redis
 
   chat-service:
     build:

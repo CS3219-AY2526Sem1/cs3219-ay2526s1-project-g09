@@ -45,6 +45,22 @@ export default defineConfig(({ mode }) => {
         "@assets": path.resolve(__dirname, "./src/assets"),
       },
     },
-    server: { port: 5173 },
+    server: {
+      port: 5173,
+      proxy: {
+        "/ws1": {
+          target: "http://collab-service:5276", // or http://localhost:5276 if running on host
+          changeOrigin: true,
+          ws: true,
+          rewrite: (p) => p.replace(/^\/ws1/, ""),
+        },
+        "/ws2": {
+          target: "http://collab-service-replica:5276", // or http://localhost:5280
+          changeOrigin: true,
+          ws: true,
+          rewrite: (p) => p.replace(/^\/ws2/, ""),
+        },
+      },
+    },
   };
 });

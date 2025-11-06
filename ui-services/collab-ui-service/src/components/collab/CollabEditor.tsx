@@ -5,12 +5,73 @@ import io from "socket.io-client";
 import * as Y from "yjs";
 import { Awareness, encodeAwarenessUpdate } from "y-protocols/awareness";
 import { MonacoBinding } from "y-monaco";
-import { COLLAB_API_URL, SOCKET_BASE_URL } from "@/api/collabService";
+import {
+  COLLAB_API_URL,
+  SOCKET_BASE_URL,
+  SOCKET_WS1_BASE_URL,
+  SOCKET_WS2_BASE_URL,
+} from "@/api/collabService";
 
 type DestroyableAwareness = Awareness & { destroy?: () => void };
 
-const socket = io(SOCKET_BASE_URL, {
-  path: "/api/v1/collab-service/socket.io",
+const SOCKET_PATH = "/api/v1/collab-service/socket.io";
+
+const resolveSocketTarget = () => {
+  const inShellDev = window.location.port === "5173";
+
+  if (!inShellDev) {
+    return {
+      base: SOCKET_BASE_URL,
+      path: SOCKET_PATH,
+    };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const ioHint = params.get("io");
+
+  if (ioHint === "2") {
+    if (SOCKET_WS2_BASE_URL) {
+      return {
+        base: SOCKET_WS2_BASE_URL,
+        path: SOCKET_PATH,
+      };
+    }
+    return {
+      base: "",
+      path: `/ws2${SOCKET_PATH}`,
+    };
+  }
+
+  if (ioHint === "1" || ioHint === "ws1") {
+    if (SOCKET_WS1_BASE_URL) {
+      return {
+        base: SOCKET_WS1_BASE_URL,
+        path: SOCKET_PATH,
+      };
+    }
+    return {
+      base: "",
+      path: `/ws1${SOCKET_PATH}`,
+    };
+  }
+
+  if (SOCKET_WS1_BASE_URL) {
+    return {
+      base: SOCKET_WS1_BASE_URL,
+      path: SOCKET_PATH,
+    };
+  }
+
+  return {
+    base: "",
+    path: `/ws1${SOCKET_PATH}`,
+  };
+};
+
+const { base: socketBase, path: socketPath } = resolveSocketTarget();
+
+const socket = io(socketBase, {
+  path: socketPath,
   transports: ["websocket"],
 });
 
@@ -247,6 +308,10 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       new Set([editor]),
       awareness,
     );
+    console.log("[CollabEditor] MonacoBinding updated", {
+      sessionId: activeSessionRef.current,
+      socketId: socket.id,
+    });
   }, [currentUserId, destroyBinding, randomColorForUser]);
 
   const handleSessionLeave = useCallback(async () => {
@@ -566,6 +631,12 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
           sessionId,
           size: update.length,
         });
+        if (!bindingRef.current) {
+          console.warn(
+            "[CollabEditor] Missing Monaco binding after remote update; reinitialising.",
+          );
+          rebindEditor();
+        }
       } catch (error) {
         console.error("Failed to apply remote Yjs update", error);
       }
@@ -584,7 +655,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       socket.off("yjsInit", handleYjsInit);
       socket.off("yjsUpdate", handleYjsUpdate);
     };
-  }, [ensureInitialContent, sessionId]);
+  }, [ensureInitialContent, rebindEditor, sessionId]);
 
   useEffect(() => {
     const awareness = awarenessRef.current;
