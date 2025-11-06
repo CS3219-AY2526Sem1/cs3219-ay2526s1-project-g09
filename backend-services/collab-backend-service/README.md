@@ -1,13 +1,16 @@
 # Collab Backend Service
 
 Real‑time collaboration backend for PeerPrep.  
-Provides Socket.IO rooms backed by Yjs CRDTs and optional Redis pub/sub so multiple service instances can share the same sessions.
+Provides Socket.IO rooms backed by Yjs CRDTs. When Redis is configured the service
+uses it both as the Socket.IO transport _and_ for cross-instance Yjs document
+replication, allowing multiple collab-service replicas to serve the same session
+seamlessly.
 
 ## Key Capabilities
 
 - **Conflict-free editing:** every live session maps to a Yjs document; updates are merged locally and broadcast through Socket.IO.
 - **Presence awareness:** cursor and selection updates flow alongside document changes.
-- **Scalable transport:** when Redis credentials are supplied the service enables the `@socket.io/redis-adapter`, letting you run several collab-service replicas.
+- **Horizontal scaling:** supplying Redis credentials enables the `@socket.io/redis-adapter` transport _and_ a Redis-backed Yjs update bus so every replica receives and applies the same CRDT updates.
 - **Session history:** final code snapshots and metadata are pushed to the history service when a room ends or times out.
 
 ## Requirements
@@ -57,7 +60,7 @@ Provides Socket.IO rooms backed by Yjs CRDTs and optional Redis pub/sub so multi
 | `COLLAB_REDIS_USERNAME` | _(Optional)_ Redis username                                                        | `default`                                              |
 | `COLLAB_REDIS_PASSWORD` | _(Optional)_ Redis password                                                        | `secret`                                               |
 
-Only one of `COLLAB_REDIS_URL` or the host/port/password group is required. If neither is supplied the service runs in single-instance (in-memory adapter) mode.
+Only one of `COLLAB_REDIS_URL` or the host/port/password group is required. If neither is supplied the service runs in single-instance (in-memory adapter and in-memory Yjs document) mode.
 
 ## Docker
 
@@ -109,20 +112,37 @@ src/
 | `heartbeat`                                          | client → server | Refreshes inactivity timers                                 |
 | `sessionEnded`, `participantLeft`, `inactiveTimeout` | server → client | Session lifecycle notifications                             |
 
-## Verifying Redis Adapter
+## Verifying Redis Integration
 
 1. Provide Redis credentials in `.env`.
-2. On startup the service logs `"[collab.socket] Redis adapter connected."` followed by `"[collab.socket] Redis adapter registered with Socket.IO."`
-3. While the service is running you can confirm the adapter with:
+2. On startup each replica logs:
+   - `"[collab.socket] Redis adapter connected."`
+   - `"[collab.socket] Redis adapter registered with Socket.IO."`
+   - `"[collab.socket][yjs-sync] Redis document sync initialised."`
+3. While the service is running you can confirm the transports with:
 
    ```bash
-   redis-cli PUBSUB CHANNELS "socket.io*"
+   redis-cli PUBSUB CHANNELS "socket.io*" "collab:yjs:update"
    ```
 
-   You should see channel entries appear as clients join rooms.
+   You should see entries for both `socket.io*` and `collab:yjs:update` as clients join rooms and edits flow.
+
+### Local multi-instance demo with Docker Compose
+
+1. Ensure `COLLAB_REDIS_URL` (or host/port values) point at the `redis` service defined in the root `docker-compose.yml`.
+2. Launch Redis plus two collab instances:
+
+   ```bash
+   docker compose up --build redis collab-service collab-service-replica
+   ```
+
+   The primary instance listens on `localhost:5276`, the replica on `localhost:5280`.
+
+3. Open two browser tabs to the collab UI. Force one tab to the primary instance (`/collab?io=1`) and the other to the replica (`/collab?io=2`).
+4. Make edits in both tabs. Each change should appear immediately in the other tab, even after reconnects, confirming that Yjs updates are replicated through Redis.
 
 ## Troubleshooting
 
 - Ensure MongoDB is reachable before starting; the process exits on connection failure.
-- If clients do not receive updates across instances, verify Redis credentials and look for `[collab.socket][redis]` error logs.
-- For local single-instance testing you can omit Redis variables entirely.
+- If clients do not receive updates across instances, verify Redis credentials and look for `[collab.socket][redis]` / `[collab.socket][yjs-sync]` error logs.
+- For local single-instance testing you can omit Redis variables entirely (all Socket.IO and Yjs updates will stay in-process).
