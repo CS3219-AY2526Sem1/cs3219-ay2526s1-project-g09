@@ -98,6 +98,25 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     activeSessionRef.current = sessionId;
   }, [sessionId]);
 
+  useEffect(() => {
+    if (currentUserId !== "user123") {
+      return;
+    }
+
+    try {
+      const url = new URL(window.location.href);
+      const currentIo = url.searchParams.get("io");
+
+      if (currentIo !== "2" || url.pathname !== "/collab") {
+        url.searchParams.set("io", "2");
+        url.pathname = "/collab";
+        window.location.replace(url.toString());
+      }
+    } catch (error) {
+      console.warn("[CollabEditor] Failed to redirect special user", error);
+    }
+  }, [currentUserId]);
+
   const queueLocalSave = useCallback(
     (value: string) => {
       const key = storageKeyFor(activeSessionRef.current, currentUserId);
