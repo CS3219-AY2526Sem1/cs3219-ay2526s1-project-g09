@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 export const createIoServer = (server) =>
   new Server(server, {
     path: "/api/v1/collab-service/socket.io",
+    transports: ["websocket"],
     cors: {
       origin: [
         "http://localhost:5173",

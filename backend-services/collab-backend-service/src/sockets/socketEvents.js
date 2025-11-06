@@ -161,7 +161,7 @@ export const heartbeatEvent = (socket) => {
   });
 };
 
-export const yjsUpdateEvent = (socket) => {
+export const yjsUpdateEvent = (socket, publishYjsUpdate = async () => {}) => {
   // Main CRDT path: apply incoming Yjs updates, keep socket metadata in sync,
   // then fan the update out to the rest of the session.
   socket.on("yjsUpdate", (payload) => {
@@ -230,6 +230,18 @@ export const yjsUpdateEvent = (socket) => {
       sessionId,
       userId: resolvedUserId,
       size: decoded.byteLength,
+    });
+
+    publishYjsUpdate({
+      sessionId,
+      update: encoded,
+      language: resolvedLanguage,
+      userId: resolvedUserId,
+    }).catch((error) => {
+      console.error(
+        "[collab.socket][yjs-sync] Failed to propagate update to Redis:",
+        error,
+      );
     });
   });
 };

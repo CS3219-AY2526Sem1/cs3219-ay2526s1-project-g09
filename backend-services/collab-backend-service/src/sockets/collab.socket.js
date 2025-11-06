@@ -1,4 +1,5 @@
 import { initialiseRedisAdapter } from "../services/redis.service.js";
+import { initialiseYjsRedisSync } from "../services/yjsRedis.service.js";
 import { createIoServer } from "./socketServer.js";
 import { createInactivitySweep, trackedSockets } from "./activityTracker.js";
 import {
@@ -17,6 +18,10 @@ export const initSocket = (server) => {
   // Redis clients are stored for graceful shutdown; the array stays empty when
   // the adapter falls back to the in-memory default.
   const redisClients = [];
+  const pendingYjsUpdates = [];
+  let publishYjsUpdate = async (payload) => {
+    pendingYjsUpdates.push(payload);
+  };
 
   (async () => {
     try {
@@ -25,6 +30,24 @@ export const initSocket = (server) => {
         io.adapter(redisResources.adapter);
         redisClients.push(...(redisResources.clients ?? []));
         console.log("[collab.socket] Redis adapter registered with Socket.IO.");
+      }
+
+      const yjsRedisResources = await initialiseYjsRedisSync();
+      if (yjsRedisResources) {
+        publishYjsUpdate = (payload) =>
+          yjsRedisResources.publishUpdate(payload);
+        redisClients.push(...(yjsRedisResources.clients ?? []));
+        pendingYjsUpdates.splice(0).forEach((payload) => {
+          yjsRedisResources.publishUpdate(payload).catch((error) => {
+            console.error(
+              "[collab.socket][yjs-sync] Failed to publish queued update:",
+              error,
+            );
+          });
+        });
+      } else {
+        publishYjsUpdate = async () => {};
+        pendingYjsUpdates.length = 0;
       }
     } catch (error) {
       console.error(
@@ -61,7 +84,7 @@ export const initSocket = (server) => {
 
     heartbeatEvent(socket);
 
-    yjsUpdateEvent(socket);
+    yjsUpdateEvent(socket, publishYjsUpdate);
 
     cursorUpdateEvent(socket);
 
