@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 
-export const createServer = (server) =>
+export const createIoServer = (server) =>
   new Server(server, {
     path: "/api/v1/collab-service/socket.io",
     cors: {
