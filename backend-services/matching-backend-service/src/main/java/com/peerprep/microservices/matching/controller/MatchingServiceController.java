@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.peerprep.microservices.matching.dto.MatchAcceptanceRequest;
 import com.peerprep.microservices.matching.dto.MatchAcceptanceResponse;
@@ -79,6 +80,14 @@ public class MatchingServiceController {
   public UserPreferenceResponse updateUserPreference(
     @PathVariable String userId,
     @RequestBody UserPreferenceRequest userPreferenceRequest) {
+    // Parity check
+    if (userPreferenceRequest.userId() != null &&
+      !userPreferenceRequest.userId().equals(userId)) {
+      throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST,
+        "userId in path and request body must match.");
+    }
+
     return userPreferenceService.upsertUserPreference(userPreferenceRequest);
   }
 

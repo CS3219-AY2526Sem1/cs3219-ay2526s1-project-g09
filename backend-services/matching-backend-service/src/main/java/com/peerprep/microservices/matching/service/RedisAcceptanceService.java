@@ -177,11 +177,10 @@ public class RedisAcceptanceService {
    * @param matchId The match ID
    * @param userId The user ID
    * @param newStatus ACCEPTED or REJECTED
-   * @param publishChannel optional Redis channel to publish after update
    * @return updated MatchAcceptanceStatus
    */
   public MatchAcceptanceStatus updateAcceptance(
-    String matchId, String userId, AcceptanceStatus newStatus, String publishChannel) {
+    String matchId, String userId, AcceptanceStatus newStatus) {
 
     // Pass the prefix and matchId separately to Lua
     String updatedJson = redisTemplate.execute(
@@ -189,8 +188,7 @@ public class RedisAcceptanceService {
       Collections.singletonList(MATCH_KEY_PREFIX), // KEYS[1] = prefix
       matchId, // ARGV[1] = matchId
       userId, // ARGV[2] = userId
-      newStatus.name(), // ARGV[3] = newStatus
-      publishChannel != null ? publishChannel : "" // ARGV[4] = publish channel
+      newStatus.name() // ARGV[3] = newStatus
     );
 
     log.info("Updated match acceptance details for matchId {}: {}", matchId, updatedJson);

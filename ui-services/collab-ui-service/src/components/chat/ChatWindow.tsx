@@ -12,20 +12,117 @@ import {
   type SystemMessagePayload,
 } from "@/api/chatService";
 
+type ChatMessageItem = {
+  sender: string;
+  text: string;
+  isUser: boolean;
+  isSystem?: boolean;
+};
+
+const MAX_MESSAGES = 500;
+
+/** Narrow unknown -> ChatMessageItem | null (type guard + sanitizer) */
+function toChatMessageItem(value: unknown): ChatMessageItem | null {
+  if (typeof value !== "object" || value === null) return null;
+  const rec = value as Record<string, unknown>;
+
+  const senderOk = typeof rec.sender === "string" && rec.sender.length <= 500;
+  const textOk = typeof rec.text === "string" && rec.text.length <= 20_000;
+  const isUserOk = typeof rec.isUser === "boolean";
+  const isSystemOk =
+    typeof rec.isSystem === "boolean" || typeof rec.isSystem === "undefined";
+
+  if (!senderOk || !textOk || !isUserOk || !isSystemOk) return null;
+
+  return {
+    sender: rec.sender as string,
+    text: rec.text as string,
+    isUser: rec.isUser as boolean,
+    ...(typeof rec.isSystem !== "undefined"
+      ? { isSystem: !!rec.isSystem }
+      : {}),
+  };
+}
+
+/** Validate and sanitize an unknown parsed payload into a safe list */
+function sanitizeMessagesPayload(payload: unknown): ChatMessageItem[] {
+  if (!Array.isArray(payload)) return [];
+  const out: ChatMessageItem[] = [];
+  for (const item of payload) {
+    const msg = toChatMessageItem(item);
+    if (msg) out.push(msg);
+    if (out.length >= MAX_MESSAGES) break;
+  }
+  return out;
+}
+
+/** Load & validate from localStorage; never throws */
+function loadMessagesFromStorage(storageKey: string): ChatMessageItem[] {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return sanitizeMessagesPayload(parsed);
+  } catch {
+    // Corrupt JSON or quota issues -> fail closed
+    return [];
+  }
+}
+
+/** Save safely (truncate + stringify) */
+function saveMessagesToStorage(
+  storageKey: string,
+  messages: ChatMessageItem[],
+) {
+  try {
+    const trimmed =
+      messages.length > MAX_MESSAGES ? messages.slice(-MAX_MESSAGES) : messages;
+    localStorage.setItem(storageKey, JSON.stringify(trimmed));
+  } catch {
+    // Quota exceeded or serialization error; ignore to avoid crashing UI
+  }
+}
+
+/** Clear safely */
+function clearMessagesFromStorage(storageKey: string) {
+  try {
+    localStorage.removeItem(storageKey);
+  } catch {
+    // ignore
+  }
+}
 interface ChatWindowProps {
   user?: User | null;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
   const [chatInput, setChatInput] = useState<string>("");
-  const [messages, setMessages] = useState<
-    { sender: string; text: string; isUser: boolean; isSystem?: boolean }[]
-  >([]);
   const [isOtherUserOnline, setIsOtherUserOnline] = useState<boolean>(true);
   const { session } = useCollabSession();
   const socketRef = useRef<Socket | null>(null);
   const socketReadyRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const storageKey = session?.sessionId
+    ? `chat_messages_${session.sessionId}`
+    : null;
+  const [messages, setMessages] = useState<
+    { sender: string; text: string; isUser: boolean; isSystem?: boolean }[]
+  >([]);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    const restored = loadMessagesFromStorage(storageKey);
+    if (restored.length) {
+      setMessages(restored);
+      console.log("Restored chat messages from localStorage");
+    }
+  }, [storageKey]);
+
+  /** --- Save messages to localStorage whenever they change --- **/
+  useEffect(() => {
+    if (!storageKey) return;
+    saveMessagesToStorage(storageKey, messages);
+  }, [messages, storageKey]);
 
   function handleSystemMessage(message: SystemMessagePayload) {
     const { event } = message;
@@ -41,6 +138,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
         setIsOtherUserOnline(false);
         break;
       }
+
+      case "existing_users":
+        break;
 
       default: {
         console.log("Unknown system event:", event);
@@ -101,6 +201,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
       handleSystemMessage(message);
     });
 
+    socket.on("disconnect", () => {
+      console.warn("Socket disconnected");
+    });
+
     return () => {
       socket.off("receive_message");
       socket.off("system_message");
@@ -120,6 +224,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
 
       console.log("Manually leaving chat session...");
       socket.emit("leave_session");
+
+      if (storageKey) clearMessagesFromStorage(storageKey);
+      setMessages([]);
+
       socket.disconnect();
       socketRef.current = null;
       socketReadyRef.current = false;
@@ -136,7 +244,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
         handleLeaveSession,
       );
     };
-  }, [session?.sessionId, user?.id]);
+  }, [storageKey]);
 
   useEffect(() => {
     // Scroll to bottom when messages update

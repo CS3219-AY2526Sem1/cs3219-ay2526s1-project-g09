@@ -58,8 +58,7 @@ public class AcceptanceService {
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
       matchId,
       userId,
-      AcceptanceStatus.CONNECTED,
-      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      AcceptanceStatus.CONNECTED);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -175,8 +174,7 @@ public class AcceptanceService {
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
       matchId,
       userId,
-      AcceptanceStatus.ACCEPTED,
-      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      AcceptanceStatus.ACCEPTED);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);
@@ -212,8 +210,7 @@ public class AcceptanceService {
     MatchAcceptanceStatus updated = redisAcceptanceService.updateAcceptance(
       matchId,
       userId,
-      AcceptanceStatus.REJECTED,
-      RedisChannels.MATCH_ACCEPTANCE_CHANNEL);
+      AcceptanceStatus.REJECTED);
 
     if (updated == null) {
       throw new IllegalArgumentException("No such match: " + matchId);

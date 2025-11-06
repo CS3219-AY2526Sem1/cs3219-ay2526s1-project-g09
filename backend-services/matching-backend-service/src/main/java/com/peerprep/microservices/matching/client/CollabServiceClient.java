@@ -18,6 +18,9 @@ import com.peerprep.microservices.matching.dto.CollabStartResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * A client component responsible for communicating with the external Collaboration Service.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -28,6 +31,15 @@ public class CollabServiceClient {
   @Value("${collab.service.base-url}")
   private String collabServiceBaseUrl;
 
+  /**
+   * Creates a new collaboration session for the specified users and their question preferences.
+   * 
+   * @param users a list of user identifiers participating in the collaboration session, must not be {@code null} or
+   *          empty.
+   * @param questionPreferences a map of user IDs to their corresponding question topics or categories, may be empty but
+   *          not {@code null}.
+   * @throws IllegalStateException if the Collaboration Service returns an error response.
+   */
   public void createSession(List<String> users, Map<String, List<String>> questionPreferences) {
     log.info("Creating collaboration session for users: {}", users);
     String base = collabServiceBaseUrl.endsWith("/")

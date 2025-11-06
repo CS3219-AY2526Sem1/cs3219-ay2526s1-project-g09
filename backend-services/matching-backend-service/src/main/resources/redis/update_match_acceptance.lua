@@ -3,12 +3,10 @@
 -- ARGV[1] = matchId
 -- ARGV[2] = userId
 -- ARGV[3] = newStatus ("CONNECTED", "ACCEPTED", "REJECTED")
--- ARGV[4] = publishChannel (empty string if no publish)
 local prefix = KEYS[1]
 local matchId = ARGV[1]
 local userId = ARGV[2]
 local newStatus = ARGV[3]
-local publishChannel = ARGV[4]
 
 local matchKey = prefix .. matchId
 local timestampKey = matchKey .. ":timestamp"
