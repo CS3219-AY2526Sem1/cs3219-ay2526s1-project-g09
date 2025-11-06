@@ -1,10 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
-import type { editor as MonacoEditor } from "monaco-editor";
+import type { IDisposable, editor as MonacoEditor } from "monaco-editor";
 import io from "socket.io-client";
 import * as Y from "yjs";
-import { Awareness, encodeAwarenessUpdate } from "y-protocols/awareness";
+import {
+  Awareness,
+  applyAwarenessUpdate,
+  encodeAwarenessUpdate,
+} from "y-protocols/awareness";
 import { MonacoBinding } from "y-monaco";
+import { RemoteCursorManager } from "@convergencelabs/monaco-collab-ext";
+import "@convergencelabs/monaco-collab-ext/css/monaco-collab-ext.css";
 import {
   COLLAB_API_URL,
   SOCKET_BASE_URL,
@@ -163,6 +169,9 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   const hasReceivedInitialRef = useRef(false);
   const pendingInitialContentRef = useRef<string | null>(null);
   const activeSessionRef = useRef<string | null>(sessionId);
+  const remoteCursorManagerRef = useRef<RemoteCursorManager | null>(null);
+  const remoteCursorIdsRef = useRef<Map<number, string>>(new Map());
+  const cursorDisposablesRef = useRef<IDisposable[]>([]);
 
   const clearSaveTimer = useCallback(() => {
     if (saveTimerRef.current !== null) {
@@ -248,6 +257,158 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     return REMOTE_COLORS[Math.abs(hash) % REMOTE_COLORS.length];
   }, []);
 
+  const clearRemoteCursors = useCallback(() => {
+    const manager = remoteCursorManagerRef.current;
+    remoteCursorIdsRef.current.forEach((cursorId) => {
+      if (manager) {
+        try {
+          manager.removeCursor(cursorId);
+        } catch (error) {
+          console.warn("[CollabEditor] Failed to remove remote cursor", {
+            cursorId,
+            error,
+          });
+        }
+      }
+    });
+    remoteCursorIdsRef.current.clear();
+  }, []);
+
+  const syncRemoteCursors = useCallback(() => {
+    const awareness = awarenessRef.current;
+    const manager = remoteCursorManagerRef.current;
+    if (!awareness || !manager) {
+      return;
+    }
+
+    const localClientId = awareness.clientID;
+    const states = awareness.getStates();
+    const activeClientIds = new Set<number>();
+
+    states.forEach((state, clientId) => {
+      if (clientId === localClientId) {
+        return;
+      }
+
+      const cursorState = state?.cursor;
+      const userState = state?.user;
+
+      if (
+        !cursorState ||
+        (typeof cursorState.offset !== "number" &&
+          (!cursorState.position ||
+            typeof cursorState.position.lineNumber !== "number" ||
+            typeof cursorState.position.column !== "number"))
+      ) {
+        const existingId = remoteCursorIdsRef.current.get(clientId);
+        if (existingId) {
+          manager.removeCursor(existingId);
+          remoteCursorIdsRef.current.delete(clientId);
+        }
+        return;
+      }
+
+      const cursorId =
+        remoteCursorIdsRef.current.get(clientId) ?? `${clientId.toString()}`;
+
+      if (!remoteCursorIdsRef.current.has(clientId)) {
+        const baseUserId =
+          typeof userState?.id === "string"
+            ? userState.id
+            : typeof userState?.name === "string"
+              ? userState.name
+              : `${clientId}`;
+        const color =
+          typeof userState?.color === "string"
+            ? userState.color
+            : randomColorForUser(baseUserId);
+        const label =
+          typeof userState?.name === "string"
+            ? userState.name
+            : typeof userState?.id === "string"
+              ? userState.id
+              : baseUserId;
+
+        try {
+          manager.addCursor(cursorId, color, label);
+        } catch (error) {
+          console.warn("[CollabEditor] Failed to add remote cursor", {
+            clientId,
+            error,
+          });
+          return;
+        }
+
+        remoteCursorIdsRef.current.set(clientId, cursorId);
+      }
+
+      if (typeof cursorState.offset === "number") {
+        manager.setCursorOffset(cursorId, cursorState.offset);
+      } else if (
+        cursorState.position &&
+        typeof cursorState.position.lineNumber === "number" &&
+        typeof cursorState.position.column === "number"
+      ) {
+        manager.setCursorPosition(cursorId, cursorState.position);
+      }
+
+      manager.showCursor(cursorId);
+      activeClientIds.add(clientId);
+    });
+
+    remoteCursorIdsRef.current.forEach((cursorId, clientId) => {
+      if (!activeClientIds.has(clientId)) {
+        manager.removeCursor(cursorId);
+        remoteCursorIdsRef.current.delete(clientId);
+      }
+    });
+  }, [randomColorForUser]);
+
+  const clearLocalCursorState = useCallback(() => {
+    const awareness = awarenessRef.current;
+    if (!awareness) {
+      return;
+    }
+    awareness.setLocalStateField("cursor", null);
+    awareness.setLocalStateField("selection", null);
+  }, []);
+
+  const publishLocalCursorState = useCallback(() => {
+    const awareness = awarenessRef.current;
+    const editor = editorRef.current;
+    if (!awareness || !editor) {
+      return;
+    }
+
+    const model = editor.getModel();
+    const position = editor.getPosition();
+
+    if (!model || !position) {
+      clearLocalCursorState();
+      return;
+    }
+
+    const offset = model.getOffsetAt(position);
+    awareness.setLocalStateField("cursor", {
+      offset,
+      position,
+    });
+
+    const selection = editor.getSelection();
+    if (selection) {
+      const start = model.getOffsetAt(selection.getStartPosition());
+      const end = model.getOffsetAt(selection.getEndPosition());
+      if (start !== end) {
+        awareness.setLocalStateField("selection", {
+          anchor: start,
+          head: end,
+        });
+      } else {
+        awareness.setLocalStateField("selection", null);
+      }
+    }
+  }, [clearLocalCursorState]);
+
   const rebindEditor = useCallback(() => {
     const editor = editorRef.current;
     const doc = docRef.current;
@@ -273,6 +434,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
           }: { added: number[]; updated: number[]; removed: number[] },
           origin: unknown,
         ) => {
+          syncRemoteCursors();
           if (origin === socket) return;
           const update = encodeAwarenessUpdate(awareness, [
             ...added,
@@ -312,7 +474,15 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       sessionId: activeSessionRef.current,
       socketId: socket.id,
     });
-  }, [currentUserId, destroyBinding, randomColorForUser]);
+    publishLocalCursorState();
+    syncRemoteCursors();
+  }, [
+    currentUserId,
+    destroyBinding,
+    publishLocalCursorState,
+    randomColorForUser,
+    syncRemoteCursors,
+  ]);
 
   const handleSessionLeave = useCallback(async () => {
     try {
@@ -434,11 +604,15 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     if (!sessionId || sessionEnded) {
       activeSessionRef.current = null;
       destroyBinding();
+      const awareness = awarenessRef.current;
+      awareness?.setLocalState(null);
+      clearLocalCursorState();
       if (docRef.current) {
         docRef.current.destroy();
       }
       docRef.current = null;
       textRef.current = null;
+      clearRemoteCursors();
       return;
     }
 
@@ -505,19 +679,22 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       doc.off("update", handleUpdate);
       clearInitialSyncTimer();
       destroyBinding();
-      const awareness = awarenessRef.current as DestroyableAwareness | null;
-      awareness?.destroy?.();
+      const awarenessInstance =
+        awarenessRef.current as DestroyableAwareness | null;
+      awarenessInstance?.destroy?.();
       awarenessRef.current = null;
       doc.destroy();
       docRef.current = null;
       textRef.current = null;
       pendingInitialContentRef.current = null;
+      clearRemoteCursors();
     };
   }, [
     clearInitialSyncTimer,
     currentUserId,
     destroyBinding,
     ensureInitialContent,
+    clearRemoteCursors,
     queueLocalSave,
     rebindEditor,
     sessionEnded,
@@ -642,11 +819,32 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       }
     };
 
+    const handleAwarenessUpdate = (payload: {
+      sessionId?: string;
+      update?: unknown;
+    }) => {
+      if (!payload?.sessionId || payload.sessionId !== sessionId) {
+        return;
+      }
+      const awareness = awarenessRef.current;
+      if (!awareness) {
+        return;
+      }
+      const update = decodeUpdate(payload.update);
+      if (!update) {
+        console.warn("[CollabEditor] Skipped awarenessUpdate: invalid payload");
+        return;
+      }
+      applyAwarenessUpdate(awareness, update, socket);
+      syncRemoteCursors();
+    };
+
     socket.on("sessionEnded", handleSessionEnded);
     socket.on("participantLeft", handleParticipantLeft);
     socket.on("inactiveTimeout", handleInactiveTimeout);
     socket.on("yjsInit", handleYjsInit);
     socket.on("yjsUpdate", handleYjsUpdate);
+    socket.on("awarenessUpdate", handleAwarenessUpdate);
 
     return () => {
       socket.off("sessionEnded", handleSessionEnded);
@@ -654,8 +852,9 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       socket.off("inactiveTimeout", handleInactiveTimeout);
       socket.off("yjsInit", handleYjsInit);
       socket.off("yjsUpdate", handleYjsUpdate);
+      socket.off("awarenessUpdate", handleAwarenessUpdate);
     };
-  }, [ensureInitialContent, rebindEditor, sessionId]);
+  }, [ensureInitialContent, rebindEditor, sessionId, syncRemoteCursors]);
 
   useEffect(() => {
     const awareness = awarenessRef.current;
@@ -664,11 +863,16 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     }
 
     if (currentUserId) {
-      awareness.setLocalStateField("user", { id: currentUserId });
+      const color = randomColorForUser(currentUserId);
+      awareness.setLocalStateField("user", {
+        id: currentUserId,
+        name: currentUserId,
+        color,
+      });
     } else {
       awareness.setLocalState(null);
     }
-  }, [currentUserId]);
+  }, [currentUserId, randomColorForUser]);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -683,6 +887,12 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       clearSaveTimer();
       clearInitialSyncTimer();
       destroyBinding();
+      cursorDisposablesRef.current.forEach((disposable) => {
+        disposable.dispose();
+      });
+      cursorDisposablesRef.current = [];
+      clearRemoteCursors();
+      remoteCursorManagerRef.current = null;
       const awareness = awarenessRef.current as DestroyableAwareness | null;
       awareness?.destroy?.();
       awarenessRef.current = null;
@@ -692,7 +902,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       docRef.current = null;
       textRef.current = null;
     },
-    [clearInitialSyncTimer, clearSaveTimer, destroyBinding],
+    [clearInitialSyncTimer, clearRemoteCursors, clearSaveTimer, destroyBinding],
   );
 
   const handleEditorMount = useCallback(
@@ -702,9 +912,43 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
         minimap: { enabled: false },
         readOnly: sessionEnded,
       });
+      clearRemoteCursors();
+      remoteCursorManagerRef.current = new RemoteCursorManager({
+        editor,
+        tooltips: true,
+        tooltipDuration: 2,
+        showTooltipOnHover: true,
+      });
+      cursorDisposablesRef.current.forEach((disposable) => {
+        disposable.dispose();
+      });
+      cursorDisposablesRef.current = [
+        editor.onDidChangeCursorSelection(() => {
+          publishLocalCursorState();
+        }),
+        editor.onDidChangeCursorPosition(() => {
+          publishLocalCursorState();
+        }),
+        editor.onDidFocusEditorWidget(() => {
+          publishLocalCursorState();
+        }),
+        editor.onDidBlurEditorWidget(() => {
+          clearLocalCursorState();
+          syncRemoteCursors();
+        }),
+      ];
+      publishLocalCursorState();
+      syncRemoteCursors();
       rebindEditor();
     },
-    [rebindEditor, sessionEnded],
+    [
+      clearLocalCursorState,
+      clearRemoteCursors,
+      publishLocalCursorState,
+      rebindEditor,
+      sessionEnded,
+      syncRemoteCursors,
+    ],
   );
 
   return (
