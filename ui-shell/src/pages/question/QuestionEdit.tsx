@@ -1,7 +1,6 @@
 import React from "react";
 import Layout from "@components/layout/BlueBgLayout";
 import { useParams } from "react-router-dom";
-import NavHeader from "@components/common/NavHeader";
 import { RemoteWrapper } from "@/components/mfe/RemoteWrapper";
 
 const QuestionEditPageShell: React.FC = () => {
@@ -10,7 +9,7 @@ const QuestionEditPageShell: React.FC = () => {
   if (!id) return <p className="text-gray-400">No question selected.</p>;
 
   return (
-    <Layout navHeader={<NavHeader />}>
+    <Layout>
       <RemoteWrapper
         remote={() => import("questionUiService/QuestionEdit")}
         remoteName="Question UI Service"

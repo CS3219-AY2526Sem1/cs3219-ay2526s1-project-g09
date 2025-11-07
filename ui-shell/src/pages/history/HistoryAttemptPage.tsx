@@ -8,7 +8,6 @@ import React, {
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { RemoteWrapper } from "@/components/mfe/RemoteWrapper";
 import Layout from "@components/layout/BlueBgLayout";
-import NavHeader from "@components/common/NavHeader";
 import { Button } from "@/components/ui/button";
 import type { HistorySnapshot } from "@/types/history";
 import {
@@ -197,7 +196,7 @@ const HistoryAttemptPage: React.FC = () => {
   };
 
   return (
-    <Layout navHeader={<NavHeader />}>
+    <Layout>
       <div className="flex items-center justify-between pl-4 mb-4">
         <button
           type="button"

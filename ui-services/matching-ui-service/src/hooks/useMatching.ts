@@ -4,7 +4,6 @@ import type {
   UserPreferences,
   MatchResult,
   TimeoutConfig,
-  MatchDetails,
 } from "@/api/routes/matchingService";
 import {
   cancelMatch,
@@ -142,33 +141,6 @@ export function useMatching({ username }: UseMatchingProps) {
     setCurrentView("initial");
   };
 
-  // Helper to extract first topic/difficulty and map to timeMins
-  const getFirstTopicDifficultyAndTime = (match: MatchDetails) => {
-    const topics = Object.entries(match.topics);
-    if (topics.length === 0) return { topic: "", difficulty: "", timeMins: 0 };
-
-    const [firstTopic, difficulties] = topics[0];
-    const difficulty = difficulties[0];
-
-    // Map difficulty to time
-    let timeMins = 0;
-    switch (difficulty) {
-      case "Easy":
-        timeMins = 30;
-        break;
-      case "Medium":
-        timeMins = 60;
-        break;
-      case "Hard":
-        timeMins = 120;
-        break;
-      default:
-        timeMins = 0;
-    }
-
-    return { topic: firstTopic, difficulty, timeMins };
-  };
-
   return {
     // State
     currentView,
@@ -191,6 +163,5 @@ export function useMatching({ username }: UseMatchingProps) {
     handleMatchNotFound,
     handleDismissRejected,
     handleDismissExpired,
-    getFirstTopicDifficultyAndTime,
   };
 }

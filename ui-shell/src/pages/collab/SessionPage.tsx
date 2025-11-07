@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import SessionLayout from "@components/layout/BlueBgLayout";
-import NavHeader from "@components/collab/SessionHeader";
+import BlueBgLayout from "@components/layout/BlueBgLayout";
+import SessionHeader from "@components/collab/SessionHeader";
 import { CollabSessionProvider } from "collabUiService/CollabSessionContext";
 import { useCollabSession as useRemoteCollabSession } from "collabUiService/CollabSessionHook";
 import { useAuth } from "@/data/UserStore";
@@ -14,21 +14,21 @@ const SessionPage: React.FC = () => {
 
   if (!user || !currentUserId) {
     return (
-      <SessionLayout navHeader={<NavHeader />}>
+      <BlueBgLayout navHeaderComponent={SessionHeader}>
         <div className="flex h-[85vh] items-center justify-center px-4">
           <p className="text-white/70">
             Please log in to access collaboration sessions.
           </p>
         </div>
-      </SessionLayout>
+      </BlueBgLayout>
     );
   }
 
   return (
     <CollabSessionProvider currentUserId={currentUserId}>
-      <SessionLayout navHeader={<NavHeader />}>
+      <BlueBgLayout navHeaderComponent={SessionHeader}>
         <SessionContent user={user} />
-      </SessionLayout>
+      </BlueBgLayout>
     </CollabSessionProvider>
   );
 };

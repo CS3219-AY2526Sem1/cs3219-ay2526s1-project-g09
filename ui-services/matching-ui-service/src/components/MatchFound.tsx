@@ -11,9 +11,6 @@ import { Button } from "./ui/button";
 
 export interface MatchFoundProps {
   matchedName: string;
-  difficulty: string;
-  timeMins: number;
-  topic: string;
   acceptanceTimeout: number; // in milliseconds
   onAccept: () => void;
   onReject: () => void;
@@ -24,18 +21,8 @@ export interface MatchFoundProps {
   onDismissExpired?: () => void;
 }
 
-const formatTime = (totalMinutes: number) => {
-  if (totalMinutes < 60) return `${totalMinutes}min`;
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
-};
-
 const MatchFound: React.FC<MatchFoundProps> = ({
   matchedName,
-  difficulty,
-  timeMins,
-  topic,
   acceptanceTimeout,
   onAccept,
   onReject,
@@ -116,17 +103,6 @@ const MatchFound: React.FC<MatchFoundProps> = ({
         <h2 className="text-white text-5xl font-bold text-gray-900">
           Matched with <span className="text-sky-400">{matchedName}</span>
         </h2>
-        <div className="flex gap-2 mt-3 justify-center">
-          <span className="inline-flex items-center px-5 py-1.5 rounded text-xl font-medium bg-white text-black">
-            {topic}
-          </span>
-          <span className="inline-flex items-center px-5 py-1.5 rounded text-xl font-medium bg-white text-black">
-            {difficulty}
-          </span>
-          <span className="inline-flex items-center px-5 py-1.5 rounded text-xl font-medium bg-white text-black">
-            {formatTime(timeMins)}
-          </span>
-        </div>
       </div>
 
       {isWaiting ? (

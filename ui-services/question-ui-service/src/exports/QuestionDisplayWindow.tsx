@@ -17,10 +17,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questionId }) => {
     const fetchQuestion = async () => {
       setLoading(true);
       setError(null);
-
       try {
         const data = await getQuestionById(questionId);
-
         setQuestion({
           id: data.questionId,
           title: data.title,
@@ -41,7 +39,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questionId }) => {
         setLoading(false);
       }
     };
-
     fetchQuestion();
   }, [questionId]);
 
@@ -50,20 +47,18 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questionId }) => {
   if (!question) return <p className="text-gray-400">No question found</p>;
 
   return (
-    <div className="flex-grow-0 mb-4 bg-gray-800 p-4 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-2 text-white">
+    <div className="flex-grow-0 mb-4 bg-gray-800 p-4 rounded-lg shadow-md overflow-hidden">
+      <h2 className="text-xl font-semibold mb-2 text-white break-words">
         {question.title}
       </h2>
-
-      <div className="flex space-x-2 mb-2">
+      <div className="flex flex-wrap gap-2 mb-2">
         {question.hints.map((hint, index) => (
           <HintDialog key={index} hint={hint} index={index} />
         ))}
         <AnswerButton answer={question.answer} />
       </div>
-
       <div
-        className="prose prose-invert max-w-full text-white"
+        className="prose prose-invert max-w-none text-white break-words [&_*]:max-w-full [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_code]:break-all [&_table]:block [&_table]:overflow-x-auto [&_img]:max-w-full [&_img]:h-auto"
         dangerouslySetInnerHTML={{ __html: question.body }}
       />
     </div>

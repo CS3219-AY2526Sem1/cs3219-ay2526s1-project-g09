@@ -142,7 +142,7 @@ const HistoryApp: React.FC<HistoryAppProps> = ({
   };
 
   return (
-    <div className="min-h-screen text-slate-100">
+    <div className="min-h-80 text-slate-100">
       {renderQuestionPanel ? (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.6fr)]">
           <HistoryTable

@@ -5,21 +5,51 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/data/UserStore";
 import { RemoteWrapper } from "../mfe/RemoteWrapper";
 
-const NavHeaderComponent: React.FC = () => {
-  const location = useLocation();
-  const currentPath = location.pathname;
+// Extract logout button to prevent re-mounting
+const LogoutButtonWrapper: React.FC = React.memo(() => {
   const navigate = useNavigate();
-  const { user, setUser, setIsLoggingOut } = useAuth();
+  const { setUser, setIsLoggingOut } = useAuth();
+
   const loadLogoutButton = useMemo(
     () => () => import("userUiService/LogoutButton"),
     [],
   );
+
+  const logoutRemoveProps = useMemo(
+    () => ({
+      onLogOutSuccess: () => {
+        setIsLoggingOut(true);
+        setUser(null);
+        navigate("/", { state: { loggedOut: true } });
+        setTimeout(() => setIsLoggingOut(false), 500);
+      },
+    }),
+    [setIsLoggingOut, setUser, navigate],
+  );
+
+  return (
+    <RemoteWrapper
+      remote={loadLogoutButton}
+      remoteName="User UI Service"
+      remoteProps={logoutRemoveProps}
+      suppressFallback
+    />
+  );
+});
+
+LogoutButtonWrapper.displayName = "LogoutButtonWrapper";
+
+const NavHeaderComponent: React.FC = () => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const { user } = useAuth();
 
   // Function to apply active/inactive styles
   const getLinkClasses = (path: string) => {
     const baseClasses = "rounded-lg px-4 py-1 text-white transition";
     const activeClasses = "bg-teal-600 hover:bg-teal-700";
     const inactiveClasses = "bg-gray-700 hover:bg-gray-600";
+
     return cn(
       baseClasses,
       currentPath === path || currentPath.startsWith(`${path}/`)
@@ -49,7 +79,6 @@ const NavHeaderComponent: React.FC = () => {
           <Link to="/settings" className={getLinkClasses("/settings")}>
             Settings
           </Link>
-
           {/* Only show for admins */}
           {user?.isAdmin && (
             <Link to="/questions" className={getLinkClasses("/questions")}>
@@ -57,26 +86,13 @@ const NavHeaderComponent: React.FC = () => {
             </Link>
           )}
         </div>
-
-        <RemoteWrapper
-          remote={loadLogoutButton}
-          remoteName="User UI Service"
-          remoteProps={{
-            onLogOutSuccess: () => {
-              setIsLoggingOut(true);
-              setUser(null);
-              navigate("/", { state: { loggedOut: true } });
-              setTimeout(() => setIsLoggingOut(false), 500);
-            },
-          }}
-          loadingMessage="Loading logout button..."
-          errorMessage="Logout service unavailable"
-        />
+        <div className="w-[88px] h-[40px] flex items-center justify-center">
+          <LogoutButtonWrapper />
+        </div>
       </div>
     </nav>
   );
 };
 
 const NavHeader = React.memo(NavHeaderComponent);
-
 export default NavHeader;

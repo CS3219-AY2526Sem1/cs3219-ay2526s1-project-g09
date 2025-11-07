@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Layout from "@components/layout/BlueBgLayout";
-import NavHeader from "@components/common/NavHeader";
 import type { HistorySnapshot } from "@/types/history";
 import { RemoteWrapper } from "@/components/mfe/RemoteWrapper";
 import type { Attempt } from "@/types/Attempt";
@@ -126,7 +125,7 @@ const HistoryDetailPage: React.FC = () => {
   };
 
   return (
-    <Layout navHeader={<NavHeader />}>
+    <Layout>
       <div className="flex h-[85vh] gap-4 px-4">
         <div className="flex w-1/2 flex-col gap-4">
           <div className="flex items-center justify-between">

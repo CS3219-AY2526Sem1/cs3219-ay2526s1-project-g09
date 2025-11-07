@@ -1,7 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/data/UserStore";
 
-const AdminRoute: React.FC = () => {
+interface AdminRouteProps {
+  navHeader?: React.ReactNode;
+}
+
+const AdminRoute: React.FC<AdminRouteProps> = ({ navHeader }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -22,7 +26,7 @@ const AdminRoute: React.FC = () => {
     return <Navigate to="/matching" replace />;
   }
 
-  return <Outlet />;
+  return <Outlet context={{ navHeader }} />;
 };
 
 export default AdminRoute;

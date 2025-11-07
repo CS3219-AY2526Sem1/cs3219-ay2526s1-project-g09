@@ -14,27 +14,24 @@ import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-/* Header Component */
-const Header: React.FC = () => (
-  <header className="flex justify-end items-center p-6">
-    <Link
-      to="/login"
-      className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition"
-    >
-      Login
-    </Link>
-  </header>
-);
-
 /* Hero Section */
 const HeroSection: React.FC = () => (
-  <section className="flex flex-col justify-center items-start h-[60vh] px-6">
+  <section className="flex flex-col justify-center items-center h-[90vh] px-6">
     <div>
-      <img src={peerPrepIconWhite} alt="PeerPrep Logo" className="h-20" />
-      <p className="mt-4 text-lg text-blue-200 max-w-lg">
+      <img src={peerPrepIconWhite} alt="PeerPrep Logo" className="h-30" />
+      <p className="mt-4 text-lg text-blue-200 text-center">
         Technical interviews can feel overwhelming, <br />
         but you don’t have to do it alone.
       </p>
+    </div>
+    <div className="flex justify-end items-center p-6">
+      <Link to="/login">
+        <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
+          <p className="text-white font-semibold rounded-lg text-xl">
+            Get Started
+          </p>
+        </Button>
+      </Link>
     </div>
   </section>
 );
@@ -190,7 +187,6 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="flex flex-col bg-[#0a2342] text-white">
-      <Header />
       <HeroSection />
       <WaveDivider flip />
       <HowToUseSection />

@@ -1,7 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/data/UserStore";
 
-const ProtectedRoute: React.FC = () => {
+interface ProtectedRouteProps {
+  navHeader?: React.ReactNode;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ navHeader }) => {
   const { user, loading, isLoggingOut } = useAuth();
 
   if (loading) {
@@ -20,7 +24,7 @@ const ProtectedRoute: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />;
+  return <Outlet context={{ navHeader }} />;
 };
 
 export default ProtectedRoute;

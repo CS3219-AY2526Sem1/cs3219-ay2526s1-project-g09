@@ -7,18 +7,17 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
-    <div className="flex min-h-screen">
-      {/* Left Side with Wave Background */}
-      <div className="hidden md:block w-1/3 relative">
+    <div className="relative flex min-h-screen">
+      {/* Wave Background - Positioned absolutely, no space taken */}
+      <div className="hidden md:block absolute left-0 top-0 bottom-0 w-1/3 pointer-events-none">
         <img
           src={loginWave}
           alt="Wave Background"
-          className="absolute h-screen w-auto object-cover"
+          className="h-full w-auto object-cover"
         />
       </div>
-
-      {/* Right Side - Content */}
-      <div className="flex justify-center items-center bg-white px-6">
+      {/* Content - Takes full width */}
+      <div className="flex-1 flex justify-center items-center bg-white px-6">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="flex justify-center mb-6">
@@ -30,7 +29,6 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
               />
             </a>
           </div>
-
           {children}
         </div>
       </div>

@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import Layout from "@components/layout/BlueBgLayout";
-import NavHeader from "@components/common/NavHeader";
 import { useAuth } from "@/data/UserStore";
 import { RemoteWrapper } from "@/components/mfe/RemoteWrapper";
 import { CollabSessionProvider } from "collabUiService/CollabSessionContext";
@@ -13,7 +12,7 @@ const MatchingPage: React.FC = () => {
 
   if (!user || !currentUserId) {
     return (
-      <Layout navHeader={<NavHeader />}>
+      <Layout>
         <div className="flex h-[85vh] items-center justify-center px-4">
           <p className="text-white/70">
             Please log in to access the matching page.
@@ -25,7 +24,7 @@ const MatchingPage: React.FC = () => {
 
   return (
     <CollabSessionProvider currentUserId={currentUserId}>
-      <Layout navHeader={<NavHeader />}>
+      <Layout>
         <MatchingContent user={user} />
       </Layout>
     </CollabSessionProvider>
@@ -42,13 +41,20 @@ const MatchingContent: React.FC<MatchingContentProps> = ({ user }) => {
   const navigate = useNavigate();
   const { session, loading, isHydrated } = useRemoteCollabSession();
 
+  // Redirect once hydrated and session exists
   useEffect(() => {
-    if (!isHydrated || loading || !session) {
-      return;
+    if (isHydrated && !loading && session) {
+      navigate("/collab", { replace: true });
     }
-
-    navigate("/collab", { replace: true });
   }, [isHydrated, loading, session, navigate]);
+
+  if (!isHydrated || loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-white/70">
+        Checking session...
+      </div>
+    );
+  }
 
   return (
     <div className="mb-20 flex-1 flex">
@@ -56,7 +62,7 @@ const MatchingContent: React.FC<MatchingContentProps> = ({ user }) => {
         remote={() => import("matchingUiService/MatchingUi")}
         remoteName="Matching UI Service"
         remoteProps={{ user }}
-        loadingMessage="Loading Matching UI..."
+        loadingMessage="Loading.."
         errorMessage="Matching service unavailable"
       />
     </div>

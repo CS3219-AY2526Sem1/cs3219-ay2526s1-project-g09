@@ -37,7 +37,6 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user }) => {
     handleMatchNotFound,
     handleDismissRejected,
     handleDismissExpired,
-    getFirstTopicDifficultyAndTime,
   } = useMatching({ username: user?.username ?? "" });
 
   if (!user) {
@@ -75,7 +74,6 @@ const MatchingPage: React.FC<MatchingPageProps> = ({ user }) => {
       {currentView === "matchFound" && matchData?.match && (
         <MatchFound
           matchedName={matchData.match.userId ?? ""}
-          {...getFirstTopicDifficultyAndTime(matchData.match)}
           acceptanceTimeout={timeoutConfig.matchAcceptanceTimeout}
           onAccept={handleAcceptMatch}
           onReject={handleRejectMatch}
