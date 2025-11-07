@@ -1,15 +1,10 @@
-module "elastic_beanstalk_iam" {
-  source     = "../iam/elastic_beanstalk"
-  account_id = 670422575487
-}
-
 resource "aws_elastic_beanstalk_application" "backend_service" {
-  name        = "peerprep-staging-collab-service"
-  description = "Collab Backend Service"
+  name        = "peerprep-staging-${var.service_name}"
+  description = var.service_description
 }
 
 resource "aws_elastic_beanstalk_environment" "backend_service" {
-  name                = "peerprep-staging-collab-service"
+  name                = "peerprep-staging-${var.service_name}"
   application         = aws_elastic_beanstalk_application.backend_service.name
   solution_stack_name = "64bit Amazon Linux 2 v4.3.3 running Docker"
 
@@ -21,7 +16,7 @@ resource "aws_elastic_beanstalk_environment" "backend_service" {
   setting {
     namespace = "aws:elasticbeanstalk:environment"
     name      = "ServiceRole"
-    value     = module.elastic_beanstalk_iam.elastic_beanstalk_service_role_name
+    value     = var.elastic_beanstalk_service_role_name
   }
 
   # ------------------
