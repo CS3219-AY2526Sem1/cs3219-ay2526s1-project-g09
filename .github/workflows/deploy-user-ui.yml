@@ -11,7 +11,7 @@ on:
 
 jobs:
   call-base:
-    uses: ./.github/workflows/deploy-ui-to-s3.yml
+    uses: ./.github/workflows/deploy-ui-to-s3-prod.yml
     with:
       name: user-ui-service
       path: ui-services/user-ui-service

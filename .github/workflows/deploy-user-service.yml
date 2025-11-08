@@ -8,8 +8,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    uses: ./.github/workflows/deploy-service-to-eb.yml
+  deploy-staging:
+    uses: ./.github/workflows/deploy-service-to-eb-staging.yml
+    with:
+      service_name: user-service
+      service_path: backend-services/user-backend-service
+      application_name: peerprep-staging-user-service
+      environment_name: peerprep-staging-user-service
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+
+  deploy-prod:
+    uses: ./.github/workflows/deploy-service-to-eb-prod.yml
     with:
       service_name: user-service
       service_path: backend-services/user-backend-service
