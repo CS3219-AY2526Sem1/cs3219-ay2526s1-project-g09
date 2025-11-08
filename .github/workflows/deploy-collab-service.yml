@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - setup-terraform
     paths:
       - "backend-services/collab-backend-service/**"
   workflow_dispatch:
