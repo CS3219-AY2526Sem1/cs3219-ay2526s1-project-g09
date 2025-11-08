@@ -1,24 +1,24 @@
 # IAM User for GitHub Actions to deploy to AWS
 # To get the access key and secret key, create them in the AWS console after applying this terraform
 
-resource "aws_iam_user" "gha_deployer_staging" {
+resource "aws_iam_user" "gha_deployer" {
   name = "PeerPrepDeployUser"
 }
 
 resource "aws_iam_user_policy_attachment" "elastic_beanstalk_admin" {
-  user       = aws_iam_user.gha_deployer_staging.name
+  user       = aws_iam_user.gha_deployer.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess-AWSElasticBeanstalk"
 }
 resource "aws_iam_user_policy_attachment" "cloudfront_full" {
-  user       = aws_iam_user.gha_deployer_staging.name
+  user       = aws_iam_user.gha_deployer.name
   policy_arn = "arn:aws:iam::aws:policy/CloudFrontFullAccess"
 }
 resource "aws_iam_user_policy_attachment" "secretsmanager_rw" {
-  user       = aws_iam_user.gha_deployer_staging.name
+  user       = aws_iam_user.gha_deployer.name
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
 }
 resource "aws_iam_user_policy_attachment" "s3_github_workflow_perms" {
-  user       = aws_iam_user.gha_deployer_staging.name
+  user       = aws_iam_user.gha_deployer.name
   policy_arn = aws_iam_policy.s3_github_workflow_perms.arn
 }
 
