@@ -82,7 +82,7 @@ resource "aws_cloudfront_distribution" "backend_service" {
 
   enabled         = true
   is_ipv6_enabled = true
-  comment         = "PeerPrep Backend Staging"
+  comment         = "PeerPrep Backend Production"
 
   default_cache_behavior {
     allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
@@ -176,7 +176,7 @@ resource "aws_cloudfront_distribution" "backend_service" {
 
   tags = {
     name        = "peerprep-backend-service"
-    Environment = "staging"
+    Environment = "production"
     Project     = "peerprep"
     Service     = "backend-service"
   }

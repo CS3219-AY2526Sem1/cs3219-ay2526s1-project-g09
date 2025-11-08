@@ -1,4 +1,4 @@
-# IAM User for GitHub Actions to deploy to AWS (Staging)
+# IAM User for GitHub Actions to deploy to AWS
 # To get the access key and secret key, create them in the AWS console after applying this terraform
 
 resource "aws_iam_user" "gha_deployer_staging" {
