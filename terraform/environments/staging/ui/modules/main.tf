@@ -7,7 +7,7 @@ resource "aws_cloudfront_distribution" "frontend_service" {
 
   enabled         = true
   is_ipv6_enabled = true
-  comment         = "PeerPrep Collab UI MFE"
+  comment         = var.cloudfront_description
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
