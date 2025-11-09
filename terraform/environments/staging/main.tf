@@ -1,14 +1,17 @@
 module "ui_shell" {
-  source = "./ui-shell"
+  source      = "./ui-shell"
+  environment = var.environment
 }
 
 module "ui" {
-  source = "./ui"
+  source      = "./ui"
+  environment = var.environment
 }
 
 module "backend" {
-  source     = "./backend"
-  account_id = 670422575487
+  source      = "./backend"
+  account_id  = var.account_id
+  environment = var.environment
 }
 
 module "github_deployment" {

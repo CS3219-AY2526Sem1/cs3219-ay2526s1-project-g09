@@ -12,3 +12,8 @@ variable "elastic_beanstalk_service_role_name" {
   description = "The name of the elastic beanstalk service role"
   type        = string
 }
+
+variable "environment" {
+  description = "The deployment environment (e.g., staging, production)."
+  type        = string
+}

@@ -38,7 +38,7 @@ resource "aws_cloudfront_distribution" "frontend_service" {
 }
 
 resource "aws_cloudfront_origin_access_control" "frontend_service" {
-  name                              = "oac-staging-${var.service_name}-service"
+  name                              = "oac-${var.environment}-${var.service_name}-service"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"

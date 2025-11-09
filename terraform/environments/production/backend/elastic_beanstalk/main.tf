@@ -1,10 +1,10 @@
 resource "aws_elastic_beanstalk_application" "backend_service" {
-  name        = "peerprep-production-${var.service_name}"
+  name        = "peerprep-${var.environment}-${var.service_name}"
   description = var.service_description
 }
 
 resource "aws_elastic_beanstalk_environment" "backend_service" {
-  name                = "peerprep-production-${var.service_name}"
+  name                = "peerprep-${var.environment}-${var.service_name}"
   application         = aws_elastic_beanstalk_application.backend_service.name
   solution_stack_name = "64bit Amazon Linux 2 v4.3.3 running Docker"
 

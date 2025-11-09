@@ -24,12 +24,12 @@ data "aws_iam_policy_document" "allow_cloudfront_access_to_ui_shell" {
 }
 
 resource "aws_s3_bucket" "ui_shell" {
-  bucket = "peerprep-staging-ui-shell"
+  bucket = "peerprep-${var.environment}-ui-shell"
 }
 
 # CloudFront configuration for UI Shell
 resource "aws_cloudfront_origin_access_control" "ui_shell" {
-  name                              = "oac-staging-ui-shell"
+  name                              = "oac-${var.environment}-ui-shell"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -91,8 +91,8 @@ resource "aws_cloudfront_distribution" "ui_shell" {
   }
 
   tags = {
-    name        = "peerprep-ui-shell"
-    Environment = "staging"
+    Name        = "peerprep-ui-shell"
+    Environment = var.environment
     Project     = "peerprep"
     Service     = "ui-shell"
   }

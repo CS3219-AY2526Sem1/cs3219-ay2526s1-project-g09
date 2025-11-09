@@ -3,6 +3,10 @@
 
 resource "aws_iam_user" "gha_deployer" {
   name = "PeerPrepDeployUser"
+  tags = {
+    "AKIAZYGCMVF7SBQLRHU2" = "github deployment"
+    "AKIAZYGCMVF7SBQLRHU2" = "github deployment"
+  }
 }
 
 resource "aws_iam_user_policy_attachment" "elastic_beanstalk_admin" {

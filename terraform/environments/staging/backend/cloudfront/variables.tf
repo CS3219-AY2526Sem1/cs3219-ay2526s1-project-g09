@@ -25,3 +25,7 @@ variable "eb_history_service_url" {
   type        = string
 }
 
+variable "environment" {
+  description = "The deployment environment (e.g., production, staging)."
+  type        = string
+}

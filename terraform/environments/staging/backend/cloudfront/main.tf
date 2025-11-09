@@ -175,8 +175,8 @@ resource "aws_cloudfront_distribution" "backend_service" {
   }
 
   tags = {
-    name        = "peerprep-backend-service"
-    Environment = "staging"
+    Name        = "peerprep-backend-service"
+    Environment = var.environment
     Project     = "peerprep"
     Service     = "backend-service"
   }
