@@ -62,7 +62,7 @@ services:
     container_name: peerprep-user-backend
 
   redis:
-    image: redis:latest
+    image: valkey/valkey:8.0
     ports:
       - "6379:6379"
 
