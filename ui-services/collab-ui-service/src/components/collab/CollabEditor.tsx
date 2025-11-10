@@ -82,7 +82,6 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   const activeSessionRef = useRef<string | null>(sessionId);
   const remoteCursorManagerRef = useRef<RemoteCursorManager | null>(null);
   const remoteCursorIdsRef = useRef<Map<number, string>>(new Map());
-  const syncRemoteCursorRafRef = useRef<number | null>(null);
   const cursorDisposablesRef = useRef<IDisposable[]>([]);
 
   const clearSaveTimer = useCallback(() => {
@@ -248,18 +247,12 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   }, []);
 
   const syncRemoteCursors = useCallback(() => {
-    if (syncRemoteCursorRafRef.current !== null) {
-      return;
-    }
-    syncRemoteCursorRafRef.current = window.requestAnimationFrame(() => {
-      syncRemoteCursorRafRef.current = null;
-      syncRemoteCursorsHelper(
-        awarenessRef.current,
-        remoteCursorManagerRef.current,
-        remoteCursorIdsRef.current,
-        randomColorForUser,
-      );
-    });
+    syncRemoteCursorsHelper(
+      awarenessRef.current,
+      remoteCursorManagerRef.current,
+      remoteCursorIdsRef.current,
+      randomColorForUser,
+    );
   }, [randomColorForUser]);
 
   const clearLocalCursorState = useCallback(() => {
@@ -538,10 +531,6 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   useEffect(
     () => () => {
       clearSaveTimer();
-      if (syncRemoteCursorRafRef.current !== null) {
-        window.cancelAnimationFrame(syncRemoteCursorRafRef.current);
-        syncRemoteCursorRafRef.current = null;
-      }
       destroyBinding();
       cursorDisposablesRef.current.forEach((disposable) => {
         disposable.dispose();
