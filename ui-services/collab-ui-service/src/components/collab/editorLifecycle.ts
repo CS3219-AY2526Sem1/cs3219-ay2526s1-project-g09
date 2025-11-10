@@ -59,8 +59,10 @@ export const rebindEditor = ({
         }: { added: number[]; updated: number[]; removed: number[] },
         origin: unknown,
       ) => {
-        syncRemoteCursors();
-        if (origin === socket) return;
+        if (origin === socket) {
+          syncRemoteCursors();
+          return;
+        }
         const update = encodeAwarenessUpdate(awareness as Awareness, [
           ...added,
           ...updated,

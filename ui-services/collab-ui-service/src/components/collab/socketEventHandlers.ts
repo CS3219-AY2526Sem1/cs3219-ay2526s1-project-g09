@@ -161,7 +161,10 @@ export const createSocketEventHandlers = ({
       return;
     }
     const awareness = awarenessRef.current;
-    if (!awareness) {
+    if (!awareness || !awareness.doc) {
+      console.warn(
+        "[CollabEditor] Skipped awarenessUpdate: awareness doc unavailable",
+      );
       return;
     }
     const update = decodeUpdate(payload.update);
