@@ -1,4 +1,4 @@
-import { COLLAB_API_URL } from "@/api/collabService";
+import { collabApiFetch } from "@/api/collabService";
 import React, {
   createContext,
   useCallback,
@@ -73,8 +73,8 @@ export const CollabSessionProvider: React.FC<ProviderProps> = ({
 
     while (attempts < maxAttempts && !fetchedSession) {
       try {
-        const response = await fetch(
-          `${COLLAB_API_URL}sessions/${encodeURIComponent(currentUserId)}`,
+        const response = await collabApiFetch(
+          `sessions/${encodeURIComponent(currentUserId)}`,
         );
 
         if (response.status === 404) {
@@ -116,8 +116,8 @@ export const CollabSessionProvider: React.FC<ProviderProps> = ({
     }
 
     try {
-      const connectResponse = await fetch(
-        `${COLLAB_API_URL}connect/${encodeURIComponent(currentUserId)}`,
+      const connectResponse = await collabApiFetch(
+        `connect/${encodeURIComponent(currentUserId)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

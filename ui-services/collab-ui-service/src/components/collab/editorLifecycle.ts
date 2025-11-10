@@ -6,7 +6,7 @@ import { Awareness, encodeAwarenessUpdate } from "y-protocols/awareness";
 import { MonacoBinding } from "y-monaco";
 import { encodeUpdate } from "./yjsHelpers";
 import { DEFAULT_LANGUAGE } from "./CollabEditor";
-import { COLLAB_API_URL } from "@/api/collabService";
+import { collabApiFetch } from "@/api/collabService";
 
 interface RebindEditorParams {
   editorRef: MutableRefObject<MonacoEditor.IStandaloneCodeEditor | null>;
@@ -127,8 +127,8 @@ export const handleSessionLeave = async ({
     if (effectiveSessionId) {
       const targetUser = currentUserId ?? "unknown-user";
       const finalCode = getCurrentCode();
-      const res = await fetch(
-        `${COLLAB_API_URL}disconnect/${encodeURIComponent(targetUser)}`,
+      const res = await collabApiFetch(
+        `disconnect/${encodeURIComponent(targetUser)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

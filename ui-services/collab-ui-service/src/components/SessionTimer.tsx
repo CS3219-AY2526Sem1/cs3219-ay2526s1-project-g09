@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { COLLAB_API_URL } from "@/api/collabService";
+import { collabApiFetch } from "@/api/collabService";
 
 interface SessionTimerProps {
   initialTimeInSeconds?: number;
@@ -25,7 +25,7 @@ interface SessionDetails {
 const retrieveSessionDetails = async (
   sessionId: string,
 ): Promise<SessionDetails> => {
-  const res = await fetch(`${COLLAB_API_URL}${sessionId}`, {
+  const res = await collabApiFetch(sessionId, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
@@ -68,7 +68,7 @@ const SessionTimer: React.FC<SessionTimerProps> = ({
     hasExpiredRef.current = true;
 
     try {
-      const res = await fetch(`${COLLAB_API_URL}disconnect/system`, {
+      const res = await collabApiFetch("disconnect/system", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, force: true }),
