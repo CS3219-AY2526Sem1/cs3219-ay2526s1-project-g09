@@ -8,7 +8,7 @@ const DISCONNECT_TIMEOUT_MS = 10_000;
 const disconnectTimers = new Map();
 
 export const initSocket = async (server) => {
-  const redis = await RedisService.getInstance();
+  let redis;
 
   const io = new Server(server, {
     path: "/api/v1/chat-service/socket.io",
@@ -21,7 +21,19 @@ export const initSocket = async (server) => {
     },
   });
 
-  io.adapter(createAdapter(redis.pubClient, redis.subClient));
+  // Initialize Redis adapter with error handling
+  try {
+    redis = await RedisService.getInstance();
+    io.adapter(createAdapter(redis.pubClient, redis.subClient));
+    console.log("Redis adapter successfully initialized for chat service");
+  } catch (error) {
+    console.error(
+      "[chat.socket][redis] Failed to initialize Redis adapter. Falling back to in-memory adapter:",
+      error,
+    );
+    // Socket.IO will use default in-memory adapter if no adapter is set
+    // Redis will remain undefined, which is handled below
+  }
 
   async function handleDisconnect(socket, immediate) {
     const { userId, username, roomId } = socket.data;
@@ -38,6 +50,17 @@ export const initSocket = async (server) => {
     console.log(`User disconnected: ${username} (${socket.id})`);
 
     async function performDisconnect() {
+      if (!redis) {
+        console.log(`Redis unavailable, skipping user state persistence for ${username}`);
+        io.to(roomId).emit("system_message", {
+          event: "disconnect",
+          userId,
+          username,
+          text: `${username} has left the chat.`,
+        });
+        return;
+      }
+
       const latest = await redis.getUser(roomId, userId);
       if (!latest || latest.isDisconnectConfirm) return;
 
@@ -98,9 +121,6 @@ export const initSocket = async (server) => {
       socket.join(roomId);
       socket.data = { userId, username, roomId };
 
-      const currentUser = await redis.getUser(roomId, userId);
-      const allUsers = await redis.getAllUsers(roomId);
-
       // clear pending disconnect timers
       const timerKey = `${roomId}:${userId}`;
       if (disconnectTimers.has(timerKey)) {
@@ -108,6 +128,20 @@ export const initSocket = async (server) => {
         disconnectTimers.delete(timerKey);
         console.log(`Cleared pending disconnect timer for ${username}`);
       }
+
+      if (!redis) {
+        console.log(`Redis unavailable, ${username} joined room ${roomId} (no state persistence)`);
+        io.to(roomId).emit("system_message", {
+          event: "connect",
+          userId,
+          username,
+          text: `${username} has entered the chat.`,
+        });
+        return;
+      }
+
+      const currentUser = await redis.getUser(roomId, userId);
+      const allUsers = await redis.getAllUsers(roomId);
 
       if (currentUser) {
         if (currentUser.isDisconnectConfirm) {
