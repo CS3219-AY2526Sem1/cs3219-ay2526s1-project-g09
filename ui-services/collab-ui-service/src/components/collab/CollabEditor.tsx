@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import type { IDisposable, editor as MonacoEditor } from "monaco-editor";
+import type { Socket } from "socket.io-client";
 import * as Y from "yjs";
 import { Awareness } from "y-protocols/awareness";
 import { MonacoBinding } from "y-monaco";
@@ -13,7 +14,12 @@ import {
   syncRemoteCursors as syncRemoteCursorsHelper,
 } from "./cursorHelpers";
 import { cursorStorageKeyFor, decodeUpdate, storageKeyFor } from "./yjsHelpers";
-import { createCollabSocket } from "./socketHelpers";
+import {
+  getCollabSocket,
+  registerActiveSession,
+  subscribeToCollabSocket,
+  unregisterActiveSession,
+} from "./socketHelpers";
 import { createSocketEventHandlers } from "./socketEventHandlers";
 import { createDocUpdateHandler } from "./docHandlers";
 import {
@@ -27,8 +33,6 @@ type DestroyableAwareness = Awareness & { destroy?: () => void };
 export const HEARTBEAT_INTERVAL_MS = 30_000;
 export const DEFAULT_LANGUAGE = "javascript";
 export const DEFAULT_BOOTSTRAP_CODE = "// Start coding here!\n";
-
-const socket = createCollabSocket();
 
 interface CollabEditorProps {
   questionId?: string;
@@ -53,6 +57,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   sessionId: initialSessionId,
   currentUserId,
 }) => {
+  const [socket, setSocket] = useState<Socket>(() => getCollabSocket());
   const [sessionId, setSessionId] = useState<string | null>(
     initialSessionId ?? null,
   );
@@ -77,6 +82,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   const activeSessionRef = useRef<string | null>(sessionId);
   const remoteCursorManagerRef = useRef<RemoteCursorManager | null>(null);
   const remoteCursorIdsRef = useRef<Map<number, string>>(new Map());
+  const syncRemoteCursorRafRef = useRef<number | null>(null);
   const cursorDisposablesRef = useRef<IDisposable[]>([]);
 
   const clearSaveTimer = useCallback(() => {
@@ -242,12 +248,18 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   }, []);
 
   const syncRemoteCursors = useCallback(() => {
-    syncRemoteCursorsHelper(
-      awarenessRef.current,
-      remoteCursorManagerRef.current,
-      remoteCursorIdsRef.current,
-      randomColorForUser,
-    );
+    if (syncRemoteCursorRafRef.current !== null) {
+      return;
+    }
+    syncRemoteCursorRafRef.current = window.requestAnimationFrame(() => {
+      syncRemoteCursorRafRef.current = null;
+      syncRemoteCursorsHelper(
+        awarenessRef.current,
+        remoteCursorManagerRef.current,
+        remoteCursorIdsRef.current,
+        randomColorForUser,
+      );
+    });
   }, [randomColorForUser]);
 
   const clearLocalCursorState = useCallback(() => {
@@ -280,6 +292,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   }, [
     currentUserId,
     destroyBinding,
+    socket,
     publishLocalCursorState,
     randomColorForUser,
     syncRemoteCursors,
@@ -302,34 +315,34 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   }, [handleSessionLeave]);
 
   useEffect(() => {
+    return subscribeToCollabSocket((nextSocket) => {
+      setSocket(nextSocket);
+    });
+  }, []);
+
+  useEffect(() => {
     if (!initialSessionId) {
       return;
     }
 
-    let cancelled = false;
+    setSessionId(initialSessionId);
+    setSessionEnded(false);
+    setSessionEndedMessage(null);
+    setParticipantPrompt(null);
+  }, [initialSessionId]);
 
-    const connectAndJoin = () => {
-      setSessionId(initialSessionId);
-      setSessionEnded(false);
-      setSessionEndedMessage(null);
-      setParticipantPrompt(null);
-
-      if (cancelled) {
-        return;
+  useEffect(() => {
+    if (!sessionId || sessionEnded) {
+      if (sessionId) {
+        unregisterActiveSession(sessionId);
       }
-
-      socket.emit("joinRoom", {
-        sessionId: initialSessionId,
-        userId: currentUserId,
-      });
-    };
-
-    connectAndJoin();
-
+      return;
+    }
+    registerActiveSession(sessionId, currentUserId);
     return () => {
-      cancelled = true;
+      unregisterActiveSession(sessionId);
     };
-  }, [currentUserId, initialSessionId]);
+  }, [currentUserId, sessionEnded, sessionId]);
 
   useEffect(() => {
     if (!sessionId || sessionEnded) {
@@ -344,7 +357,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [sessionId, sessionEnded]);
+  }, [sessionEnded, sessionId, socket]);
 
   useEffect(() => {
     if (initialSessionId || sessionId) {
@@ -396,7 +409,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     const storedKey = storageKeyFor(sessionId, currentUserId);
     const stored = storedKey !== null ? localStorage.getItem(storedKey) : null;
     pendingInitialContentRef.current =
-      stored !== null && stored.length > 0 ? stored : DEFAULT_BOOTSTRAP_CODE;
+      stored !== null && stored.length > 0 ? stored : "";
 
     const handleUpdate = createDocUpdateHandler({
       sessionId,
@@ -431,6 +444,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     clearRemoteCursors,
     queueLocalSave,
     rebindEditor,
+    socket,
     sessionEnded,
     sessionId,
   ]);
@@ -492,6 +506,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     setSessionEndedMessage,
     setSessionId,
     syncRemoteCursors,
+    socket,
   ]);
 
   useEffect(() => {
@@ -523,6 +538,10 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   useEffect(
     () => () => {
       clearSaveTimer();
+      if (syncRemoteCursorRafRef.current !== null) {
+        window.cancelAnimationFrame(syncRemoteCursorRafRef.current);
+        syncRemoteCursorRafRef.current = null;
+      }
       destroyBinding();
       cursorDisposablesRef.current.forEach((disposable) => {
         disposable.dispose();
@@ -571,7 +590,6 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
         }),
         editor.onDidBlurEditorWidget(() => {
           clearLocalCursorState();
-          syncRemoteCursors();
         }),
       ];
       rebindEditor();

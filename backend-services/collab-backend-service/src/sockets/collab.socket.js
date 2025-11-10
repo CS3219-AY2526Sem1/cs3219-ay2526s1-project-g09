@@ -23,6 +23,37 @@ export const initSocket = (server) => {
     pendingYjsUpdates.push(payload);
   };
 
+  const stopInactivityWatcher = (() => {
+    let inactivityInterval = null;
+    return {
+      start(runSweep) {
+        if (inactivityInterval !== null) {
+          clearInterval(inactivityInterval);
+        }
+        inactivityInterval = setInterval(runSweep, 30 * 1000);
+      },
+      stop() {
+        if (inactivityInterval !== null) {
+          clearInterval(inactivityInterval);
+          inactivityInterval = null;
+        }
+      },
+    };
+  })();
+
+  const closeRedisClients = async () => {
+    await Promise.all(
+      redisClients.map((client) =>
+        client?.quit?.().catch((error) => {
+          console.warn(
+            "[collab.socket][redis] Failed to close Redis client cleanly:",
+            error,
+          );
+        }),
+      ),
+    );
+  };
+
   (async () => {
     try {
       const redisResources = await initialiseRedisAdapter();
@@ -65,7 +96,7 @@ export const initSocket = (server) => {
   const runInactivitySweep = createInactivitySweep(io);
   // Periodically check for sockets that have gone silent and nudge SessionService
   // to evict them. This decouples inactivity handling from per-event logic.
-  const inactivityInterval = setInterval(runInactivitySweep, 30 * 1000);
+  stopInactivityWatcher.start(runInactivitySweep);
 
   io.on("connection", (socket) => {
     const initialActivity = Date.now();
@@ -94,16 +125,24 @@ export const initSocket = (server) => {
   });
 
   io.engine.on("close", () => {
-    clearInterval(inactivityInterval);
-    redisClients.forEach((client) => {
-      client.quit?.().catch((error) => {
-        console.warn(
-          "[collab.socket][redis] Failed to close Redis client cleanly:",
-          error,
-        );
-      });
-    });
+    stopInactivityWatcher.stop();
+    void closeRedisClients();
   });
 
-  return io;
+  let shutdownPromise = null;
+  const close = async () => {
+    if (shutdownPromise) {
+      return shutdownPromise;
+    }
+    shutdownPromise = (async () => {
+      stopInactivityWatcher.stop();
+      await new Promise((resolve) => {
+        io.close(() => resolve());
+      });
+      await closeRedisClients();
+    })();
+    return shutdownPromise;
+  };
+
+  return { io, close };
 };
