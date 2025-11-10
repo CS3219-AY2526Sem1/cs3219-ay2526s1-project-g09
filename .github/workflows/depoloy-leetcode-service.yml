@@ -1,0 +1,19 @@
+name: Deploy Leetcode Service
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "backend-services/leetcode-backend-service/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-service-to-eb.yml
+    with:
+      service_name: leetcode-service
+      service_path: backend-services/leetcode-backend-service
+      application_name: peerprep-leetcode-service
+      environment_name: peerprep-leetcode-service-prod
+    secrets: inherit
