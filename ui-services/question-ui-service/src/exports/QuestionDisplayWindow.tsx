@@ -55,7 +55,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questionId }) => {
         {question.hints.map((hint, index) => (
           <HintDialog key={index} hint={hint} index={index} />
         ))}
-        <AnswerButton answer={question.answer} />
+
+        {question.answer && question.answer.trim() !== "" && (
+          <AnswerButton answer={question.answer} />
+        )}
       </div>
       <div
         className="prose prose-invert max-w-none text-white break-words [&_*]:max-w-full [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_code]:break-all [&_table]:block [&_table]:overflow-x-auto [&_img]:max-w-full [&_img]:h-auto"
