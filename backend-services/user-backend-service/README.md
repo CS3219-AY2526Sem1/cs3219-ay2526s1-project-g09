@@ -98,10 +98,10 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
 
 ### Authentication & Session Behavior
 
-| rememberMe | JWT Lifetime | Cookie Lifetime              | Behavior                                       |
-| ---------- | ------------ | ---------------------------- | ---------------------------------------------- |
-| false      | 1 day        | Session cookie (no `maxAge`) | Expires in 24 hours or until browser is closed |
-| true       | 30 days      | 30 days                      | Persists for 30 days                           |
+| rememberMe | JWT Lifetime | Cookie Lifetime              | Behavior                                                                                   |
+| ---------- | ------------ | ---------------------------- | ------------------------------------------------------------------------------------------ |
+| false      | 1 day        | Session cookie (no `maxAge`) | Cookie expires when browser is closed; JWT remains valid for up to 24 hours if cookie persists |
+| true       | 30 days      | 30 days                      | Persists for 30 days                                                                       |
 
 ## API Reference
 

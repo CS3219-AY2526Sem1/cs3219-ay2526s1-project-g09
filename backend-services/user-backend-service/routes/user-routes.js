@@ -32,7 +32,7 @@ router.patch(
 // Create user
 router.post("/", rateLimiter, createUser);
 
-// Get, update, delete user by ID
+// Get user by ID
 router.get(
   "/:id",
   rateLimiter,
