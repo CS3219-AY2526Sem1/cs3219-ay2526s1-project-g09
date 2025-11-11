@@ -3,11 +3,7 @@ import app from "./app.js";
 import { initSocket } from "./utils/socket.util.js";
 
 const PORT = process.env.PORT || 5286;
-const DEFAULT_SHUTDOWN_TIMEOUT_MS = 30_000;
-const parsedShutdownTimeout = Number(process.env.SHUTDOWN_TIMEOUT_MS);
-const SHUTDOWN_TIMEOUT_MS = Number.isFinite(parsedShutdownTimeout)
-  ? parsedShutdownTimeout
-  : DEFAULT_SHUTDOWN_TIMEOUT_MS;
+const SHUTDOWN_TIMEOUT_MS = 30_000;
 
 const server = http.createServer(app);
 let socketLifecycle;
