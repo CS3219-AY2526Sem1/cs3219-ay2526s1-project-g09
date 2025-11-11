@@ -17,8 +17,10 @@ import { rateLimiter } from "../middleware/rate-limiter.js";
 
 const router = express.Router();
 
+// Get all users (admin only)
 router.get("/", rateLimiter, verifyAccessToken, verifyIsAdmin, getAllUsers);
 
+// Update user privilege (admin only)
 router.patch(
   "/:id/privilege",
   rateLimiter,
@@ -27,8 +29,10 @@ router.patch(
   updateUserPrivilege,
 );
 
+// Create user
 router.post("/", rateLimiter, createUser);
 
+// Get, update, delete user by ID
 router.get(
   "/:id",
   rateLimiter,
@@ -37,6 +41,7 @@ router.get(
   getUser,
 );
 
+// Update user details
 router.patch(
   "/:id",
   rateLimiter,
@@ -45,6 +50,7 @@ router.patch(
   updateUser,
 );
 
+// Delete user
 router.delete(
   "/:id",
   rateLimiter,
