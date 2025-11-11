@@ -11,7 +11,7 @@ on:
 
 jobs:
   call-base:
-    uses: ./.github/workflows/deploy-ui-to-s3-prod.yml
+    uses: ./.github/workflows/deploy-ui-to-s3.yml
     with:
       name: ui-shell
       path: ui-shell
