@@ -29,15 +29,11 @@ Express.js + Socket.io service that:
 
 3. Clone `.env.example` and rename as `.env`.
 
-4. Configure Redis connection:
-   - For local Redis: Set `REDIS_HOST=localhost` and `REDIS_PORT=6379`
-   - For AWS ElastiCache with TLS: Set `REDIS_TLS_ENABLED=true`
+4. Run a redis instance on port 6379 and ensure that `REDIS_TLS_ENABLED` is `false` in `.env` for development mode.
 
-5. Run the command: `docker run -d -p 6379:6379 redis:latest`. This will start a local Redis container.
+5. Run the command `npm start` to start the Chat Service in production mode, or use `npm run dev` for development mode, which includes features like automatic server restart when you make code changes.
 
-6. Run the command `npm start` to start the Chat Service in production mode, or use `npm run dev` for development mode, which includes features like automatic server restart when you make code changes.
-
-7. The service will be available on port 5286. If you wish to change the port, please update the `.env` file.
+6. The service will be available on port 5286. If you wish to change the port, please update the `.env` file.
 
 ## Running with Docker
 
@@ -222,14 +218,13 @@ The service implements a 10-second grace period for disconnections to prevent fa
   }
   ```
 
-  Example - Existing Users (sent to newly joined user):
+  Example - Existing User (sent to newly joined user):
 
   ```javascript
   {
     eventType: 'existing_users',
     users: [
-      { userId: 'user-456', username: 'Bob' },
-      { userId: 'user-789', username: 'Charlie' }
+      { userId: 'user-456', username: 'Bob' }
     ]
   }
   ```
