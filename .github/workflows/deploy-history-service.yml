@@ -3,8 +3,10 @@ on:
   push:
     branches:
       - master
+      - setup-terraform
+
     paths:
-      - "backend-services/history-backend-service/**"
+      - "backend-services/user-backend-service/**"
   workflow_dispatch:
 
 jobs:
