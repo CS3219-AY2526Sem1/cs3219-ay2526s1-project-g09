@@ -107,326 +107,435 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
 
 ### Registering a User
 
-- Usage:
+- Usage: **POST** `http://localhost:5277/api/v1/user-service/users`
 
-  **POST** `http://localhost:5277/api/v1/user-service/users`
+- Behaviour: Registers a new user account with username, email, and password.
 
 - Headers
-  - Required: `X-CSRF-Token: <CSRF-derived-token>`
 
-  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
-  - Required: `username` (string), `email` (string), `password` (string)
+
+  | Name       | Type   | Required | Description                                                          |
+  | ---------- | ------ | -------- | -------------------------------------------------------------------- |
+  | `username` | string | Yes      | Username for the account (3-20 characters, letters and numbers only) |
+  | `email`    | string | Yes      | Email address for the account                                        |
+  | `password` | string | Yes      | Password for the account (must meet security requirements)           |
+
+  Username requirements:
+  - Username must be 3–20 characters
+  - Username should only contain letters and numbers
+
+  Password requirements:
+  - Password must be at least 12 characters long
+  - Password should have at least 1 uppercase and 1 lowercase character
+  - Password should contain a number
+  - Password should contain a special character
+    - Special characters include: `!"#$%&'()*+,-./\:;<=>?@[]^_`{|}~`
+  - Password should not contain any whitespace
+  - Password should not exceed 64 characters
+
+  ```json
+  {
+    "username": "SampleUser1",
+    "email": "sample1@gmail.com",
+    "password": "SecurePassword123!"
+  }
+  ```
+
+- Expected Response:
+  - HTTP STATUS 201 CREATED: User account successfully created.
 
     ```json
     {
-      "username": "SampleUser1",
-      "email": "sample1@gmail.com",
-      "password": "SecurePassword123!"
+      "message": "Created new user SampleUser1 successfully",
+      "data": {
+        "id": "<userId>",
+        "username": "SampleUser1",
+        "email": "sample1@gmail.com",
+        "isAdmin": false,
+        "isVerified": false,
+        "createdAt": "2025-09-22T13:55:40.590Z"
+      }
     }
     ```
-
-  - Note: Username should meet the following requirements:
-    - Username must be 3–20 characters
-    - Username should only contain letters and numbers
-
-  - Note: Password should meet the following requirements:
-    - Password is 12 characters long
-    - Password should have at least 1 uppercase and 1 lowercase character
-    - Password should contain a number
-    - Password should contain a special character
-      - Special characters include: `!"#$%&'()*+,-./\:;<=>?@[]^_`{|}~`
-    - Password should not contain any whitespace
-    - Password should not exceed 64 characters
-
-- Expected Response:
-  ```json
-  {
-    "message": "Created new user SampleUser1 successfully",
-    "data": {
-      "id": "<userId>",
-      "username": "SampleUser1",
-      "email": "sample1@gmail.com",
-      "isAdmin": false,
-      "isVerified": false,
-      "createdAt": "2025-09-22T13:55:40.590Z"
-    }
-  }
-  ```
 
 ### Login with User Details
 
-- Usage:
+- Usage: **POST** `http://localhost:5277/api/v1/user-service/auth/login`
 
-  **POST** `http://localhost:5277/api/v1/user-service/auth/login`
+- Behaviour: Authenticates a user with their credentials and creates a session.
 
 - Headers
-  - Required: `X-CSRF-Token: <CSRF-derived-token>`
 
-  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
-  - Required: `email` (string), `password` (string), `rememberMe` (boolean)
+
+  | Name         | Type    | Required | Description                                                                                                     |
+  | ------------ | ------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+  | `email`      | string  | Yes      | Email address of the user                                                                                       |
+  | `password`   | string  | Yes      | Password for the account                                                                                        |
+  | `rememberMe` | boolean | Yes      | Whether to extend session lifetime (see [Authentication & Session Behavior](#authentication--session-behavior)) |
+
+  ```json
+  {
+    "email": "sample1@gmail.com",
+    "password": "SecurePassword",
+    "rememberMe": false
+  }
+  ```
+
+- Expected Response:
+  - HTTP STATUS 200 OK: User successfully authenticated and logged in.
 
     ```json
     {
-      "email": "sample1@gmail.com",
-      "password": "SecurePassword",
-      "rememberMe": false
+      "message": "User logged in",
+      "data": {
+        "id": "<userId>",
+        "username": "SampleUser1",
+        "email": "sample1@gmail.com",
+        "isAdmin": false,
+        "isVerified": true,
+        "createdAt": "2025-09-22T13:55:40.590Z"
+      }
     }
     ```
-
-- Expected Response:
-  ```json
-  {
-    "message": "User logged in",
-    "data": {
-      "id": "<userId>",
-      "username": "SampleUser1",
-      "email": "sample1@gmail.com",
-      "isAdmin": false,
-      "isVerified": true,
-      "createdAt": "2025-09-22T13:55:40.590Z"
-    }
-  }
-  ```
 
 ### Get User
 
-- Usage:
+- Usage: **GET** `http://localhost:5277/api/v1/user-service/users/{userId}`
 
-**GET** `http://localhost:5277/api/v1/user-service/users/{userId}`
+- Behaviour: Retrieves user information for the specified user ID.
 
 - Parameters
-  - Required: `userId` path parameter
 
-  - Example: `http://localhost:5277/api/v1/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
+  | Name     | Type   | Required | Description                    |
+  | -------- | ------ | -------- | ------------------------------ |
+  | `userId` | string | Yes      | The ID of the user to retrieve |
+
+  Example: `http://localhost:5277/api/v1/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Expected Response:
-  ```json
-  {
-    "message": "Found user",
-    "data": {
-      "id": "<userId>",
-      "username": "SampleUser1",
-      "email": "sample1@gmail.com",
-      "isAdmin": false,
-      "isVerified": true,
-      "createdAt": "2025-09-22T13:55:40.590Z"
+  - HTTP STATUS 200 OK: User information successfully retrieved.
+
+    ```json
+    {
+      "message": "Found user",
+      "data": {
+        "id": "<userId>",
+        "username": "SampleUser1",
+        "email": "sample1@gmail.com",
+        "isAdmin": false,
+        "isVerified": true,
+        "createdAt": "2025-09-22T13:55:40.590Z"
+      }
     }
-  }
-  ```
+    ```
 
 ### Update User
 
-- Usage:
+- Usage: **PATCH** `http://localhost:5277/api/v1/user-service/users/{userId}`
 
-**PATCH** `http://localhost:5277/api/v1/user-service/users/{userId}`
+- Behaviour: Updates user information for the specified user. At least one field must be provided.
 
 - Headers
-  - Required: `X-CSRF-Token: <CSRF-derived-token>`
 
-  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Parameters
-  - Required: `userId` path parameter
 
-  - Example: `http://localhost:5277/api/v1/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
+  | Name     | Type   | Required | Description                  |
+  | -------- | ------ | -------- | ---------------------------- |
+  | `userId` | string | Yes      | The ID of the user to update |
+
+  Example: `http://localhost:5277/api/v1/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Body
-  - At least one of the following fields is required: `username` (string), `email` (string), `password` (string)
+
+  | Name       | Type   | Required | Description                                                              |
+  | ---------- | ------ | -------- | ------------------------------------------------------------------------ |
+  | `username` | string | No       | New username for the account (3-20 characters, letters and numbers only) |
+  | `email`    | string | No       | New email address for the account                                        |
+  | `password` | string | No       | New password for the account (must meet security requirements)           |
+
+  Note: At least one field must be provided.
+
+  ```json
+  {
+    "username": "SampleUserName",
+    "email": "sample@gmail.com",
+    "password": "SecurePassword"
+  }
+  ```
+
+- Expected Response:
+  - HTTP STATUS 200 OK: User information successfully updated.
 
     ```json
     {
-      "username": "SampleUserName",
-      "email": "sample@gmail.com",
-      "password": "SecurePassword"
+      "message": "Updated data for user {userId}",
+      "data": {
+        "id": "{userId}",
+        "username": "SampleUser123",
+        "email": "sample2@gmail.com",
+        "isAdmin": false,
+        "isVerified": true,
+        "createdAt": "2025-09-22T13:55:40.590Z"
+      }
     }
     ```
-
-- Expected Response:
-  ```json
-  {
-    "message": "Updated data for user {userId}",
-    "data": {
-      "id": "{userId}",
-      "username": "SampleUser123",
-      "email": "sample2@gmail.com",
-      "isAdmin": false,
-      "isVerified": true,
-      "createdAt": "2025-09-22T13:55:40.590Z"
-    }
-  }
-  ```
 
 ### Delete User
 
-- Usage:
+- Usage: **DELETE** `http://localhost:5277/api/v1/user-service/users/{userId}`
 
-**DELETE** `http://localhost:5277/api/v1/user-service/users/{userId}`
+- Behaviour: Deletes the specified user account permanently.
 
 - Headers
-  - Required: `X-CSRF-Token: <CSRF-derived-token>`
 
-  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Parameters
-  - Required: `userId` path parameter
 
-  - Example: `http://localhost:5277/api/v1/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
+  | Name     | Type   | Required | Description                  |
+  | -------- | ------ | -------- | ---------------------------- |
+  | `userId` | string | Yes      | The ID of the user to delete |
+
+  Example: `http://localhost:5277/api/v1/user-service/users/60c72b2f9b1d4c3a2e5f8b4c`
 
 - Expected Response:
-  ```json
-  {
-    "message": "Deleted user {userId} successfully"
-  }
-  ```
+  - HTTP STATUS 200 OK: User successfully deleted.
+
+    ```json
+    {
+      "message": "Deleted user {userId} successfully"
+    }
+    ```
 
 ### Verify Token
 
-- Usage:
+- Usage: **GET** `http://localhost:5277/api/v1/user-service/auth/verify-token`
 
-**GET** `http://localhost:5277/api/v1/user-service/auth/verify-token`
+- Behaviour: Verifies the validity of the current JWT token and returns user information.
 
 - Expected Response:
-  ```json
-  {
-    "message": "Token verified",
-    "data": {
-      "id": "{userId}",
-      "username": "SampleUser123",
-      "email": "sample123@gmail.com",
-      "isAdmin": false
+  - HTTP STATUS 200 OK: Token is valid.
+
+    ```json
+    {
+      "message": "Token verified",
+      "data": {
+        "id": "{userId}",
+        "username": "SampleUser123",
+        "email": "sample123@gmail.com",
+        "isAdmin": false
+      }
     }
-  }
-  ```
+    ```
 
 ### Send OTP
 
-- Usage:
+- Usage: **POST** `http://localhost:5277/api/v1/user-service/auth/send-otp`
 
-**POST** `http://localhost:5277/api/v1/user-service/auth/send-otp`
+- Behaviour: Sends a one-time password (OTP) to the specified email address for email verification.
 
 - Headers
-  - Required: `X-CSRF-Token: <CSRF-derived-token>`
 
-  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
-  - Required: `email` (string)
+
+  | Name    | Type   | Required | Description                      |
+  | ------- | ------ | -------- | -------------------------------- |
+  | `email` | string | Yes      | Email address to send the OTP to |
+
+  ```json
+  {
+    "email": "sample@gmail.com"
+  }
+  ```
+
+- Expected Response:
+  - HTTP STATUS 200 OK: OTP successfully sent to the email address.
 
     ```json
     {
-      "email": "sample@gmail.com"
+      "message": "OTP sent to your email"
     }
     ```
-
-- Expected Response:
-  ```json
-  {
-    "message": "OTP sent to your email"
-  }
-  ```
 
 ### Verify OTP
 
-- Usage:
+- Usage: **POST** `http://localhost:5277/api/v1/user-service/auth/verify-otp`
 
-**POST** `http://localhost:5277/api/v1/user-service/auth/verify-otp`
+- Behaviour: Verifies the OTP sent to the user's email and marks the account as verified.
 
 - Headers
-  - Required: `X-CSRF-Token: <CSRF-derived-token>`
 
-  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Body
-  - Required: `email` (string), `otp` (string)
+
+  | Name    | Type   | Required | Description                              |
+  | ------- | ------ | -------- | ---------------------------------------- |
+  | `email` | string | Yes      | Email address associated with the OTP    |
+  | `otp`   | string | Yes      | The one-time password received via email |
+
+  ```json
+  {
+    "email": "sample@gmail.com",
+    "otp": "123456"
+  }
+  ```
+
+- Expected Response:
+  - HTTP STATUS 200 OK: Email successfully verified.
 
     ```json
     {
-      "email": "sample@gmail.com",
-      "otp": "123456"
+      "message": "Email verified successfully",
+      "data": {
+        "id": "<userId>",
+        "username": "SampleUser1",
+        "email": "sample1@gmail.com",
+        "isAdmin": false,
+        "isVerified": true,
+        "createdAt": "2025-09-22T13:55:40.590Z"
+      }
     }
     ```
-
-- Expected Response:
-  ```json
-  {
-    "message": "Email verified successfully",
-    "data": {
-      "id": "<userId>",
-      "username": "SampleUser1",
-      "email": "sample1@gmail.com",
-      "isAdmin": false,
-      "isVerified": true,
-      "createdAt": "2025-09-22T13:55:40.590Z"
-    }
-  }
-  ```
 
 ### Logging Out
 
-- Usage:
+- Usage: **POST** `http://localhost:5277/api/v1/user-service/auth/logout`
 
-**POST** `http://localhost:5277/api/v1/user-service/auth/logout`
-
-- Headers
-  - Required: `X-CSRF-Token: <CSRF-derived-token>`
-
-  - Postman Usage: Refer to [CSRF Token](#csrf-token)
-
-- Expected Response:
-  ```json
-  {
-    "message": "Logged out"
-  }
-  ```
-
-### User forgot password, Request reset link
-
-- Usage:
-
-**POST** `http://localhost:5277/api/v1/user-service/auth/forgot-password`
+- Behaviour: Logs out the current user and invalidates their session.
 
 - Headers
-  - Required: `X-CSRF-Token: <CSRF-derived-token>`
 
-  - Postman Usage: Refer to [CSRF Token](#csrf-token)
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
 
 - Expected Response:
-
-  ```json
-  {
-    "ok": true
-  }
-  ```
-
-- Note: `"ok": "true"` will be returned regardless of email delivered successfully or not.
-
-### Reset password
-
-- Usage:
-
-**POST** `http://localhost:5277/api/v1/user-service/auth/reset-password?token={resetToken}`
-
-- Parameters
-  - Required: `resetToken` path parameter
-
-- Body
-  - Required: `newPassword` (string)
+  - HTTP STATUS 200 OK: User successfully logged out.
 
     ```json
     {
-      "newPassword": "newPassword123!"
+      "message": "Logged out"
     }
     ```
 
-  - Note: Password should meet the following requirements:
-    - Password is 12 characters long
-    - Password should have at least 1 uppercase and 1 lowercase character
-    - Password should contain a number
-    - Password should contain a special character
-      - Special characters include: `!"#$%&'()*+,-./\:;<=>?@[]^_`{|}~`
-    - Password should not contain any whitespace
-    - Password should not exceed 64 characters
+### User Forgot Password, Request Reset Link
+
+- Usage: **POST** `http://localhost:5277/api/v1/user-service/auth/forgot-password`
+
+- Behaviour: Sends a password reset link to the user's email address. Returns success regardless of whether the email exists (for security reasons).
+
+- Headers
+
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
+
+- Body
+
+  | Name    | Type   | Required | Description                         |
+  | ------- | ------ | -------- | ----------------------------------- |
+  | `email` | string | Yes      | Email address to send reset link to |
+
+  ```json
+  {
+    "email": "sample@gmail.com"
+  }
+  ```
+
+- Expected Response:
+  - HTTP STATUS 200 OK: Request processed. Note: Returns success regardless of whether email exists (for security).
+
+    ```json
+    {
+      "ok": true
+    }
+    ```
+
+### Reset Password
+
+- Usage: **POST** `http://localhost:5277/api/v1/user-service/auth/reset-password?token={resetToken}`
+
+- Behaviour: Resets the user's password using a valid reset token received via email.
+
+- Headers
+
+  | Name           | Type   | Required | Description             |
+  | -------------- | ------ | -------- | ----------------------- |
+  | `X-CSRF-Token` | string | Yes      | CSRF token for security |
+
+  Postman Usage: Refer to [CSRF Token](#csrf-token)
+
+- Parameters
+
+  | Name         | Type   | Required | Description                                 |
+  | ------------ | ------ | -------- | ------------------------------------------- |
+  | `resetToken` | string | Yes      | The password reset token received via email |
+
+- Body
+
+  | Name          | Type   | Required | Description                                                    |
+  | ------------- | ------ | -------- | -------------------------------------------------------------- |
+  | `newPassword` | string | Yes      | New password for the account (must meet security requirements) |
+
+  Password requirements:
+  - Password must be at least 12 characters long
+  - Password should have at least 1 uppercase and 1 lowercase character
+  - Password should contain a number
+  - Password should contain a special character
+    - Special characters include: `!"#$%&'()*+,-./\:;<=>?@[]^_`{|}~`
+  - Password should not contain any whitespace
+  - Password should not exceed 64 characters
+
+  ```json
+  {
+    "newPassword": "newPassword123!"
+  }
+  ```
+
+- Expected Response:
+  - HTTP STATUS 200 OK: Password successfully reset.
+
+    ```json
+    {
+      "message": "Password reset successful"
+    }
+    ```
