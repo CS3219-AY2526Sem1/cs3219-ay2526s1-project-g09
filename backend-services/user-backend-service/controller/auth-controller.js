@@ -265,14 +265,17 @@ function generateCookie(res, user, rememberMe) {
   const accessToken = generateAccessToken(user, tokenLifetime);
   const isProd = process.env.NODE_ENV === "production";
 
-  res.cookie("authToken", accessToken, {
+  const cookieOptions = {
     httpOnly: true,
     secure: isProd, // HTTPS in prod
     sameSite: isProd ? "none" : "lax", // None in prod, Lax in dev
     partitioned: isProd,
     path: "/",
-    ...(rememberMe
-      ? { maxAge: 30 * 24 * 60 * 60 * 1000 }
-      : { maxAge: 24 * 60 * 60 * 1000 }), // if rememberMe is true, maxAge is 30 days, else false, maxAge is 1 day
-  });
+  };
+
+  if (rememberMe) {
+    cookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000; // if rememberMe is true, maxAge is 30 days, else false, no maxAge and cookie expires at end of session
+  }
+
+  res.cookie("authToken", accessToken, cookieOptions);
 }
