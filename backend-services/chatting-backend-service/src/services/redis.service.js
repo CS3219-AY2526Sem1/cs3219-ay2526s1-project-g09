@@ -1,36 +1,27 @@
 import { createClient } from "redis";
 
 /**
- * Resolve Redis connection options from environment variables
- * Supports both URL-based and host/port-based configuration with TLS
+ * Resolve Redis connection options for AWS ElastiCache
+ * Only requires: REDIS_HOST, REDIS_PORT (optional), REDIS_TLS_ENABLED
  */
 const resolveRedisConnectionOptions = () => {
-  const redisUrl = process.env.REDIS_URL ?? null;
-
-  if (!redisUrl) {
-    // Default to localhost for development
-    return {
-      socket: {
-        host: "localhost",
-        port: 6379,
-      },
-    };
-  }
-
-  const useTls = process.env.REDIS_TLS_ENABLED === "true";
+  const redisHost = process.env.REDIS_HOST || "redis";
+  const redisPort = parseInt(process.env.REDIS_PORT || "6379");
+  const redisTlsEnabled = process.env.REDIS_TLS_ENABLED === "true";
 
   const options = {
-    url: redisUrl,
-    socket: useTls
-      ? {
-          tls: true,
-          rejectUnauthorized: false,
-          servername: new URL(redisUrl).hostname,
-          connectTimeout: 20000,
-          alpnProtocols: [],
-        }
-      : undefined,
+    socket: {
+      host: redisHost,
+      port: redisPort,
+    },
   };
+
+  // Add TLS for ElastiCache encryption in-transit
+  if (redisTlsEnabled) {
+    options.socket.tls = true;
+    // ElastiCache certificates are valid. Reject unauthorized certs
+    options.socket.rejectUnauthorized = true;
+  }
 
   return options;
 };
@@ -40,6 +31,11 @@ class RedisService {
 
   constructor() {
     const options = resolveRedisConnectionOptions();
+    console.log("Initializing Redis with config:", {
+      host: options.socket.host,
+      port: options.socket.port,
+      tls: !!options.socket.tls,
+    });
 
     this.pubClient = createClient(options);
     this.subClient = this.pubClient.duplicate();
@@ -54,6 +50,7 @@ class RedisService {
   }
 
   async connect() {
+    console.log("Connecting to Redis...");
     await Promise.all([
       this.pubClient.connect(),
       this.subClient.connect(),
@@ -73,6 +70,7 @@ class RedisService {
 
   // -------- Room operations --------
   async addOrUpdateUser(roomId, userId, data) {
+    console.log(`Adding user ${userId} to room ${roomId}`);
     await this.appClient.hSet(
       `room:${roomId}:users`,
       userId,
@@ -93,10 +91,12 @@ class RedisService {
   }
 
   async removeUser(roomId, userId) {
+    console.log(`Removing user ${userId} from room ${roomId}`);
     await this.appClient.hDel(`room:${roomId}:users`, userId);
   }
 
   async deleteRoom(roomId) {
+    console.log(`Deleting room ${roomId}`);
     await this.appClient.del(`room:${roomId}:users`);
   }
 
