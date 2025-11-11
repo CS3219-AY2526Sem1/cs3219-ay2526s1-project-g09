@@ -154,6 +154,107 @@ export async function fetchHistorySnapshot(
   return normalised;
 }
 
+export interface HistoryListQuery {
+  sessionId?: string | null;
+  userId?: string | null;
+  questionId?: string | null;
+  limit?: number;
+  skip?: number;
+}
+
+export interface HistoryListResult {
+  items: HistorySnapshot[];
+  total: number;
+  limit: number;
+  skip: number;
+}
+
+export async function fetchHistorySnapshots(
+  query: HistoryListQuery = {},
+  signal?: AbortSignal,
+): Promise<HistoryListResult> {
+  const url = new URL(`${HISTORY_SERVICE_BASE_URL}/history`);
+  const params = new URLSearchParams();
+
+  const appendStringParam = (key: keyof HistoryListQuery) => {
+    const value = query[key];
+    if (typeof value === "string" && value.trim().length > 0) {
+      params.set(key, value.trim());
+    }
+  };
+
+  appendStringParam("sessionId");
+  appendStringParam("userId");
+  appendStringParam("questionId");
+
+  if (
+    typeof query.limit === "number" &&
+    Number.isFinite(query.limit) &&
+    query.limit > 0
+  ) {
+    params.set("limit", String(Math.floor(query.limit)));
+  }
+
+  if (
+    typeof query.skip === "number" &&
+    Number.isFinite(query.skip) &&
+    query.skip >= 0
+  ) {
+    params.set("skip", String(Math.max(0, Math.floor(query.skip))));
+  }
+
+  const queryString = params.toString();
+  const endpoint = queryString
+    ? `${url.toString()}?${queryString}`
+    : url.toString();
+
+  const response = await fetch(endpoint, {
+    signal,
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(
+      `History request failed (${response.status}): ${
+        text || response.statusText
+      }`,
+    );
+  }
+
+  const data = await response.json();
+  if (!data || data.success === false) {
+    throw new Error(data?.error ?? "Failed to fetch history snapshots");
+  }
+
+  const items = Array.isArray(data.items)
+    ? data.items
+        .map((item: unknown) =>
+          normaliseHistorySnapshot(item as HistorySnapshotInput),
+        )
+        .filter(
+          (snapshot: HistorySnapshot | null): snapshot is HistorySnapshot =>
+            snapshot !== null,
+        )
+    : [];
+
+  return {
+    items,
+    total:
+      typeof data.total === "number" && Number.isFinite(data.total)
+        ? data.total
+        : items.length,
+    limit:
+      typeof data.limit === "number" && Number.isFinite(data.limit)
+        ? data.limit
+        : (query.limit ?? items.length),
+    skip:
+      typeof data.skip === "number" && Number.isFinite(data.skip)
+        ? data.skip
+        : (query.skip ?? 0),
+  };
+}
+
 export interface UpdateHistorySnapshotPayload {
   code?: string;
   language?: string;
