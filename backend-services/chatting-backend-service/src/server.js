@@ -46,9 +46,7 @@ const gracefulShutdown = async (signal) => {
 
   // Force exit timeout
   const forceExitTimer = setTimeout(() => {
-    console.error(
-      "[chat-service] Graceful shutdown timed out. Forcing exit.",
-    );
+    console.error("[chat-service] Graceful shutdown timed out. Forcing exit.");
     process.exit(1);
   }, SHUTDOWN_TIMEOUT_MS);
 

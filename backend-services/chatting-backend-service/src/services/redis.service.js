@@ -103,16 +103,16 @@ class RedisService {
   async close() {
     console.log("[chat.redis] Closing Redis clients...");
     const clients = [this.pubClient, this.subClient, this.appClient];
-    await Promise.all(
-      clients.map((client) =>
-        client
-          ?.quit()
-          .catch((err) =>
-            console.error("[chat.redis] Failed to close Redis client:", err),
-          ),
-      ),
+    const results = await Promise.allSettled(
+      clients.map((client) => client?.quit()),
     );
+    const failures = results.filter((r) => r.status === "rejected");
+    if (failures.length > 0) {
+      console.error("[chat.redis] Some Redis clients failed to close");
+      throw new Error(`Failed to close ${failures.length} Redis client(s)`);
+    }
     console.log("[chat.redis] Redis clients closed");
+    RedisService.instance = null;
   }
 }
 
