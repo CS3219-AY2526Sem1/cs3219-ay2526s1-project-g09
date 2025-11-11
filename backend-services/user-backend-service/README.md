@@ -27,7 +27,7 @@ Express.js service that:
 
 3. Clone `.env.example` and rename as `.env`.
 
-4. Replace <db_password> with your MongoDB Atlas account password. Replace <gmail_account> with your Gmail address. Replace <brevo_user> and <brevo_pass> with the respective values from Brevo. Brevo setup guide can be found [here](https://help.brevo.com/hc/en-us/articles/7924908994450-Send-transactional-emails-using-Brevo-SMTP)
+4. Replace <db_password> with your MongoDB Atlas account password. Replace <gmail_account> with your Gmail address. This email address is used by PeerPrep to send verification emails to users. Replace <brevo_user> and <brevo_pass> with the respective values from Brevo. Brevo setup guide can be found [here](https://help.brevo.com/hc/en-us/articles/7924908994450-Send-transactional-emails-using-Brevo-SMTP)
 
 5. Run the command `npm start` to start the User Service in production mode, or use `npm run dev` for development mode, which includes features like automatic server restart when you make code changes.
 
