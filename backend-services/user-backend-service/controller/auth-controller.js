@@ -154,10 +154,12 @@ export async function verifyOTP(req, res) {
 }
 
 export async function handleLogout(req, res) {
+  const isProd = process.env.NODE_ENV === "production";
   res.clearCookie("authToken", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    partitioned: isProd,
     path: "/",
   });
   return res.status(200).json({ message: "Logged out" });
