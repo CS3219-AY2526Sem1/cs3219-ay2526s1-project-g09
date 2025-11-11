@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Editor from "@monaco-editor/react";
 import type { IDisposable, editor as MonacoEditor } from "monaco-editor";
 import type { Socket } from "socket.io-client";
@@ -83,6 +89,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   const remoteCursorManagerRef = useRef<RemoteCursorManager | null>(null);
   const remoteCursorIdsRef = useRef<Map<number, string>>(new Map());
   const cursorDisposablesRef = useRef<IDisposable[]>([]);
+  const initialSyncTimerRef = useRef<number | null>(null);
 
   const clearSaveTimer = useCallback(() => {
     if (saveTimerRef.current !== null) {
@@ -91,9 +98,25 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     }
   }, []);
 
+  const clearInitialSyncTimer = useCallback(() => {
+    if (initialSyncTimerRef.current !== null) {
+      window.clearTimeout(initialSyncTimerRef.current);
+      initialSyncTimerRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     activeSessionRef.current = sessionId;
   }, [sessionId]);
+
+  const hasOtherParticipants = useMemo(() => {
+    if (!Array.isArray(users) || users.length === 0) {
+      return false;
+    }
+    return users.some(
+      (userId) => typeof userId === "string" && userId !== currentUserId,
+    );
+  }, [currentUserId, users]);
 
   const queueLocalSave = useCallback(
     (value: string) => {
@@ -401,8 +424,9 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
 
     const storedKey = storageKeyFor(sessionId, currentUserId);
     const stored = storedKey !== null ? localStorage.getItem(storedKey) : null;
-    pendingInitialContentRef.current =
-      stored !== null && stored.length > 0 ? stored : "";
+    const shouldUseLocalDraft =
+      !hasOtherParticipants && stored !== null && stored.length > 0;
+    pendingInitialContentRef.current = shouldUseLocalDraft ? stored : "";
 
     const handleUpdate = createDocUpdateHandler({
       sessionId,
@@ -416,8 +440,18 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     doc.on("update", handleUpdate);
     rebindEditor();
 
+    clearInitialSyncTimer();
+    if (!hasOtherParticipants) {
+      initialSyncTimerRef.current = window.setTimeout(() => {
+        if (!hasReceivedInitialRef.current) {
+          ensureInitialContent("bootstrap-timeout");
+        }
+      }, 1500);
+    }
+
     return () => {
       doc.off("update", handleUpdate);
+      clearInitialSyncTimer();
       destroyBinding();
       const awarenessInstance =
         awarenessRef.current as DestroyableAwareness | null;
@@ -431,10 +465,12 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     };
   }, [
     currentUserId,
+    clearInitialSyncTimer,
     clearLocalCursorState,
     destroyBinding,
     ensureInitialContent,
     clearRemoteCursors,
+    hasOtherParticipants,
     queueLocalSave,
     rebindEditor,
     socket,
@@ -531,6 +567,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   useEffect(
     () => () => {
       clearSaveTimer();
+      clearInitialSyncTimer();
       destroyBinding();
       cursorDisposablesRef.current.forEach((disposable) => {
         disposable.dispose();
@@ -547,7 +584,7 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       docRef.current = null;
       textRef.current = null;
     },
-    [clearRemoteCursors, clearSaveTimer, destroyBinding],
+    [clearInitialSyncTimer, clearRemoteCursors, clearSaveTimer, destroyBinding],
   );
 
   const handleEditorMount = useCallback(
