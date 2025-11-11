@@ -149,19 +149,6 @@ export const initSocket = async (server) => {
         console.log(`Cleared pending disconnect timer for ${username}`);
       }
 
-      if (!roomStore) {
-        console.log(
-          `Redis unavailable, ${username} joined room ${roomId} (no state persistence)`,
-        );
-        io.to(roomId).emit("system_message", {
-          event: "connect",
-          userId,
-          username,
-          text: `${username} has entered the chat.`,
-        });
-        return;
-      }
-
       const currentUser = await roomStore.getUser(roomId, userId);
       const allUsers = await roomStore.getAllUsers(roomId);
 
