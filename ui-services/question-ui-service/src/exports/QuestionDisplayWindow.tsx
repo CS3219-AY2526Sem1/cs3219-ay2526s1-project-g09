@@ -51,6 +51,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questionId }) => {
       <h2 className="text-xl font-semibold mb-2 text-white break-words">
         {question.title}
       </h2>
+      <p className="text-sm text-gray-400 mb-3">
+        {question.topics.join(", ")} • {question.difficulty ?? "Unknown"}
+      </p>
       <div className="flex flex-wrap gap-2 mb-2">
         {question.hints.map((hint, index) => (
           <HintDialog key={index} hint={hint} index={index} />
