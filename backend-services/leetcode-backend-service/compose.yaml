@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: leetcode-service
+    image: peerprep-leetcode-service
     ports:
-      - "5285:5285"
+      - "80:5285"
     env_file:
       - .env
