@@ -99,6 +99,21 @@ class RedisService {
   async deleteRoom(roomId) {
     await this.appClient.del(`room:${roomId}:users`);
   }
+
+  async close() {
+    console.log("[chat.redis] Closing Redis clients...");
+    const clients = [this.pubClient, this.subClient, this.appClient];
+    await Promise.all(
+      clients.map((client) =>
+        client
+          ?.quit()
+          .catch((err) =>
+            console.error("[chat.redis] Failed to close Redis client:", err),
+          ),
+      ),
+    );
+    console.log("[chat.redis] Redis clients closed");
+  }
 }
 
 export default RedisService;

@@ -227,6 +227,39 @@ export const initSocket = async (server) => {
     });
   });
 
+  let shutdownPromise = null;
+  const close = async () => {
+    if (shutdownPromise) {
+      return shutdownPromise;
+    }
+
+    shutdownPromise = (async () => {
+      console.log("[chat.socket] Closing Socket.IO server...");
+
+      // Clear all pending disconnect timers
+      for (const timer of disconnectTimers.values()) {
+        clearTimeout(timer);
+      }
+      disconnectTimers.clear();
+      console.log("[chat.socket] Cleared all pending disconnect timers");
+
+      // Close Socket.IO server
+      await new Promise((resolve) => {
+        io.close(() => {
+          console.log("[chat.socket] Socket.IO server closed");
+          resolve();
+        });
+      });
+
+      // Close Redis clients if using Redis adapter
+      if (roomStore?.close) {
+        await roomStore.close();
+      }
+    })();
+
+    return shutdownPromise;
+  };
+
   console.log("Socket.io initialized (no socketData)");
-  return io;
+  return { io, close };
 };
