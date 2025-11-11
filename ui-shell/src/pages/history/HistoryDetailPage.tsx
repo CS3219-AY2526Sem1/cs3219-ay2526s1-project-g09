@@ -7,6 +7,7 @@ import type { Attempt } from "@/types/Attempt";
 import type { Question } from "@/types/Question";
 import {
   fetchHistorySnapshot,
+  fetchHistorySnapshots,
   normaliseHistorySnapshot,
 } from "@/api/historyService";
 
@@ -42,6 +43,11 @@ const HistoryDetailPage: React.FC = () => {
   const [entry, setEntry] = useState<HistorySnapshot | null>(initialEntry);
   const [loading, setLoading] = useState(!initialEntry);
   const [error, setError] = useState<string | null>(null);
+  const [attemptSnapshots, setAttemptSnapshots] = useState<HistorySnapshot[]>(
+    initialEntry ? [initialEntry] : [],
+  );
+  const [attemptsLoading, setAttemptsLoading] = useState(false);
+  const [attemptsError, setAttemptsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (entry || !historyId) {
@@ -71,51 +77,137 @@ const HistoryDetailPage: React.FC = () => {
     return () => controller.abort();
   }, [entry, historyId]);
 
-  const attemptEntries = useMemo<Attempt[]>(() => {
+  useEffect(() => {
     if (!entry) {
+      setAttemptSnapshots([]);
+      return;
+    }
+    setAttemptSnapshots([entry]);
+    setAttemptsError(null);
+  }, [entry]);
+
+  useEffect(() => {
+    if (!entry?.userId || !entry?.questionId) {
+      return;
+    }
+
+    const controller = new AbortController();
+    setAttemptsLoading(true);
+    fetchHistorySnapshots(
+      {
+        userId: entry.userId,
+        questionId: entry.questionId,
+        limit: 100,
+      },
+      controller.signal,
+    )
+      .then((result) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        if (!result.items.length) {
+          setAttemptSnapshots(entry ? [entry] : []);
+        } else {
+          const map = new Map<string, HistorySnapshot>();
+          result.items.forEach((snapshot) => map.set(snapshot.id, snapshot));
+          if (entry && !map.has(entry.id)) {
+            map.set(entry.id, entry);
+          }
+          setAttemptSnapshots(Array.from(map.values()));
+        }
+        setAttemptsError(null);
+      })
+      .catch((err) => {
+        if (!controller.signal.aborted) {
+          setAttemptsError(
+            err instanceof Error ? err.message : "Failed to load attempts",
+          );
+          setAttemptSnapshots(entry ? [entry] : []);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setAttemptsLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [entry]);
+
+  const attemptEntries = useMemo<Attempt[]>(() => {
+    if (!attemptSnapshots.length) {
       return [];
     }
 
-    const attemptTimestamp =
-      entry.sessionEndedAt ?? entry.updatedAt ?? entry.createdAt ?? new Date();
+    const sortedSnapshots = [...attemptSnapshots].sort((a, b) => {
+      const timeA =
+        (a.sessionEndedAt ?? a.updatedAt ?? a.createdAt)?.getTime() ?? 0;
+      const timeB =
+        (b.sessionEndedAt ?? b.updatedAt ?? b.createdAt)?.getTime() ?? 0;
+      return timeB - timeA;
+    });
 
-    const timeTakenLabel = formatDuration(entry);
+    return sortedSnapshots.map((snapshot) => {
+      const attemptTimestamp =
+        snapshot.sessionEndedAt ??
+        snapshot.updatedAt ??
+        snapshot.createdAt ??
+        new Date();
 
-    const baseQuestion: Question = {
-      title: entry.questionTitle || "Untitled Question",
-      body: "",
-      topics: entry.topics ?? [],
-      hints: [],
-      answer: "",
-      difficulty: entry.difficulty ?? "Unknown",
-      timeLimit:
-        typeof entry.timeLimit === "number"
-          ? `${entry.timeLimit} min`
-          : (entry.timeLimit ?? "—"),
-    };
+      const timeTakenLabel = formatDuration(snapshot);
 
-    const partners = entry.participants.filter(
-      (participant) => participant !== entry.userId,
-    );
-    const targets = partners.length > 0 ? partners : [entry.userId];
+      const baseQuestion: Question = {
+        title: snapshot.questionTitle || "Untitled Question",
+        body: "",
+        topics: snapshot.topics ?? [],
+        hints: [],
+        answer: "",
+        difficulty: snapshot.difficulty ?? "Unknown",
+        timeLimit:
+          typeof snapshot.timeLimit === "number"
+            ? `${snapshot.timeLimit} min`
+            : snapshot.timeLimit !== undefined
+              ? String(snapshot.timeLimit)
+              : "—",
+      };
 
-    return targets.map((partner, index) => ({
-      id: `${entry.id}-${partner}-${index}`,
-      question: baseQuestion,
-      date: attemptTimestamp,
-      partner,
-      timeTaken: timeTakenLabel,
-    }));
-  }, [entry]);
+      const partner =
+        snapshot.participants.find(
+          (participant) => participant !== snapshot.userId,
+        ) ?? snapshot.userId;
+
+      return {
+        id: snapshot.id,
+        question: baseQuestion,
+        date: attemptTimestamp,
+        partner,
+        timeTaken: timeTakenLabel,
+      };
+    });
+  }, [attemptSnapshots]);
 
   const handleAttemptSelect = (attempt: Attempt) => {
-    if (!entry) {
+    if (!attempt?.id) {
       return;
     }
-    navigate(`/history/${entry.id}/attempt`, {
+
+    const snapshot = attemptSnapshots.find((item) => item.id === attempt.id);
+    if (!snapshot) {
+      return;
+    }
+
+    const attemptPartner =
+      attempt.partner ??
+      snapshot.participants.find(
+        (participant) => participant !== snapshot.userId,
+      ) ??
+      snapshot.userId;
+
+    navigate(`/history/${snapshot.id}/attempt`, {
       state: {
-        entry,
-        attemptPartner: attempt.partner ?? entry.userId,
+        entry: snapshot,
+        attemptPartner,
       },
     });
   };
@@ -157,8 +249,8 @@ const HistoryDetailPage: React.FC = () => {
             errorMessage="Attempt history unavailable."
             remoteProps={{
               items: attemptEntries,
-              isLoading: loading,
-              error,
+              isLoading: loading || attemptsLoading,
+              error: error ?? attemptsError,
               emptyMessage: "No attempt history recorded.",
               loadingMessage: "Loading attempt history…",
               onSelect: handleAttemptSelect,

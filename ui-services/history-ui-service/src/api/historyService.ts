@@ -102,6 +102,15 @@ const mapToHistoryEntry = (payload: HistoryEntryPayload): HistoryEntry => {
   };
 };
 
+function getEntryTimestamp(entry: HistoryEntry): number {
+  return (
+    entry.sessionEndedAt?.getTime() ??
+    entry.updatedAt?.getTime() ??
+    entry.createdAt?.getTime() ??
+    0
+  );
+}
+
 export async function fetchHistoryEntries(
   options: {
     userId?: string;
@@ -139,7 +148,22 @@ export async function fetchHistoryEntries(
   }
 
   const items = Array.isArray(data.items) ? data.items : [];
-  return items.map(mapToHistoryEntry);
+  const entries = items.map(mapToHistoryEntry);
+
+  const latestByQuestionId = new Map<string, HistoryEntry>();
+  for (const entry of entries) {
+    if (!entry.questionId) {
+      continue;
+    }
+    const existing = latestByQuestionId.get(entry.questionId);
+    if (!existing || getEntryTimestamp(entry) > getEntryTimestamp(existing)) {
+      latestByQuestionId.set(entry.questionId, entry);
+    }
+  }
+
+  return Array.from(latestByQuestionId.values()).sort(
+    (a, b) => getEntryTimestamp(b) - getEntryTimestamp(a),
+  );
 }
 
 export { HISTORY_SERVICE_BASE_URL };
