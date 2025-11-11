@@ -243,6 +243,10 @@ export const initSocket = async (server) => {
       disconnectTimers.clear();
       console.log("[chat.socket] Cleared all pending disconnect timers");
 
+      // Disconnect all connected sockets
+      io.sockets.sockets.forEach((socket) => socket.disconnect(true));
+      console.log("[chat.socket] Disconnected all sockets");
+
       // Close Socket.IO server
       await new Promise((resolve) => {
         io.close(() => {
