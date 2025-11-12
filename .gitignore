@@ -82,3 +82,9 @@ build/
 .zip
 ### Coverage ###
 coverage/
+
+### Terraform ###
+*.tfstate
+*.tfstate.backup
+.terraform/
+.tfplan

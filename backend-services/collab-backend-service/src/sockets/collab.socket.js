@@ -10,6 +10,7 @@ import {
   yjsUpdateEvent,
   cursorUpdateEvent,
   awarenessUpdateEvent,
+  requestYjsInitEvent,
   disconnectEvent,
 } from "./socketEvents.js";
 
@@ -120,6 +121,7 @@ export const initSocket = (server) => {
     cursorUpdateEvent(socket);
 
     awarenessUpdateEvent(socket);
+    requestYjsInitEvent(socket);
 
     disconnectEvent(socket, trackedSockets, io);
   });

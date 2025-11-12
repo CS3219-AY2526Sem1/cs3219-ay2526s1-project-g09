@@ -37,6 +37,7 @@ import {
 type DestroyableAwareness = Awareness & { destroy?: () => void };
 
 export const HEARTBEAT_INTERVAL_MS = 30_000;
+export const FORCE_SYNC_INTERVAL_MS = 2_000;
 export const DEFAULT_LANGUAGE = "javascript";
 export const DEFAULT_BOOTSTRAP_CODE = "// Start coding here!\n";
 
@@ -90,6 +91,8 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   const remoteCursorIdsRef = useRef<Map<number, string>>(new Map());
   const cursorDisposablesRef = useRef<IDisposable[]>([]);
   const initialSyncTimerRef = useRef<number | null>(null);
+  const forceSyncTimerRef = useRef<number | null>(null);
+  const cursorActivityRafRef = useRef<number | null>(null);
 
   const clearSaveTimer = useCallback(() => {
     if (saveTimerRef.current !== null) {
@@ -102,6 +105,20 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     if (initialSyncTimerRef.current !== null) {
       window.clearTimeout(initialSyncTimerRef.current);
       initialSyncTimerRef.current = null;
+    }
+  }, []);
+
+  const clearForceSyncTimer = useCallback(() => {
+    if (forceSyncTimerRef.current !== null) {
+      window.clearInterval(forceSyncTimerRef.current);
+      forceSyncTimerRef.current = null;
+    }
+  }, []);
+
+  const cancelCursorActivityRaf = useCallback(() => {
+    if (cursorActivityRafRef.current !== null) {
+      window.cancelAnimationFrame(cursorActivityRafRef.current);
+      cursorActivityRafRef.current = null;
     }
   }, []);
 
@@ -246,6 +263,28 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     }, reason);
   }, []);
 
+  // Periodically request a fresh snapshot from the server (same as a rejoin).
+  const forceSyncDocument = useCallback(
+    (options?: { reason?: string }) => {
+      const activeSessionId = activeSessionRef.current;
+      if (!activeSessionId || sessionEnded || !socket?.connected) {
+        console.debug("[CollabEditor][ForceSync] Skipped (inactive state)", {
+          activeSessionId,
+          sessionEnded,
+          socketConnected: socket?.connected ?? false,
+        });
+        return;
+      }
+
+      console.log("[CollabEditor][ForceSync] Requesting yjsInit snapshot", {
+        sessionId: activeSessionId,
+        reason: options?.reason ?? "interval",
+      });
+      socket.emit("requestYjsInit", { sessionId: activeSessionId });
+    },
+    [sessionEnded, socket],
+  );
+
   const destroyBinding = useCallback(() => {
     const binding = bindingRef.current;
     bindingRef.current = null;
@@ -286,10 +325,18 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
     publishLocalCursorStateHelper(awarenessRef.current, editorRef.current);
   }, []);
 
-  const handleLocalCursorActivity = useCallback(() => {
+  const flushCursorActivity = useCallback(() => {
+    cursorActivityRafRef.current = null;
     publishLocalCursorState();
     persistCursorPosition();
   }, [persistCursorPosition, publishLocalCursorState]);
+
+  const handleLocalCursorActivity = useCallback(() => {
+    cancelCursorActivityRaf();
+    cursorActivityRafRef.current = window.requestAnimationFrame(() => {
+      flushCursorActivity();
+    });
+  }, [cancelCursorActivityRaf, flushCursorActivity]);
 
   const rebindEditor = useCallback(() => {
     rebindEditorHelper({
@@ -329,6 +376,12 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
   useEffect(() => {
     return registerLeaveEventListener(handleSessionLeave);
   }, [handleSessionLeave]);
+
+  useEffect(() => {
+    return () => {
+      cancelCursorActivityRaf();
+    };
+  }, [cancelCursorActivityRaf]);
 
   useEffect(() => {
     return subscribeToCollabSocket((nextSocket) => {
@@ -374,6 +427,28 @@ const CollabEditor: React.FC<CollabEditorProps> = ({
       window.clearInterval(intervalId);
     };
   }, [sessionEnded, sessionId, socket]);
+
+  useEffect(() => {
+    if (!sessionId || sessionEnded) {
+      clearForceSyncTimer();
+      return;
+    }
+
+    const tick = () => {
+      console.debug("[CollabEditor][ForceSync] Interval tick");
+      forceSyncDocument();
+    };
+
+    forceSyncDocument({ reason: "initial-start" });
+    forceSyncTimerRef.current = window.setInterval(
+      tick,
+      FORCE_SYNC_INTERVAL_MS,
+    );
+
+    return () => {
+      clearForceSyncTimer();
+    };
+  }, [clearForceSyncTimer, forceSyncDocument, sessionEnded, sessionId]);
 
   useEffect(() => {
     if (initialSessionId || sessionId) {

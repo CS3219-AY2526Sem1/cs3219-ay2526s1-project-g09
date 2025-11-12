@@ -100,7 +100,14 @@ export const syncRemoteCursors = (
     if (!cursorState || (!hasOffset && !hasPosition)) {
       const existingId = cursorIds.get(clientId);
       if (existingId) {
-        manager.removeCursor(existingId);
+        try {
+          manager.removeCursor(existingId);
+        } catch (error) {
+          console.warn("[cursorHelpers] Failed to drop empty cursor", {
+            clientId,
+            error,
+          });
+        }
         cursorIds.delete(clientId);
       }
       return;
@@ -139,20 +146,34 @@ export const syncRemoteCursors = (
       cursorIds.set(clientId, cursorId);
     }
 
-    if (hasOffset) {
-      manager.setCursorOffset(cursorId, cursorState.offset);
-    } else if (hasPosition) {
-      manager.setCursorPosition(cursorId, cursorState.position);
+    try {
+      if (hasOffset) {
+        manager.setCursorOffset(cursorId, cursorState.offset);
+      } else if (hasPosition) {
+        manager.setCursorPosition(cursorId, cursorState.position);
+      }
+      manager.showCursor(cursorId);
+      activeClientIds.add(clientId);
+    } catch (error) {
+      console.warn("[cursorHelpers] Failed to render remote cursor", {
+        clientId,
+        cursorId,
+        error,
+      });
     }
-
-    manager.showCursor(cursorId);
-    activeClientIds.add(clientId);
   });
 
   const staleClients: number[] = [];
   cursorIds.forEach((cursorId, clientId) => {
     if (!activeClientIds.has(clientId)) {
-      manager.removeCursor(cursorId);
+      try {
+        manager.removeCursor(cursorId);
+      } catch (error) {
+        console.warn("[cursorHelpers] Failed to remove stale cursor", {
+          clientId,
+          error,
+        });
+      }
       staleClients.push(clientId);
     }
   });

@@ -305,6 +305,46 @@ export const awarenessUpdateEvent = (socket) => {
   });
 };
 
+export const requestYjsInitEvent = (socket) => {
+  socket.on("requestYjsInit", (payload) => {
+    const sessionId = payload?.sessionId ?? socket.data.sessionId;
+    if (!sessionId) {
+      return;
+    }
+
+    const docEntry = ensureSessionDoc(sessionId);
+    if (!docEntry) {
+      console.warn(
+        "[collab.socket] Skipped yjsInit request: session doc unavailable",
+        { sessionId },
+      );
+      return;
+    }
+
+    try {
+      const encodedState = encodeUpdateToBase64(
+        Y.encodeStateAsUpdate(docEntry.doc),
+      );
+      socket.emit("yjsInit", {
+        sessionId,
+        update: encodedState,
+        language: docEntry.language ?? DEFAULT_LANGUAGE,
+      });
+      console.log("[collab.socket] Fulfilled yjsInit request", {
+        sessionId,
+        socketId: socket.id,
+        byteLength: encodedState?.length ?? 0,
+      });
+    } catch (error) {
+      console.error(
+        "[collab.socket] Failed to fulfil yjsInit request",
+        sessionId,
+        error,
+      );
+    }
+  });
+};
+
 export const disconnectEvent = (socket, trackedSockets, io) => {
   // Defers the heavy disconnect flow so quick reconnections (network blips)
   // don't immediately tear down the session. After the grace period we call

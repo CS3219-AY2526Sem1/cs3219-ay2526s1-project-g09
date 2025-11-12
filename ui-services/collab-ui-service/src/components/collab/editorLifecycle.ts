@@ -91,12 +91,7 @@ export const rebindEditor = ({
   }
 
   const text = doc.getText("source");
-  bindingRef.current = new MonacoBinding(
-    text,
-    model,
-    new Set([editor]),
-    awareness ?? undefined,
-  );
+  bindingRef.current = new MonacoBinding(text, model, new Set([editor]));
   console.log("[CollabEditor] MonacoBinding updated", {
     sessionId: activeSessionRef.current,
     socketId: socket.id,
