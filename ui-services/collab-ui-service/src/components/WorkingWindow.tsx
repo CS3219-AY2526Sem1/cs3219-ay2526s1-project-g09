@@ -72,7 +72,7 @@ const WorkingWindow: React.FC<CollabPageProps> = ({ user }) => {
             value="code"
             className="data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
           >
-            Code {username}
+            Code
           </TabsTrigger>
           <TabsTrigger
             value="whiteboard"
