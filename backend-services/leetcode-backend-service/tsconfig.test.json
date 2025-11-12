@@ -1,10 +1,7 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["node", "vitest/globals"],
-    "noEmit": true,
-    "declaration": false,
-    "declarationMap": false
+    "types": ["node", "vitest/globals"]
   },
   "include": ["src", "tests", "vitest.config.ts"]
 }
