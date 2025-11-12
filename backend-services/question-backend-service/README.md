@@ -69,13 +69,12 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 - Behaviour: Checks if the service is currently up.
 
 - Expected Response:
-
   - HTTP STATUS 200 OK: The service is up.
 
   ```json
   {
-      "ok": true
-   }
+    "ok": true
+  }
   ```
 
 ---
@@ -88,16 +87,16 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
 - Parameters
 
-  | Name | Type | Required | Description |
+  | Name         | Type   | Required | Description                                                                 |
   | ------------ | ------ | -------- | --------------------------------------------------------------------------- |
-  | `title` | string | No | Filter by question title |
-  | `category` | string | No | Filter by category |
-  | `difficulty` | string | No | Filter by difficulty |
-  | `minTime` | number | No | Minimum time limit |
-  | `maxTime` | number | No | Maximum time limit |
-  | `size` | number | No | Number of questions per page (default 10) |
-  | `page` | number | No | Page number (default 1) |
-  | `sortBy` | string | No | Sort order: `newest`, `oldest`, `easiest`, `hardest`, `shortest`, `longest` |
+  | `title`      | string | No       | Filter by question title                                                    |
+  | `category`   | string | No       | Filter by category                                                          |
+  | `difficulty` | string | No       | Filter by difficulty                                                        |
+  | `minTime`    | number | No       | Minimum time limit                                                          |
+  | `maxTime`    | number | No       | Maximum time limit                                                          |
+  | `size`       | number | No       | Number of questions per page (default 10)                                   |
+  | `page`       | number | No       | Page number (default 1)                                                     |
+  | `sortBy`     | string | No       | Sort order: `newest`, `oldest`, `easiest`, `hardest`, `shortest`, `longest` |
 
 - Expected Response:
   - HTTP STATUS 200 OK:
@@ -129,14 +128,8 @@ Base URL: `http://localhost:5275/api/v1/question-service`
       "details": [
         {
           "code": "invalid_value",
-          "values": [
-            "Easy",
-            "Medium",
-            "Hard"
-          ],
-          "path": [
-            "difficulty"
-          ],
+          "values": ["Easy", "Medium", "Hard"],
+          "path": ["difficulty"],
           "message": "Invalid option: expected one of \"Easy\"|\"Medium\"|\"Hard\""
         }
       ]
@@ -162,12 +155,11 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
 - Parameters
 
-  | Name | Type | Required | Description |
-  | -------- | -------- | -------- | --------------------------------------------------------- |
-  | `id` | `string` | Yes | The ID of the question to fetch. |
+  | Name | Type     | Required | Description                      |
+  | ---- | -------- | -------- | -------------------------------- |
+  | `id` | `string` | Yes      | The ID of the question to fetch. |
 
 - Expected Response:
-
   - HTTP STATUS 200 OK:
     The question details are retrieved successfully.
 
@@ -221,25 +213,24 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
 - Usage: **POST** `http://localhost:5275/api/v1/question-service/add-question`
 
-- Behaviour: Add a new question. 
+- Behaviour: Add a new question.
 
 - Headers:
-
   - `x-admin-token`: must match the `ADMIN_TOKEN` in `.env`
   - `x-source`: `"admin"` or `"leetcode"`
 
 - Body
 
-  | Name | Type | Required | Description |
-  | --------------- | -------- | -------- | --------------------------------------------------------------------------- |
-  | `title` | `string` | Yes | The title of the question. |
-  | `categoryTitle` | `string` | Yes | The category or topic the question belongs to. |
-  | `difficulty` | `string` | Yes | The difficulty level of the question (e.g., Easy, Medium, Hard). |
-  | `timeLimit` | `number` | Yes | The time limit (in minutes) allowed to solve the question. |
-  | `content` | `string` | Yes | The main problem statement or description. |
-  | `hints` | `array` | No | A list of hints to help the user approach the question. |
-  | `answer` | `string` | No | The model or reference answer to the question. |
-  | `codeSnippets` | `array` | No | Code examples in different languages, each containing `lang`, `langSlug`, and `code`. |
+  | Name            | Type     | Required | Description                                                                           |
+  | --------------- | -------- | -------- | ------------------------------------------------------------------------------------- |
+  | `title`         | `string` | Yes      | The title of the question.                                                            |
+  | `categoryTitle` | `string` | Yes      | The category or topic the question belongs to.                                        |
+  | `difficulty`    | `string` | Yes      | The difficulty level of the question (e.g., Easy, Medium, Hard).                      |
+  | `timeLimit`     | `number` | Yes      | The time limit (in minutes) allowed to solve the question.                            |
+  | `content`       | `string` | Yes      | The main problem statement or description.                                            |
+  | `hints`         | `array`  | No       | A list of hints to help the user approach the question.                               |
+  | `answer`        | `string` | No       | The model or reference answer to the question.                                        |
+  | `codeSnippets`  | `array`  | No       | Code examples in different languages, each containing `lang`, `langSlug`, and `code`. |
 
   ```json
   {
@@ -323,21 +314,20 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 - Behaviour: Update an existing question by ID.
 
 - Headers:
-
   - `x-admin-token`: must match the `ADMIN_TOKEN` in `.env`
 
 - Body
 
-  | Name | Type | Required | Description |
-  | --------------- | -------- | -------- | --------------------------------------------------------------------------- |
-  | `title` | `string` | No | The title of the question. |
-  | `categoryTitle` | `string` | No | The category or topic the question belongs to. |
-  | `difficulty` | `string` | No | The difficulty level of the question (e.g., Easy, Medium, Hard). |
-  | `timeLimit` | `number` | No | The time limit (in minutes) allowed to solve the question. |
-  | `content` | `string` | No | The main problem statement or description. |
-  | `hints` | `array` | No | A list of hints to help the user approach the question. |
-  | `answer` | `string` | No | The model or reference answer to the question. |
-  | `codeSnippets` | `array` | No | Code examples in different languages, each containing `lang`, `langSlug`, and `code`. |
+  | Name            | Type     | Required | Description                                                                           |
+  | --------------- | -------- | -------- | ------------------------------------------------------------------------------------- |
+  | `title`         | `string` | No       | The title of the question.                                                            |
+  | `categoryTitle` | `string` | No       | The category or topic the question belongs to.                                        |
+  | `difficulty`    | `string` | No       | The difficulty level of the question (e.g., Easy, Medium, Hard).                      |
+  | `timeLimit`     | `number` | No       | The time limit (in minutes) allowed to solve the question.                            |
+  | `content`       | `string` | No       | The main problem statement or description.                                            |
+  | `hints`         | `array`  | No       | A list of hints to help the user approach the question.                               |
+  | `answer`        | `string` | No       | The model or reference answer to the question.                                        |
+  | `codeSnippets`  | `array`  | No       | Code examples in different languages, each containing `lang`, `langSlug`, and `code`. |
 
   Note: At least one field must be provided, but any subset of fields is allowed.
 
@@ -416,7 +406,6 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 - Behaviour: Deletes a question by ID.
 
 - Headers:
-
   - `x-admin-token`: must match the `ADMIN_TOKEN` in `.env`
 
 - Expected Response:
@@ -614,11 +603,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
     ```json
     {
-      "difficulties": [
-        "Easy",
-        "Hard",
-        "Medium"
-      ]
+      "difficulties": ["Easy", "Hard", "Medium"]
     }
     ```
 
@@ -645,12 +630,12 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
     ```json
     {
-      "Concurrency": ["Easy","Medium"],
-      "Database": ["Easy","Medium","Hard"],
-      "Algorithms": ["Easy","Medium","Hard"],
-      "JavaScript": ["Easy","Medium","Hard"],
+      "Concurrency": ["Easy", "Medium"],
+      "Database": ["Easy", "Medium", "Hard"],
+      "Algorithms": ["Easy", "Medium", "Hard"],
+      "JavaScript": ["Easy", "Medium", "Hard"],
       "pandas": ["Easy"],
-      "Shell": ["Easy","Medium"]
+      "Shell": ["Easy", "Medium"]
     }
     ```
 
