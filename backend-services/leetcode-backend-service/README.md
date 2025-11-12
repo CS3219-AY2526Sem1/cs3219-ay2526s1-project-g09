@@ -60,6 +60,7 @@ src/
   server.ts           # buildServer(): registers plugins + routes
   health.ts
   logger.ts         # Logger file for consistent log formatting
+```
 
 ## API Overview
 
@@ -78,7 +79,6 @@ Base URL: `http://localhost:5285/api/v1/leetcode-service`
   {
       "ok": true
    }
-
   ```
 
 ### Seed LeetCode Questions to DB
