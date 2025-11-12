@@ -101,7 +101,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
 - Expected Response:
   - HTTP STATUS 200 OK:
-    The questions are retrieved succesfully.
+    The questions are retrieved successfully.
 
     ```json
     {
@@ -169,7 +169,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 - Expected Response:
 
   - HTTP STATUS 200 OK:
-    The question details are retrieved succesfully.
+    The question details are retrieved successfully.
 
     ```json
     {
@@ -221,7 +221,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
 - Usage: **POST** `http://localhost:5275/api/v1/question-service/add-question`
 
-- Behaviour: Fetch detailed information for a single question.
+- Behaviour: Add a new question. 
 
 - Headers:
 
@@ -258,7 +258,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
 - Expected Response:
   - HTTP STATUS 200 OK:
-    The question details are added succesfully.
+    The question details are added successfully.
 
     ```json
     {
@@ -339,7 +339,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
   | `answer` | `string` | No | The model or reference answer to the question. |
   | `codeSnippets` | `array` | No | Code examples in different languages, each containing `lang`, `langSlug`, and `code`. |
 
-  Note: Any subset of fields allowed, but at least one attribute is required.
+  Note: At least one field must be provided, but any subset of fields is allowed.
 
   ```json
   {
@@ -350,7 +350,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
 - Expected Response:
   - HTTP STATUS 200 OK:
-    The question details are updated succesfully.
+    The question details are updated successfully.
 
     ```json
     {
@@ -421,7 +421,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
 - Expected Response:
   - HTTP STATUS 200 OK:
-    The question details are deleted succesfully.
+    The question details are deleted successfully.
 
     ```json
     {
@@ -560,17 +560,9 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
     ```json
     {
-      "error": "Internal Server Error"
-    }
-    ```
-
-    OR
-
-    ```json
-    {
       "statusCode": 500,
       "error": "Internal Server Error",
-      "message": "Cannot destructure property 'categories' of 'req.body' as it is undefined."
+      "message": "A detailed error message describing the server error."
     }
     ```
 

@@ -3,7 +3,7 @@
 Typescript service that:
 
 - Fetches LeetCode problems via `leetcode-query` npm dependency.
-- Insert questions into the LeetCode and Question Service (MongoDB)
+- Inserts questions into the LeetCode and Question Service (MongoDB)
 
 ## Tech
 
@@ -28,7 +28,7 @@ Typescript service that:
 
 5. Run the command `npm run dev` to start the LeetCode Service.
 
-6. Using applications like Postman, you can interact with the Leetcode Service on port 5285.
+6. Using applications like Postman, you can interact with the LeetCode Service on port 5285.
 
 ## Running with Docker
 
@@ -44,22 +44,22 @@ Typescript service that:
 src/
   db/
     model/
-      question.ts     # Mongoose schema definition for Question documents
+      question.ts        # Mongoose schema definition for Question documents
     types/
-      question.ts     # TypeScript interface for Question
-      seedBatchResponse 
-    changeStream.ts   # Listens to changes in leetcode-service DB and triggers sync events
-    connection.ts     # Handles MongoDB connection setup (Mongoose Connect)
-    dbLimiter.ts      # Rate limiter for database operations
+      question.ts        # TypeScript interface for Question
+      seedBatchResponse  # TypeScript interface for seed batch response
+    changeStream.ts      # Listens to changes in leetcode-service DB and triggers sync events
+    connection.ts        # Handles MongoDB connection setup (Mongoose Connect)
+    dbLimiter.ts         # Rate limiter for database operations
   leetcode/
-    queries.ts        # Contains LeetCode GraphQL queries (QUERY_LIST, QUERY_DETAIL)
-    seedBatch.ts      # Resumable batch seeding using persisted cursor; upserts windowed pages
-    types.ts          # TypeScript interface for
-  index.ts            # Tiny bootstrap: loads env, creates server, starts listening
-  routes.ts           # Fastify routes: GET /leetcode/test, POST /leetcode/seed-batch
-  server.ts           # buildServer(): registers plugins + routes
+    queries.ts           # Contains LeetCode GraphQL queries (QUERY_LIST, QUERY_DETAIL)
+    seedBatch.ts         # Resumable batch seeding using persisted cursor; upserts windowed pages
+    types.ts             # TypeScript interface for LeetCode API types
+  index.ts               # Tiny bootstrap: loads env, creates server, starts listening
+  routes.ts              # Fastify routes: GET /leetcode/test, POST /leetcode/seed-batch
+  server.ts              # buildServer(): registers plugins + routes
   health.ts
-  logger.ts         # Logger file for consistent log formatting
+  logger.ts              # Logger file for consistent log formatting
 ```
 
 ## API Overview
@@ -115,4 +115,5 @@ When a new question is detected, the watcher automatically triggers the **Questi
 This ensures that:
 
 - Newly fetched LeetCode questions are propagated in real time to the Question Service.
+
 - Other services can query the centralized Question Service database without needing to directly depend on the LeetCode Service.
