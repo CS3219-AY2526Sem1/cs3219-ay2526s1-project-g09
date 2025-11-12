@@ -74,7 +74,8 @@ Base URL: `http://localhost:5285/api/v1/leetcode-service`
 
 - Expected Response:
 
-  - HTTP STATUS 200 OK: [ADD EXPLANATION HERE]
+  - HTTP STATUS 200 OK: The service is up.
+
   ```json
   {
       "ok": true
@@ -90,7 +91,7 @@ Base URL: `http://localhost:5285/api/v1/leetcode-service`
 - Expected Response:
 
   - HTTP STATUS 200 OK:
-    The LeetCode questions were successfully inserted into the database. This response also includes metadata about the synchronization progress. 
+    The LeetCode questions were successfully inserted into the database. This response also includes metadata about the synchronization progress.
 
   ```json
   {
