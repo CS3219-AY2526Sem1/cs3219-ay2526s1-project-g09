@@ -175,7 +175,7 @@ The service implements a 10-second grace period for disconnections to prevent fa
 
   ```javascript
   {
-    message: "Hello world";
+    message: "Hello world",
   }
   ```
 
