@@ -1,0 +1,19 @@
+name: Deploy Question Service
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "backend-services/question-backend-service/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-service-to-eb.yml
+    with:
+      service_name: question-service
+      service_path: backend-services/question-backend-service
+      application_name: peerprep-question-service
+      environment_name: peerprep-question-service-prod
+    secrets: inherit

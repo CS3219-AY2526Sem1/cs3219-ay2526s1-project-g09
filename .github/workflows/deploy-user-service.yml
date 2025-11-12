@@ -1,0 +1,18 @@
+name: Deploy User Service
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "backend-services/user-backend-service/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-service-to-eb.yml
+    with:
+      service_name: user-service
+      service_path: backend-services/user-backend-service
+      application_name: peerprep-user-service
+      environment_name: peerprep-user-service-prod
+    secrets: inherit

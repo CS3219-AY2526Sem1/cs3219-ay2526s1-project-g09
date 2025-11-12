@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
+    "eslint": "^9.36.0",
+    "prettier": "3.6.2"
+  },
+  "scripts": {
+    "format": "npx prettier --write .",
+    "format:check": "npx prettier --check ."
+  }
+}

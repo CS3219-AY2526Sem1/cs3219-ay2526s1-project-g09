@@ -1,0 +1,10 @@
+# This docker-compose.yml is mostly used for cloud deployment.
+services:
+  matching-service:
+    build: .
+    container_name: peerprep-matching-service
+    env_file:
+      - .env
+    ports:
+      - "80:5274" # Use 80:5274 for deployment. 5274:5274 for local testing.
+    stop_grace_period: 125s
