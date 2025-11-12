@@ -3,9 +3,6 @@
 Express.js + Socket.io service that:
 
 - Provides real-time bidirectional chat communication via WebSocket
-- Manages user presence and room state with Redis
-- Supports horizontal scaling with Redis Pub/Sub adapter
-- Implements graceful disconnect handling with reconnection grace period
 
 ## Tech
 
@@ -270,24 +267,6 @@ The service implements a 10-second grace period for disconnections to prevent fa
 | `REDIS_PORT`        | number  | No       | 6379    | Redis server port                      |
 | `REDIS_TLS_ENABLED` | boolean | No       | false   | Enable TLS for Redis (AWS ElastiCache) |
 
-### Redis Data Structure
-
-Chat rooms are stored with the following structure:
-
-```
-Key: room:{roomId}:users
-Value: {
-  "userId1": {
-    "username": "Alice",
-    "isDisconnectConfirm": false
-  },
-  "userId2": {
-    "username": "Bob",
-    "isDisconnectConfirm": false
-  }
-}
-```
-
 ### Failover Strategy
 
 The service implements automatic failover:
@@ -296,73 +275,3 @@ The service implements automatic failover:
 2. **Fallback:** In-memory storage (single-instance, ephemeral)
 
 If Redis is unavailable, the service automatically falls back to in-memory storage and logs a warning. This ensures the service remains operational even without Redis, though room state will not be shared across multiple instances.
-
-## WebSocket Connection Example
-
-### Using Socket.io Client
-
-```javascript
-import { io } from "socket.io-client";
-
-const socket = io("http://localhost:5286", {
-  path: "/api/v1/chat-service/socket.io",
-});
-
-// Join a room
-socket.emit("join_room", {
-  userId: "user-123",
-  username: "Alice",
-  roomId: "session-456",
-});
-
-// Send a message
-socket.emit("send_message", {
-  message: {
-    userId: "user-123",
-    username: "Alice",
-    content: "Hello!",
-    timestamp: Date.now(),
-  },
-});
-
-// Receive messages
-socket.on("receive_message", (message) => {
-  console.log(`${message.username}: ${message.content}`);
-});
-
-// Listen for system messages
-socket.on("system_message", (data) => {
-  console.log("System event:", data);
-});
-
-// Leave the room
-socket.emit("leave_session");
-```
-
-## Key Features
-
-### Graceful Disconnect Handling
-
-The service implements a 10-second grace period when a user disconnects. During this time:
-
-- The user is marked as potentially disconnecting but not removed
-- If the user reconnects, no "user left" notification is sent
-- If the grace period expires, a `system_message` with `eventType: "disconnect"` is broadcast
-- This prevents false notifications during page refreshes or temporary network issues
-
-### Horizontal Scaling
-
-The service uses Redis Pub/Sub adapter to enable horizontal scaling:
-
-- Multiple server instances can run simultaneously
-- Socket.io events are synchronized via Redis Pub/Sub
-- Room state is shared across all instances
-- Load balancing is supported out of the box
-
-### Room Cleanup
-
-Rooms are automatically cleaned up when empty:
-
-- When the last user leaves a room, the room data is deleted from Redis
-- Prevents memory leaks and stale data accumulation
-- No manual cleanup required
