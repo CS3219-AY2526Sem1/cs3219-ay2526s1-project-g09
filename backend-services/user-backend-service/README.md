@@ -482,7 +482,7 @@ Every **POST**, **PUT**, **PATCH** or **DELETE** request requires a CSRF Token.
   ```
 
 - Expected Response:
-  - HTTP STATUS 200 OK: Request processed. Note: Returns success regardless of whether email exists (for security).
+  - HTTP STATUS 200 OK: Request processed. (Note: Returns success regardless of whether email exists)
 
     ```json
     {

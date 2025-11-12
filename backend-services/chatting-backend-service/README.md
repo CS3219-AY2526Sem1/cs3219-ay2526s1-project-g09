@@ -7,7 +7,7 @@ Express.js + Socket.io service that:
 ## Tech
 
 - Express.js
-- Node.js 22
+- Node.js
 - Socket.io (WebSocket)
 - Redis (Room State & Pub/Sub)
 - JavaScript (ES Modules)
@@ -17,7 +17,7 @@ Express.js + Socket.io service that:
 **Before running** check for the following requirements:
 
 - Node.js 18 or higher
-- Redis (6379)
+- Redis (Port 6379)
 - npm
 
 1. Open Command Line/Terminal and navigate into the `chatting-backend-service` directory.
@@ -92,11 +92,11 @@ The service implements a 10-second grace period for disconnections to prevent fa
   | `roomId`   | string | Yes      | Unique identifier for the chat room |
 
   ```javascript
-  socket.emit("join_room", {
+  {
     userId: "user-123",
     username: "Alice",
     roomId: "session-456",
-  });
+  }
   ```
 
 - **Server Response:**
@@ -117,22 +117,18 @@ The service implements a 10-second grace period for disconnections to prevent fa
 
   Message object structure:
 
-  | Name        | Type   | Required | Description                    |
-  | ----------- | ------ | -------- | ------------------------------ |
-  | `userId`    | string | Yes      | ID of the message sender       |
-  | `username`  | string | Yes      | Username of the message sender |
-  | `content`   | string | Yes      | Message text content           |
-  | `timestamp` | number | Yes      | Unix timestamp (milliseconds)  |
+  | Name     | Type   | Required | Description              |
+  | -------- | ------ | -------- | ------------------------ |
+  | `userId` | string | Yes      | ID of the message sender |
+  | `text`   | string | Yes      | Message text content     |
 
   ```javascript
-  socket.emit("send_message", {
+  {
     message: {
       userId: "user-123",
-      username: "Alice",
-      content: "Hello, world!",
-      timestamp: Date.now(),
-    },
-  });
+      text: "Hello, world!",
+    }
+  }
   ```
 
 - **Server Response:**
@@ -145,10 +141,6 @@ The service implements a 10-second grace period for disconnections to prevent fa
 - **Behaviour:** Manually disconnects the user from the chat room and triggers immediate cleanup.
 
 - **Payload:** None
-
-  ```javascript
-  socket.emit("leave_session");
-  ```
 
 - **Server Response:**
   - Triggers socket disconnect immediately
@@ -177,17 +169,14 @@ The service implements a 10-second grace period for disconnections to prevent fa
 
 - **Payload**
 
-  | Name        | Type   | Description                    |
-  | ----------- | ------ | ------------------------------ |
-  | `userId`    | string | ID of the message sender       |
-  | `username`  | string | Username of the message sender |
-  | `content`   | string | Message text content           |
-  | `timestamp` | number | Unix timestamp (milliseconds)  |
+  | Name      | Type   | Description          |
+  | --------- | ------ | -------------------- |
+  | `message` | string | Message text content |
 
   ```javascript
-  socket.on("receive_message", (message) => {
-    console.log(`${message.username}: ${message.content}`);
-  });
+  {
+    message: "Hello world";
+  }
   ```
 
 #### System Message
@@ -198,20 +187,21 @@ The service implements a 10-second grace period for disconnections to prevent fa
 
 - **Payload**
 
-  | Name        | Type   | Description                                                                          |
-  | ----------- | ------ | ------------------------------------------------------------------------------------ |
-  | `eventType` | string | Type of system event: `"connect"`, `"reconnect"`, `"disconnect"`, `"existing_users"` |
-  | `userId`    | string | ID of the user related to the event (for connect/disconnect)                         |
-  | `username`  | string | Username of the user related to the event (for connect/disconnect)                   |
-  | `users`     | array  | List of active users (only for `"existing_users"` event type)                        |
+  | Name       | Type   | Description                                                                          |
+  | ---------- | ------ | ------------------------------------------------------------------------------------ |
+  | `event`    | string | Type of system event: `"connect"`, `"reconnect"`, `"disconnect"`, `"existing_users"` |
+  | `userId`   | string | ID of the user related to the event (for connect/disconnect)                         |
+  | `username` | string | Username of the user related to the event (for connect/disconnect)                   |
+  | `text`     | string | Message to be displayed for the client                                               |
 
   Example - User Connected:
 
   ```javascript
   {
-    eventType: 'connect',
+    event: 'connect',
     userId: 'user-123',
-    username: 'Alice'
+    username: 'Alice',
+    text: `Alice has entered the chat.`
   }
   ```
 
@@ -219,23 +209,11 @@ The service implements a 10-second grace period for disconnections to prevent fa
 
   ```javascript
   {
-    eventType: 'existing_users',
-    users: [
-      { userId: 'user-456', username: 'Bob' }
-    ]
+    event: 'existing_users',
+    userId: 'user-456',
+    username: 'Bob',
+    text: `Bob is already in chat.`
   }
-  ```
-
-  ```javascript
-  socket.on("system_message", (data) => {
-    if (data.eventType === "connect") {
-      console.log(`${data.username} joined the room`);
-    } else if (data.eventType === "disconnect") {
-      console.log(`${data.username} left the room`);
-    } else if (data.eventType === "existing_users") {
-      console.log("Current users:", data.users);
-    }
-  });
   ```
 
 ## HTTP API Reference
