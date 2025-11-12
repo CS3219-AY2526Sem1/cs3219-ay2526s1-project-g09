@@ -1,6 +1,6 @@
 # PeerPrep - Question Backend Service
 
-Typescript service that:
+TypeScript service that:
 
 - Provides Create Operations for adding questions from the LeetCode Service or other services
 - Provides CRUD operations for questions for Admin users.
@@ -47,15 +47,15 @@ Typescript service that:
 src/
   db/
     model/
-      question.ts     # Mongoose schema for Question
+      question.ts     # Mongoose schema definition for Question documents
     types/
-      question.ts     # TypeScript interface
+      question.ts     # TypeScript interface for Question
     connection.ts     # Handles MongoDB connection setup (Mongoose Connect)
     dbLimiter.ts      # Rate limiter for database operations
   index.ts            # Tiny bootstrap: loads env, creates server, starts listening
-  logger.ts           # Centralise formatter for logging
-  routes.ts           # REST endpoints
-  server.ts           # buildServer(): plugins + routes
+  logger.ts           # Logger file for consistent log formatting
+  routes.ts           # Fastify routes
+  server.ts           # buildServer(): registers plugins + routes
 ```
 
 ## API Overview
@@ -264,15 +264,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
     ```json
     {
-      "error": "Invalid input",
-      "details": [
-        {
-          "expected": "object",
-          "code": "invalid_type",
-          "path": [],
-          "message": "Invalid input: expected object, received undefined"
-        }
-      ]
+      "error": "Invalid input"
     }
     ```
 
@@ -358,15 +350,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
     ```json
     {
-      "error": "Invalid input",
-      "details": [
-        {
-          "expected": "object",
-          "code": "invalid_type",
-          "path": [],
-          "message": "Invalid input: expected object, received undefined"
-        }
-      ]
+      "error": "Invalid input"
     }
     ```
 
@@ -426,15 +410,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
     ```json
     {
-      "error": "Invalid input",
-      "details": [
-        {
-          "expected": "object",
-          "code": "invalid_type",
-          "path": [],
-          "message": "Invalid input: expected object, received undefined"
-        }
-      ]
+      "error": "Invalid input"
     }
     ```
 
@@ -523,15 +499,7 @@ Base URL: `http://localhost:5275/api/v1/question-service`
 
     ```json
     {
-      "error": "Invalid input",
-      "details": [
-        {
-          "expected": "object",
-          "code": "invalid_type",
-          "path": [],
-          "message": "Invalid input: expected object, received undefined"
-        }
-      ]
+      "error": "Invalid input"
     }
     ```
 

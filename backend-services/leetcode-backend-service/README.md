@@ -1,6 +1,6 @@
-# PeerPrep - Leetcode Backend Service
+# PeerPrep - LeetCode Backend Service
 
-Typescript service that:
+TypeScript service that:
 
 - Fetches LeetCode problems via `leetcode-query` npm dependency.
 - Inserts questions into the LeetCode and Question Service (MongoDB)
@@ -44,22 +44,22 @@ Typescript service that:
 src/
   db/
     model/
-      question.ts        # Mongoose schema definition for Question documents
+      question.ts           # Mongoose schema definition for Question documents
     types/
-      question.ts        # TypeScript interface for Question
-      seedBatchResponse  # TypeScript interface for seed batch response
-    changeStream.ts      # Listens to changes in leetcode-service DB and triggers sync events
-    connection.ts        # Handles MongoDB connection setup (Mongoose Connect)
-    dbLimiter.ts         # Rate limiter for database operations
+      question.ts           # TypeScript interface for Question
+      seedBatchResponse.ts  # TypeScript interface for seed batch response
+    changeStream.ts         # Listens to changes in leetcode-service DB and triggers sync events
+    connection.ts           # Handles MongoDB connection setup (Mongoose Connect)
+    dbLimiter.ts            # Rate limiter for database operations
   leetcode/
-    queries.ts           # Contains LeetCode GraphQL queries (QUERY_LIST, QUERY_DETAIL)
-    seedBatch.ts         # Resumable batch seeding using persisted cursor; upserts windowed pages
-    types.ts             # TypeScript interface for LeetCode API types
-  index.ts               # Tiny bootstrap: loads env, creates server, starts listening
-  routes.ts              # Fastify routes: GET /leetcode/test, POST /leetcode/seed-batch
-  server.ts              # buildServer(): registers plugins + routes
+    queries.ts              # Contains LeetCode GraphQL queries (QUERY_LIST, QUERY_DETAIL)
+    seedBatch.ts            # Resumable batch seeding using persisted cursor; upserts windowed pages
+    types.ts                # TypeScript interface for LeetCode API types
+  index.ts                  # Tiny bootstrap: loads env, creates server, starts listening
+  routes.ts                 # Fastify routes: GET /leetcode/test, POST /leetcode/seed-batch
+  server.ts                 # buildServer(): registers plugins + routes
   health.ts
-  logger.ts              # Logger file for consistent log formatting
+  logger.ts                 # Logger file for consistent log formatting
 ```
 
 ## API Overview
@@ -87,6 +87,9 @@ Base URL: `http://localhost:5285/api/v1/leetcode-service`
 
 - Behaviour: Fetches up to 200 problems from LeetCode and **upserts** to MongoDB.
 
+- Headers:
+  - `x-admin-token`: must match the `ADMIN_TOKEN` in `.env`
+
 - Expected Response:
   - HTTP STATUS 200 OK:
     The LeetCode questions were successfully inserted into the database. This response also includes metadata about the synchronization progress.
@@ -103,6 +106,24 @@ Base URL: `http://localhost:5285/api/v1/leetcode-service`
     "total": 3730
   }
   ```
+
+  - HTTP STATUS 401 UNAUTHORIZED:
+    Unauthorized access, due to missing or incorrect `x-admin-token` header value.
+
+    ```json
+    {
+      "error": "Unauthorized"
+    }
+    ```
+
+  - HTTP STATUS 500 INTERNAL SERVER ERROR:
+    An unexpected error has occurred in the service.
+
+    ```json
+    {
+      "error": "Internal Server Error"
+    }
+    ```
 
 ## Miscellaneous
 
